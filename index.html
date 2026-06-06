@@ -301,7 +301,7 @@ async function cagir(alan){
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
-    if(!r.ok) throw new Error("HTTP " + r.status);
+    if(!r.ok){ const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
     return await r.text();
   } finally { clearTimeout(to); }
 }
@@ -322,14 +322,23 @@ async function uret(){
 
   let fikirler = null, hata = null;
   for(let deneme = 1; deneme <= 3 && !fikirler; deneme++){
+    let limit = false;
     try{
       const txt = await cagir(alan);
       fikirler = jsonAyikla(txt);
       if(!fikirler) hata = "Cevap okunamadı";
     }catch(e){
-      hata = e.name === "AbortError" ? "Süre doldu" : (e.message || "Bağlantı hatası");
+      limit = e.status === 429;
+      hata = e.name === "AbortError" ? "Süre doldu" : (limit ? "Servis yoğun (429)" : (e.message || "Bağlantı hatası"));
     }
-    if(!fikirler && deneme < 3) await new Promise(res => setTimeout(res, deneme * 1500));
+    if(!fikirler && deneme < 3){
+      clearInterval(dongu);
+      // Anonim ücretsiz tier ~15 sn/istek; 429'da o pencereyi bekle
+      for(let bekle = limit ? 16 : Math.ceil(deneme * 1.5); bekle > 0; bekle--){
+        statusEl.innerHTML = `<span class="spin"></span>Ücretsiz servis yoğun, ${bekle} sn sonra tekrar deniyor…`;
+        await new Promise(res => setTimeout(res, 1000));
+      }
+    }
   }
 
   clearInterval(dongu);
@@ -343,7 +352,7 @@ async function uret(){
     statusEl.textContent = "";
     cizFikirler(fikirler);
   }else{
-    statusEl.innerHTML = `Ücretsiz servis şu an meşgul olabilir (${escapeHtml(hata||"hata")}).`;
+    statusEl.innerHTML = `Ücretsiz servis şu an çok yoğun (${escapeHtml(hata||"hata")}). 15-20 sn bekleyip tekrar dene.`;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
