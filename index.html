@@ -130,6 +130,7 @@
 
 <script>
 const ENDPOINT = "https://text.pollinations.ai/";
+const PK = "pk_9A76J8DMwl5fCL8X"; // publishable key (frontend-güvenli)
 const $ = s => document.querySelector(s);
 const out = $("#out"), statusEl = $("#status");
 const alanInput = $("#alan");
@@ -297,7 +298,7 @@ async function cagir(alan){
   try{
     const r = await fetch(ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + PK },
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
