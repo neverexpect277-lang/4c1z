@@ -107,35 +107,40 @@ function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="ye
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 // ---- AI çağrıları (prompt.js: promptYap, jsonAyikla) ----
+const POLL_MODELLER = ["openai", "mistral", "llama"]; // pollinations ücretsiz modelleri
 async function cagir(alan){
   const { sistem, kullanici } = promptYap(alan);
-  const body = {
-    messages: [
-      { role: "system", content: sistem },
-      { role: "user", content: kullanici }
-    ],
-    model: "openai",
-    seed: Math.floor(Math.random() * 1e9),
-    referrer: location.hostname || "4c1z",
-    token: PK
-  };
-  const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 45000);
-  try{
-    const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: ctrl.signal
-    });
-    if(!r.ok){
-      const govde = await r.text().catch(() => "");
-      const e = new Error("HTTP " + r.status + (govde ? " · " + govde.slice(0,140) : ""));
-      e.status = r.status;
-      throw e;
-    }
-    return await r.text();
-  } finally { clearTimeout(to); }
+  let son = new Error("pollinations modelleri yanıt vermedi");
+  for(const model of POLL_MODELLER){
+    const body = {
+      messages: [
+        { role: "system", content: sistem },
+        { role: "user", content: kullanici }
+      ],
+      model,
+      seed: Math.floor(Math.random() * 1e9),
+      referrer: location.hostname || "4c1z",
+      token: PK
+    };
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 45000);
+    try{
+      const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      });
+      if(r.ok){
+        const t = await r.text();
+        if(t && t.trim()) return t;
+      }else{
+        son = new Error("HTTP " + r.status); son.status = r.status;
+      }
+    }catch(e){ son = e; }
+    finally{ clearTimeout(to); }
+  }
+  throw son;
 }
 
 async function cagirGemini(alan){
