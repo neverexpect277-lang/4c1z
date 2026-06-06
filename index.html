@@ -130,7 +130,7 @@
 
 <script>
 const ENDPOINT = "https://text.pollinations.ai/";
-const PK = "pk_9A76J8DMwl5fCL8X"; // publishable key (frontend-güvenli)
+const PK = "pk_9A76J8DMwl5fCL8X"; // pollinations publishable key (frontend-güvenli)
 const $ = s => document.querySelector(s);
 const out = $("#out"), statusEl = $("#status");
 const alanInput = $("#alan");
@@ -313,6 +313,23 @@ async function cagir(alan){
   } finally { clearTimeout(to); }
 }
 
+async function cagirGemini(alan){
+  const { sistem, kullanici } = promptYap(alan);
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 30000);
+  try{
+    const r = await fetch("/api/gen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: sistem + "\n\n" + kullanici }),
+      signal: ctrl.signal
+    });
+    if(!r.ok) throw new Error("Gemini " + r.status);
+    const j = await r.json();
+    return j?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  } finally { clearTimeout(to); }
+}
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -327,22 +344,16 @@ async function uret(){
   statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
   const dongu = setInterval(() => { mi=(mi+1)%mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2200);
 
-  let fikirler = null, hata = null;
-  const DENEME = 4;
+  let fikirler = null;
+  const DENEME = 3;
   for(let deneme = 1; deneme <= DENEME && !fikirler; deneme++){
-    let limit = false;
-    try{
-      const txt = await cagir(alan);
-      fikirler = jsonAyikla(txt);
-      if(!fikirler) hata = "Cevap okunamadı";
-    }catch(e){
-      limit = e.status === 429;
-      hata = e.name === "AbortError" ? "Süre doldu" : (limit ? "Servis yoğun (429)" : (e.message || "Bağlantı hatası"));
-    }
+    // önce Google Gemini, olmazsa pollinations
+    try{ fikirler = jsonAyikla(await cagirGemini(alan)); }catch(e){}
+    if(!fikirler){ try{ fikirler = jsonAyikla(await cagir(alan)); }catch(e){} }
     if(!fikirler && deneme < DENEME){
       clearInterval(dongu);
       statusEl.innerHTML = `<span class="spin"></span>Çavuş ürün tarıyor…`;
-      await new Promise(res => setTimeout(res, limit ? 6000 : 2000));
+      await new Promise(res => setTimeout(res, 3000));
     }
   }
 
@@ -357,7 +368,7 @@ async function uret(){
     statusEl.textContent = "";
     cizFikirler(fikirler);
   }else{
-    statusEl.innerHTML = `Çavuş şu an bulamadı.<br><small style="color:var(--dim)">teşhis: ${escapeHtml(hata||"?")}</small>`;
+    statusEl.innerHTML = `Çavuş şu an bulamadı, birkaç saniye sonra tekrar dene.`;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
