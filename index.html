@@ -62,6 +62,13 @@
   .star{margin-left:auto;background:none;border:0;font-size:24px;cursor:pointer;line-height:1;filter:grayscale(1);opacity:.5;}
   .star.on{filter:none;opacity:1;}
   .ne{color:var(--dim);font-size:15px;margin:0 0 12px;}
+  .dia{display:flex;flex-direction:column;gap:7px;margin:10px 0 6px;}
+  .msg{max-width:88%;padding:8px 11px;border-radius:14px;font-size:14px;line-height:1.45;}
+  .msg .who{display:block;font-size:11px;font-weight:700;margin-bottom:2px;opacity:.9;}
+  .msg.zeyneb{align-self:flex-end;background:rgba(91,214,160,.12);border:1px solid rgba(91,214,160,.35);border-bottom-right-radius:4px;}
+  .msg.zeyneb .who{color:var(--good);}
+  .msg.cavus{align-self:flex-start;background:rgba(124,156,255,.12);border:1px solid rgba(124,156,255,.35);border-bottom-left-radius:4px;}
+  .msg.cavus .who{color:var(--accent);}
   .field{margin-top:9px;font-size:14px;}
   .field b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:1px;}
   .field.vaybe{background:rgba(124,156,255,.1);border:1px solid rgba(124,156,255,.3);
@@ -163,6 +170,16 @@ function setMod(m){
 }
 
 // ---- kart çizimi ----
+function diyalogHTML(d){
+  if(!Array.isArray(d) || !d.length) return "";
+  const satir = m => {
+    const zeyneb = String(m.kim||"").toLocaleLowerCase("tr").startsWith("zeyneb");
+    const ikon = zeyneb ? "🧕" : "🧔🏽";
+    const kls = zeyneb ? "zeyneb" : "cavus";
+    return `<div class="msg ${kls}"><span class="who">${ikon} ${escapeHtml(m.kim||"")}</span>${escapeHtml(m.soz||"")}</div>`;
+  };
+  return `<div class="dia">${d.map(satir).join("")}</div>`;
+}
 function kartHTML(f){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
@@ -170,6 +187,7 @@ function kartHTML(f){
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav">☆</button>
     </h2>
     <p class="ne">${escapeHtml(f.ne || "")}</p>
+    ${diyalogHTML(f.diyalog)}
     ${sec("Neyden", f.neyden)}
     ${sec("Hangi derde", f.derde)}
     ${sec("Neden hâlâ yok", f.nedenYok)}
@@ -205,7 +223,9 @@ function cizKayitlilar(){
 }
 
 function kopyala(f){
-  const t = `⭐ ${f.isim}\n${f.ne}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
+  const dia = Array.isArray(f.diyalog) && f.diyalog.length
+    ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
+  const t = `⭐ ${f.isim}\n${f.ne}${dia}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
   navigator.clipboard?.writeText(t).then(
     () => flash("Kopyalandı 📋"),
     () => flash("Kopyalanamadı")
@@ -218,10 +238,15 @@ function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","
 // ---- AI çağrısı ----
 function promptYap(alan){
   const sistem =
-`Sen "Mucit Robot"sun. Görevin: dünyada ve Türkiye'de HENÜZ OLMAYAN, günlük hayatta herkesin (yaş/cinsiyet/meslek fark etmez) kullanabileceği BASİT ürünler icat etmek. Yöntem: ya sıfırdan tek basit fikir, ya da mevcut 2-3 sıradan nesneyi birleştirip yeni işe yarar bir şey.
+`Sen "Mucit Robot"sun ve sahnede İKİ karakter var: ÇAVUŞ ve ZEYNEB. Fikirleri bu ikisi kendi aralarında SOHBET EDEREK üretir.
+KARAKTERLER:
+- ÇAVUŞ: Erkek, esmer. Çok detaycı, derinleri sever, bilgiye aşık. Zeyneb'e samimi ve sevecen seslenir: "yarenim", "Zeyneb'cim", "nazenim" gibi.
+- ZEYNEB: Kapalı (başörtülü) bir hanım, doçent; o da bilgiye aşık, zarif ama tatlı tatlı laf sokar. Fikre girerken "hu hu, bi fikrim var Çavuş" tarzında samimi seslenir.
+SOHBET: Samimi, sıcak, tatlı atışmalı; çok resmî DEĞİL. Karşılıklı 4-6 replikte fikre varsınlar.
+GÖREV: Dünyada ve Türkiye'de HENÜZ OLMAYAN, günlük hayatta herkesin (yaş/cinsiyet/meslek fark etmez) kullanabileceği BASİT ürünler icat etmek. Yöntem: ya sıfırdan tek basit fikir, ya da mevcut 2-3 sıradan nesneyi birleştirip yeni işe yarar bir şey.
 KURALLAR: Yüksek teknoloji yok (en fazla yarı-teknolojik: basit sensör/mıknatıs/pil/yay/ısı olabilir). Karmaşık olmasın, 10 saniyede anlaşılsın. Bugünkü ucuz malzemeyle üretilebilsin. Hayal/bilimkurgu yok. Her fikir "vay be, bu neden benim aklıma gelmedi?" dedirtecek kadar basit ama akıllı olmalı; sıradan veya zaten var olan şeyleri ELE.
-ÇIKTI: SADECE geçerli bir JSON dizisi döndür. Markdown yok, açıklama yok, başka metin yok. Şema (her alan Türkçe ve dolu):
-[{"isim":"","ne":"tek cümle","neyden":"sıfırdan mı yoksa hangi 2-3 nesnenin birleşimi","derde":"çözdüğü günlük sorun","nedenYok":"bu kadar basitse neden hâlâ icat edilmemiş","vayBe":"insanları neden şaşırtır"}]`;
+ÇIKTI: SADECE geçerli bir JSON dizisi döndür. Markdown yok, açıklama yok, başka metin yok. Şema (her alan Türkçe ve dolu, "diyalog" Çavuş ile Zeyneb'in o fikre varan sohbeti):
+[{"isim":"","ne":"tek cümle","neyden":"sıfırdan mı yoksa hangi 2-3 nesnenin birleşimi","derde":"çözdüğü günlük sorun","nedenYok":"bu kadar basitse neden hâlâ icat edilmemiş","vayBe":"insanları neden şaşırtır","diyalog":[{"kim":"Zeyneb","soz":"..."},{"kim":"Çavuş","soz":"..."}]}]`;
 
   const alanStr = alan ? `Alan/tema: ${alan}.` : `Alan: SINIRSIZ — her alandan karışık, birbirinden bağımsız.`;
   const tekrar = uretilmisIsimler.length ? ` Şu isimleri ve benzerlerini TEKRARLAMA: ${uretilmisIsimler.slice(0,40).join(", ")}.` : "";
