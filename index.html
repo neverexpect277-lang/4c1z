@@ -299,7 +299,7 @@ async function uret(){
   out.innerHTML = "";
 
   const alan = alanInput.value.trim();
-  const mesajlar = ["Çavuş ve Zeyneb istişare ediyor…","Sıradan fikirleri eliyor…","\"Vay be\" testinden geçiriyor…","Birleştiriyor, icat ediyor…"];
+  const mesajlar = ["Çavuş ve Zeyneb istişare ediyor…","Çavuş sıradan fikirleri eliyor…","Zeyneb \"vay be\" diyor…","Birleştiriyor, icat ediyor…"];
   let mi = 0;
   statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
   const dongu = setInterval(() => { mi=(mi+1)%mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2200);
