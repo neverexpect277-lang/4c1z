@@ -302,7 +302,12 @@ async function cagir(alan){
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
-    if(!r.ok){ const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+    if(!r.ok){
+      const govde = await r.text().catch(() => "");
+      const e = new Error("HTTP " + r.status + (govde ? " · " + govde.slice(0,140) : ""));
+      e.status = r.status;
+      throw e;
+    }
     return await r.text();
   } finally { clearTimeout(to); }
 }
@@ -351,7 +356,7 @@ async function uret(){
     statusEl.textContent = "";
     cizFikirler(fikirler);
   }else{
-    statusEl.innerHTML = `Çavuş şu an bulamadı, birkaç saniye sonra tekrar dene.`;
+    statusEl.innerHTML = `Çavuş şu an bulamadı.<br><small style="color:var(--dim)">teşhis: ${escapeHtml(hata||"?")}</small>`;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
