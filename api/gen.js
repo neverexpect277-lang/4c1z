@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text }] }] })
+        body: JSON.stringify({ contents: [{ parts: [{ text }] }], generationConfig: { temperature: 1.15 } })
       }
     );
     const j = await r.json();
