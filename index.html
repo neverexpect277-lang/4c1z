@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0f172a" />
-<title>4c1z 🤖</title>
+<title>4c1z</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root{
@@ -87,7 +87,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>🤖 4c1z</h1>
+    <h1>4c1z</h1>
     <p>Dünyada ve Türkiye'de olmayan, basit, herkesin kullanacağı ürün fikirleri</p>
   </header>
 
@@ -98,7 +98,7 @@
       <button class="clearx" id="clear" title="Temizle">✕</button>
     </div>
     <div class="chips" id="chips">
-      <span class="chip sinirsiz" data-v="">♾️ Sınırsız</span>
+      <span class="chip sinirsiz" data-v="">Sınırsız</span>
       <span class="chip" data-v="mutfak">Mutfak</span>
       <span class="chip" data-v="banyo">Banyo</span>
       <span class="chip" data-v="çanta / cep">Çanta</span>
@@ -111,12 +111,12 @@
       <span class="chip" data-v="bahçe / balkon">Bahçe</span>
       <span class="chip" data-v="evcil hayvan">Evcil</span>
     </div>
-    <button class="gen" id="gen">🎲 Fikir Üret</button>
+    <button class="gen" id="gen">Fikir Üret</button>
   </div>
 
   <div class="tabs">
-    <div class="tab on" id="tabYeni">✨ Yeni Fikirler</div>
-    <div class="tab" id="tabKayit">⭐ Kayıtlılar (<span id="kayitSay">0</span>)</div>
+    <div class="tab on" id="tabYeni">Yeni Fikirler</div>
+    <div class="tab" id="tabKayit">Kayıtlılar (<span id="kayitSay">0</span>)</div>
   </div>
 
   <div class="status" id="status"></div>
@@ -174,16 +174,15 @@ function diyalogHTML(d){
   if(!Array.isArray(d) || !d.length) return "";
   const satir = m => {
     const zeyneb = String(m.kim||"").toLocaleLowerCase("tr").startsWith("zeyneb");
-    const ikon = zeyneb ? "🧕" : "🧔🏽";
     const kls = zeyneb ? "zeyneb" : "cavus";
-    return `<div class="msg ${kls}"><span class="who">${ikon} ${escapeHtml(m.kim||"")}</span>${escapeHtml(m.soz||"")}</div>`;
+    return `<div class="msg ${kls}"><span class="who">${escapeHtml(m.kim||"")}</span>${escapeHtml(m.soz||"")}</div>`;
   };
   return `<div class="dia">${d.map(satir).join("")}</div>`;
 }
 function kartHTML(f){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
-    <h2>⭐ ${escapeHtml(f.isim || "İsimsiz")}
+    <h2>${escapeHtml(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav">☆</button>
     </h2>
     <p class="ne">${escapeHtml(f.ne || "")}</p>
@@ -193,7 +192,7 @@ function kartHTML(f){
     ${sec("Neden hâlâ yok", f.nedenYok)}
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
     <div class="cardfoot">
-      <button class="mini" data-act="kopya">📋 Kopyala</button>
+      <button class="mini" data-act="kopya">Kopyala</button>
     </div>`;
 }
 function fikirKart(f){
@@ -209,7 +208,7 @@ function fikirKart(f){
 function cizFikirler(list){
   out.innerHTML = "";
   if(!list || !list.length){
-    out.innerHTML = `<div class="empty">Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>🎲 Fikir Üret</b>'e bas.</div>`;
+    out.innerHTML = `<div class="empty">Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
     return;
   }
   list.forEach(f => out.appendChild(fikirKart(f)));
@@ -225,9 +224,9 @@ function cizKayitlilar(){
 function kopyala(f){
   const dia = Array.isArray(f.diyalog) && f.diyalog.length
     ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
-  const t = `⭐ ${f.isim}\n${f.ne}${dia}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
+  const t = `${f.isim}\n${f.ne}${dia}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
   navigator.clipboard?.writeText(t).then(
-    () => flash("Kopyalandı 📋"),
+    () => flash("Kopyalandı"),
     () => flash("Kopyalanamadı")
   );
 }
@@ -329,7 +328,7 @@ async function uret(){
   }else{
     statusEl.innerHTML = `Ücretsiz servis şu an meşgul olabilir (${escapeHtml(hata||"hata")}).`;
     const b = document.createElement("button");
-    b.className = "retry"; b.textContent = "🔄 Tekrar dene";
+    b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
     out.innerHTML = ""; out.appendChild(b);
   }
