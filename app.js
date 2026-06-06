@@ -106,47 +106,12 @@ function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="ye
 
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-// ---- AI çağrıları (prompt.js: promptYap, jsonAyikla) ----
+// ---- Model zinciri (prompt.js: ureticiPrompt, ustAkilPrompt, jsonAyikla) ----
 const POLL_MODELLER = ["openai", "mistral", "llama"]; // pollinations ücretsiz modelleri
-async function cagir(alan){
-  const { sistem, kullanici } = promptYap(alan);
-  let son = new Error("pollinations modelleri yanıt vermedi");
-  for(const model of POLL_MODELLER){
-    const body = {
-      messages: [
-        { role: "system", content: sistem },
-        { role: "user", content: kullanici }
-      ],
-      model,
-      seed: Math.floor(Math.random() * 1e9),
-      referrer: location.hostname || "4c1z",
-      token: PK
-    };
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 45000);
-    try{
-      const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: ctrl.signal
-      });
-      if(r.ok){
-        const t = await r.text();
-        if(t && t.trim()) return t;
-      }else{
-        son = new Error("HTTP " + r.status); son.status = r.status;
-      }
-    }catch(e){ son = e; }
-    finally{ clearTimeout(to); }
-  }
-  throw son;
-}
 
-async function cagirGemini(alan){
-  const { sistem, kullanici } = promptYap(alan);
+async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 30000);
+  const to = setTimeout(() => ctrl.abort(), 35000);
   try{
     const r = await fetch("/api/gen", {
       method: "POST",
@@ -160,6 +125,36 @@ async function cagirGemini(alan){
   } finally { clearTimeout(to); }
 }
 
+async function pollCagir(sistem, kullanici){
+  let son = new Error("pollinations yanıt vermedi");
+  for(const model of POLL_MODELLER){
+    const body = {
+      messages: [{ role: "system", content: sistem }, { role: "user", content: kullanici }],
+      model, seed: Math.floor(Math.random() * 1e9),
+      referrer: location.hostname || "4c1z", token: PK
+    };
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 45000);
+    try{
+      const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body), signal: ctrl.signal
+      });
+      if(r.ok){ const t = await r.text(); if(t && t.trim()) return t; }
+      else { son = new Error("HTTP " + r.status); }
+    }catch(e){ son = e; } finally { clearTimeout(to); }
+  }
+  throw son;
+}
+
+// Bir promptu model zincirinden geçirip fikir dizisi döndürür (Gemini -> pollinations)
+async function zincir(sistem, kullanici){
+  try{ const f = jsonAyikla(await geminiCagir(sistem, kullanici)); if(f) return f; }catch(e){}
+  try{ const f = jsonAyikla(await pollCagir(sistem, kullanici)); if(f) return f; }catch(e){}
+  return null;
+}
+function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -167,27 +162,30 @@ async function uret(){
   calisiyor = true;
   $("#gen").disabled = true;
   out.innerHTML = "";
-
   const alan = alanInput.value.trim();
-  const mesajlar = ["Çavuş ve Zeyneb istişare ediyor…","Çavuş sıradan fikirleri eliyor…","Zeyneb \"vay be\" diyor…","Birleştiriyor, icat ediyor…"];
-  let mi = 0;
-  statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
-  const dongu = setInterval(() => { mi=(mi+1)%mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2200);
+  const durum = msg => { statusEl.innerHTML = `<span class="spin"></span>${msg}`; };
 
-  let fikirler = null;
-  const DENEME = 3;
-  for(let deneme = 1; deneme <= DENEME && !fikirler; deneme++){
-    // önce Google Gemini, olmazsa pollinations
-    try{ fikirler = jsonAyikla(await cagirGemini(alan)); }catch(e){}
-    if(!fikirler){ try{ fikirler = jsonAyikla(await cagir(alan)); }catch(e){} }
-    if(!fikirler && deneme < DENEME){
-      clearInterval(dongu);
-      statusEl.innerHTML = `<span class="spin"></span>Çavuş ürün tarıyor…`;
-      await new Promise(res => setTimeout(res, 3000));
-    }
+  // 1. AŞAMA: aday fikir üretimi
+  durum("Çavuş aday fikirleri topluyor…");
+  let adaylar = null;
+  for(let d = 1; d <= 2 && !adaylar; d++){
+    const p = ureticiPrompt(alan);
+    adaylar = await zincir(p.sistem, p.kullanici);
+    if(!adaylar && d < 2){ durum("Servis yoğun, tekrar deniyor…"); await bekle(3000); }
   }
 
-  clearInterval(dongu);
+  // 2. AŞAMA: üst akıl süzer, harmanlar, güçlendirir
+  let fikirler = null;
+  if(adaylar){
+    durum("Üst akıl en iyileri süzüyor ve harmanlıyor…");
+    for(let d = 1; d <= 2 && !fikirler; d++){
+      const p = ustAkilPrompt(alan, adaylar);
+      fikirler = await zincir(p.sistem, p.kullanici);
+      if(!fikirler && d < 2){ durum("Üst akıl yeniden deniyor…"); await bekle(3000); }
+    }
+    if(!fikirler) fikirler = adaylar.slice(0, 3); // üst akıl olmazsa adayları göster
+  }
+
   calisiyor = false;
   $("#gen").disabled = false;
 
