@@ -297,7 +297,7 @@ async function cagir(alan){
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 45000);
   try{
-    const r = await fetch(ENDPOINT + "?key=" + encodeURIComponent(PK), {
+    const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
