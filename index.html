@@ -322,7 +322,8 @@ async function uret(){
   const dongu = setInterval(() => { mi=(mi+1)%mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2200);
 
   let fikirler = null, hata = null;
-  for(let deneme = 1; deneme <= 3 && !fikirler; deneme++){
+  const DENEME = 4;
+  for(let deneme = 1; deneme <= DENEME && !fikirler; deneme++){
     let limit = false;
     try{
       const txt = await cagir(alan);
@@ -332,13 +333,10 @@ async function uret(){
       limit = e.status === 429;
       hata = e.name === "AbortError" ? "Süre doldu" : (limit ? "Servis yoğun (429)" : (e.message || "Bağlantı hatası"));
     }
-    if(!fikirler && deneme < 3){
+    if(!fikirler && deneme < DENEME){
       clearInterval(dongu);
-      // Anonim ücretsiz tier ~15 sn/istek; 429'da o pencereyi bekle
-      for(let bekle = limit ? 16 : Math.ceil(deneme * 1.5); bekle > 0; bekle--){
-        statusEl.innerHTML = `<span class="spin"></span>Ücretsiz servis yoğun, ${bekle} sn sonra tekrar deniyor…`;
-        await new Promise(res => setTimeout(res, 1000));
-      }
+      statusEl.innerHTML = `<span class="spin"></span>Çavuş ürün tarıyor…`;
+      await new Promise(res => setTimeout(res, limit ? 6000 : 2000));
     }
   }
 
@@ -353,7 +351,7 @@ async function uret(){
     statusEl.textContent = "";
     cizFikirler(fikirler);
   }else{
-    statusEl.innerHTML = `Ücretsiz servis şu an çok yoğun (${escapeHtml(hata||"hata")}). 15-20 sn bekleyip tekrar dene.`;
+    statusEl.innerHTML = `Çavuş şu an bulamadı, birkaç saniye sonra tekrar dene.`;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
