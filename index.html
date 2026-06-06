@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0f172a" />
+<title>Mucit Robot 🤖</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg:#0b1020; --card:#141a2e; --card2:#1b2440; --line:#27314f;
+    --txt:#e8ecf7; --dim:#9aa6c4; --accent:#7c9cff; --accent2:#ffd166;
+    --good:#5bd6a0; --bad:#ff7a8a;
+  }
+  html,body{margin:0;padding:0;background:
+    radial-gradient(1200px 600px at 50% -10%, #1a2750 0%, var(--bg) 55%);
+    color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    min-height:100vh;font-size:16px;line-height:1.5;}
+  .wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px;}
+
+  header{text-align:center;padding:14px 0 6px;}
+  header h1{margin:0;font-size:30px;letter-spacing:-.02em;}
+  header p{margin:6px 0 0;color:var(--dim);font-size:14px;}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:16px;}
+  label.tt{display:block;font-size:13px;color:var(--dim);margin:0 0 8px;}
+  .inrow{display:flex;gap:8px;}
+  #alan{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;padding:13px 14px;font-size:16px;outline:none;}
+  #alan:focus{border-color:var(--accent);}
+  .clearx{background:var(--card2);border:1px solid var(--line);color:var(--dim);
+    border-radius:12px;padding:0 14px;font-size:16px;cursor:pointer;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .chip{background:var(--card2);border:1px solid var(--line);color:var(--dim);
+    border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;user-select:none;}
+  .chip:active{transform:scale(.96);}
+  .chip.sinirsiz{border-color:var(--accent);color:var(--accent);}
+
+  .gen{width:100%;margin-top:14px;border:0;border-radius:14px;padding:16px;
+    font-size:18px;font-weight:700;color:#0b1020;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent2),#ffb347);
+    box-shadow:0 8px 24px rgba(255,179,71,.25);}
+  .gen:disabled{filter:grayscale(.5) brightness(.8);cursor:default;}
+  .gen:active{transform:translateY(1px);}
+
+  .tabs{display:flex;gap:8px;margin-top:16px;}
+  .tab{flex:1;text-align:center;background:var(--card);border:1px solid var(--line);
+    color:var(--dim);border-radius:12px;padding:10px;font-size:14px;cursor:pointer;}
+  .tab.on{color:var(--txt);border-color:var(--accent);background:var(--card2);}
+
+  .status{margin-top:16px;text-align:center;color:var(--dim);font-size:14px;min-height:20px;}
+  .spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);
+    border-top-color:var(--accent2);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-4px;margin-right:8px;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .retry{margin-top:10px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:16px;margin-top:14px;animation:rise .4s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .card h2{margin:0 0 2px;font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;}
+  .star{margin-left:auto;background:none;border:0;font-size:24px;cursor:pointer;line-height:1;filter:grayscale(1);opacity:.5;}
+  .star.on{filter:none;opacity:1;}
+  .ne{color:var(--dim);font-size:15px;margin:0 0 12px;}
+  .field{margin-top:9px;font-size:14px;}
+  .field b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:1px;}
+  .field.vaybe{background:rgba(124,156,255,.1);border:1px solid rgba(124,156,255,.3);
+    border-radius:12px;padding:10px 12px;margin-top:12px;}
+  .field.vaybe b{color:var(--accent);}
+  .cardfoot{display:flex;gap:8px;margin-top:13px;}
+  .mini{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--dim);
+    border-radius:10px;padding:9px;font-size:13px;cursor:pointer;text-align:center;}
+  .mini:active{transform:scale(.97);}
+
+  .empty{text-align:center;color:var(--dim);font-size:14px;margin-top:28px;line-height:1.7;}
+  footer{text-align:center;color:#566085;font-size:12px;margin-top:26px;}
+  a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🤖 Mucit Robot</h1>
+    <p>Dünyada ve Türkiye'de olmayan, basit, herkesin kullanacağı ürün fikirleri</p>
+  </header>
+
+  <div class="panel">
+    <label class="tt" for="alan">Hangi alan? (boş = SINIRSIZ, her alandan karışık)</label>
+    <div class="inrow">
+      <input id="alan" placeholder="örn. mutfak, araba, çocuk… ya da boş bırak" autocomplete="off" />
+      <button class="clearx" id="clear" title="Temizle">✕</button>
+    </div>
+    <div class="chips" id="chips">
+      <span class="chip sinirsiz" data-v="">♾️ Sınırsız</span>
+      <span class="chip" data-v="mutfak">Mutfak</span>
+      <span class="chip" data-v="banyo">Banyo</span>
+      <span class="chip" data-v="çanta / cep">Çanta</span>
+      <span class="chip" data-v="araba">Araba</span>
+      <span class="chip" data-v="çocuk">Çocuk</span>
+      <span class="chip" data-v="yaşlılar">Yaşlı</span>
+      <span class="chip" data-v="sokak / dışarı">Sokak</span>
+      <span class="chip" data-v="ev">Ev</span>
+      <span class="chip" data-v="ofis / okul">Ofis</span>
+      <span class="chip" data-v="bahçe / balkon">Bahçe</span>
+      <span class="chip" data-v="evcil hayvan">Evcil</span>
+    </div>
+    <button class="gen" id="gen">🎲 Fikir Üret</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" id="tabYeni">✨ Yeni Fikirler</div>
+    <div class="tab" id="tabKayit">⭐ Kayıtlılar (<span id="kayitSay">0</span>)</div>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="out"></div>
+
+  <footer>
+    Fikirler internetteki ücretsiz yapay zekadan canlı üretilir.<br/>
+    Tamamen ücretsiz · anahtar gerekmez.
+  </footer>
+</div>
+
+<script>
+const ENDPOINT = "https://text.pollinations.ai/";
+const $ = s => document.querySelector(s);
+const out = $("#out"), statusEl = $("#status");
+const alanInput = $("#alan");
+
+let mod = "yeni";              // "yeni" | "kayit"
+let sonUretilen = [];          // ekrandaki son üretim
+let uretilmisIsimler = [];     // tekrar engelleme (oturum)
+const FAV_KEY = "mucit_favoriler";
+
+function favleriYukle(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }catch(e){ return []; } }
+function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); $("#kayitSay").textContent = a.length; }
+function favMi(isim){ return favleriYukle().some(f => f.isim === isim); }
+
+function favToggle(fikir){
+  let a = favleriYukle();
+  if(a.some(f => f.isim === fikir.isim)) a = a.filter(f => f.isim !== fikir.isim);
+  else a.unshift(fikir);
+  favleriKaydet(a);
+  if(mod === "kayit") cizKayitlilar();
+}
+
+// ---- chips & input ----
+$("#chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if(!c) return;
+  alanInput.value = c.dataset.v;
+});
+$("#clear").addEventListener("click", () => { alanInput.value = ""; alanInput.focus(); });
+
+// ---- tabs ----
+$("#tabYeni").addEventListener("click", () => setMod("yeni"));
+$("#tabKayit").addEventListener("click", () => setMod("kayit"));
+function setMod(m){
+  mod = m;
+  $("#tabYeni").classList.toggle("on", m === "yeni");
+  $("#tabKayit").classList.toggle("on", m === "kayit");
+  if(m === "kayit") cizKayitlilar();
+  else { statusEl.textContent = ""; cizFikirler(sonUretilen); }
+}
+
+// ---- kart çizimi ----
+function kartHTML(f){
+  const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
+  return `
+    <h2>⭐ ${escapeHtml(f.isim || "İsimsiz")}
+      <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav">☆</button>
+    </h2>
+    <p class="ne">${escapeHtml(f.ne || "")}</p>
+    ${sec("Neyden", f.neyden)}
+    ${sec("Hangi derde", f.derde)}
+    ${sec("Neden hâlâ yok", f.nedenYok)}
+    ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
+    <div class="cardfoot">
+      <button class="mini" data-act="kopya">📋 Kopyala</button>
+    </div>`;
+}
+function fikirKart(f){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = kartHTML(f);
+  el.querySelector('[data-act="fav"]').addEventListener("click", ev => {
+    favToggle(f); ev.currentTarget.classList.toggle("on");
+  });
+  el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
+  return el;
+}
+function cizFikirler(list){
+  out.innerHTML = "";
+  if(!list || !list.length){
+    out.innerHTML = `<div class="empty">Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>🎲 Fikir Üret</b>'e bas.</div>`;
+    return;
+  }
+  list.forEach(f => out.appendChild(fikirKart(f)));
+}
+function cizKayitlilar(){
+  statusEl.textContent = "";
+  const a = favleriYukle();
+  out.innerHTML = "";
+  if(!a.length){ out.innerHTML = `<div class="empty">Henüz kaydın yok.<br/>Beğendiğin fikrin ☆ yıldızına bas.</div>`; return; }
+  a.forEach(f => out.appendChild(fikirKart(f)));
+}
+
+function kopyala(f){
+  const t = `⭐ ${f.isim}\n${f.ne}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
+  navigator.clipboard?.writeText(t).then(
+    () => flash("Kopyalandı 📋"),
+    () => flash("Kopyalanamadı")
+  );
+}
+function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
+
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// ---- AI çağrısı ----
+function promptYap(alan){
+  const sistem =
+`Sen "Mucit Robot"sun. Görevin: dünyada ve Türkiye'de HENÜZ OLMAYAN, günlük hayatta herkesin (yaş/cinsiyet/meslek fark etmez) kullanabileceği BASİT ürünler icat etmek. Yöntem: ya sıfırdan tek basit fikir, ya da mevcut 2-3 sıradan nesneyi birleştirip yeni işe yarar bir şey.
+KURALLAR: Yüksek teknoloji yok (en fazla yarı-teknolojik: basit sensör/mıknatıs/pil/yay/ısı olabilir). Karmaşık olmasın, 10 saniyede anlaşılsın. Bugünkü ucuz malzemeyle üretilebilsin. Hayal/bilimkurgu yok. Her fikir "vay be, bu neden benim aklıma gelmedi?" dedirtecek kadar basit ama akıllı olmalı; sıradan veya zaten var olan şeyleri ELE.
+ÇIKTI: SADECE geçerli bir JSON dizisi döndür. Markdown yok, açıklama yok, başka metin yok. Şema (her alan Türkçe ve dolu):
+[{"isim":"","ne":"tek cümle","neyden":"sıfırdan mı yoksa hangi 2-3 nesnenin birleşimi","derde":"çözdüğü günlük sorun","nedenYok":"bu kadar basitse neden hâlâ icat edilmemiş","vayBe":"insanları neden şaşırtır"}]`;
+
+  const alanStr = alan ? `Alan/tema: ${alan}.` : `Alan: SINIRSIZ — her alandan karışık, birbirinden bağımsız.`;
+  const tekrar = uretilmisIsimler.length ? ` Şu isimleri ve benzerlerini TEKRARLAMA: ${uretilmisIsimler.slice(0,40).join(", ")}.` : "";
+  const kullanici = `${alanStr} 5 adet birbirinden tamamen farklı, özgün fikir üret. Cesur ve yaratıcı ol.${tekrar}`;
+  return { sistem, kullanici };
+}
+
+function jsonAyikla(txt){
+  if(!txt) return null;
+  let t = txt.replace(/```json/gi,"").replace(/```/g,"").trim();
+  const i = t.indexOf("["), j = t.lastIndexOf("]");
+  if(i === -1 || j === -1 || j < i) return null;
+  try{
+    const arr = JSON.parse(t.slice(i, j+1));
+    return Array.isArray(arr) ? arr.filter(x => x && x.isim) : null;
+  }catch(e){ return null; }
+}
+
+async function cagir(alan){
+  const { sistem, kullanici } = promptYap(alan);
+  const body = {
+    messages: [
+      { role: "system", content: sistem },
+      { role: "user", content: kullanici }
+    ],
+    model: "openai",
+    seed: Math.floor(Math.random() * 1e9),
+    referrer: "mucit-robot"
+  };
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 45000);
+  try{
+    const r = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal
+    });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return await r.text();
+  } finally { clearTimeout(to); }
+}
+
+let calisiyor = false;
+async function uret(){
+  if(calisiyor) return;
+  if(mod !== "yeni") setMod("yeni");
+  calisiyor = true;
+  $("#gen").disabled = true;
+  out.innerHTML = "";
+
+  const alan = alanInput.value.trim();
+  const mesajlar = ["Robot düşünüyor…","Sıradan fikirleri eliyor…","\"Vay be\" testinden geçiriyor…","Birleştiriyor, icat ediyor…"];
+  let mi = 0;
+  statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
+  const dongu = setInterval(() => { mi=(mi+1)%mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2200);
+
+  let fikirler = null, hata = null;
+  for(let deneme = 1; deneme <= 3 && !fikirler; deneme++){
+    try{
+      const txt = await cagir(alan);
+      fikirler = jsonAyikla(txt);
+      if(!fikirler) hata = "Cevap okunamadı";
+    }catch(e){
+      hata = e.name === "AbortError" ? "Süre doldu" : (e.message || "Bağlantı hatası");
+    }
+    if(!fikirler && deneme < 3) await new Promise(res => setTimeout(res, deneme * 1500));
+  }
+
+  clearInterval(dongu);
+  calisiyor = false;
+  $("#gen").disabled = false;
+
+  if(fikirler && fikirler.length){
+    sonUretilen = fikirler;
+    fikirler.forEach(f => { if(f.isim) uretilmisIsimler.push(f.isim); });
+    if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
+    statusEl.textContent = "";
+    cizFikirler(fikirler);
+  }else{
+    statusEl.innerHTML = `Ücretsiz servis şu an meşgul olabilir (${escapeHtml(hata||"hata")}).`;
+    const b = document.createElement("button");
+    b.className = "retry"; b.textContent = "🔄 Tekrar dene";
+    b.addEventListener("click", uret);
+    out.innerHTML = ""; out.appendChild(b);
+  }
+}
+
+$("#gen").addEventListener("click", uret);
+
+// init
+favleriKaydet(favleriYukle());
+cizFikirler([]);
+</script>
+</body>
+</html>
