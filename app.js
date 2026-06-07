@@ -80,7 +80,7 @@ function fikirKart(f){
 function cizFikirler(list){
   out.innerHTML = "";
   if(!list || !list.length){
-    out.innerHTML = `<div class="empty">Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
+    out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
     return;
   }
   list.forEach(f => out.appendChild(fikirKart(f)));
@@ -89,7 +89,7 @@ function cizKayitlilar(){
   statusEl.textContent = "";
   const a = favleriYukle();
   out.innerHTML = "";
-  if(!a.length){ out.innerHTML = `<div class="empty">Henüz kaydın yok.<br/>Beğendiğin fikrin ☆ yıldızına bas.</div>`; return; }
+  if(!a.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
   a.forEach(f => out.appendChild(fikirKart(f)));
 }
 
@@ -103,6 +103,27 @@ function kopyala(f){
   );
 }
 function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
+
+// Üretim bitince hafif haptik + yumuşak iki notalı ding
+let _ac;
+function bildir(){
+  try{ if(navigator.vibrate) navigator.vibrate([12, 40, 18]); }catch(e){}
+  try{
+    _ac = _ac || new (window.AudioContext || window.webkitAudioContext)();
+    if(_ac.state === "suspended") _ac.resume();
+    const now = _ac.currentTime;
+    [880, 1318].forEach((f, i) => {
+      const o = _ac.createOscillator(), g = _ac.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      const t = now + i * 0.10;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.16, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      o.connect(g).connect(_ac.destination);
+      o.start(t); o.stop(t + 0.5);
+    });
+  }catch(e){}
+}
 
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
@@ -195,6 +216,7 @@ async function uret(){
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
     statusEl.textContent = "";
     cizFikirler(fikirler);
+    bildir();
   }else{
     statusEl.innerHTML = `Çavuş şu an bulamadı, birkaç saniye sonra tekrar dene.`;
     const b = document.createElement("button");
