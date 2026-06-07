@@ -62,9 +62,7 @@ function diyalogHTML(d){
 }
 function kartHTML(f){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
-  const gp = encodeURIComponent(`ürün tanıtım fotoğrafı, ${f.isim || ""}: ${f.ne || ""}. ${f.neyden || ""}. sade arka plan, gerçekçi, yumuşak stüdyo ışığı`);
   return `
-    <div class="kartgorsel"><img loading="lazy" alt="${escapeHtml(f.isim || "")}" src="/api/image?p=${gp}&w=768&h=512"></div>
     <h2>${escapeHtml(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
@@ -90,8 +88,6 @@ function fikirKart(f){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
-  const img = el.querySelector(".kartgorsel img");
-  if(img) img.addEventListener("error", () => { const g = img.closest(".kartgorsel"); if(g) g.classList.add("gizli"); });
   return el;
 }
 function cizFikirler(list){
