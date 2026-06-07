@@ -135,10 +135,10 @@ a{color:var(--accentDeep);}
   background:rgba(40,30,10,.4);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:selamfade .3s ease both;}
 .selamModal[hidden]{display:none;}
 .selamModal.kapan{opacity:0;transition:opacity .25s ease;}
-.selamKart{background:#fff;border-radius:24px;padding:32px 26px 24px;max-width:380px;width:100%;text-align:center;
-  box-shadow:0 30px 70px rgba(60,45,15,.32);animation:selampop .38s cubic-bezier(.2,.8,.2,1) both;}
-.besmele{font-family:"Amiri","Amiri Quran",serif;font-size:50px;color:#c79a3a;direction:rtl;
-  line-height:1.15;margin-bottom:18px;}
+.selamKart{background:#fff;border-radius:24px;padding:30px 26px 24px;max-width:380px;width:100%;text-align:center;
+  overflow:hidden;box-shadow:0 30px 70px rgba(60,45,15,.32);animation:selampop .38s cubic-bezier(.2,.8,.2,1) both;}
+.besmele{font-family:"Amiri","Amiri Quran",serif;font-size:30px;color:#c79a3a;direction:rtl;
+  line-height:1.7;margin-bottom:16px;}
 .selamMetin{font-family:"Playfair Display",Georgia,"Times New Roman",serif;font-style:italic;
   color:#3d3a33;font-size:20px;line-height:1.55;margin:0 0 16px;}
 .selamImza{display:block;font-family:"Playfair Display",Georgia,serif;font-style:italic;
