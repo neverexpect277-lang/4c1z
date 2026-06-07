@@ -129,26 +129,26 @@ async function fikirGorseli(f){
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
   const g = x.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#13151c"); g.addColorStop(1, "#0a0b0f");
+  g.addColorStop(0, "#faf6ee"); g.addColorStop(1, "#f1ead9");
   x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.fillStyle = "#c4ad7c"; x.fillRect(P, 150, 56, 4);
-  x.fillStyle = "#c4ad7c"; x.font = "600 34px 'Space Grotesk',sans-serif"; x.fillText("4c1z", P, 122);
+  x.fillStyle = "#b9852a"; x.fillRect(P, 150, 56, 4);
+  x.fillStyle = "#b9852a"; x.font = "700 36px 'Playfair Display',Georgia,serif"; x.fillText("4c1z", P, 122);
   let y = 250;
-  x.fillStyle = "#f4f2ec"; x.font = "600 68px 'Space Grotesk',sans-serif";
-  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 80; });
+  x.fillStyle = "#2e2b24"; x.font = "700 68px 'Playfair Display',Georgia,serif";
+  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 82; });
   y += 16;
-  x.fillStyle = "#c2c5cf"; x.font = "400 40px Inter,sans-serif";
+  x.fillStyle = "#5d564a"; x.font = "400 40px Inter,sans-serif";
   sar(x, f.ne, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 54; });
   const blok = (b, m) => {
     if(!m || y > H - 220) return;
     y += 40;
-    x.fillStyle = "#868a97"; x.font = "600 24px Inter,sans-serif"; x.fillText(b.toUpperCase(), P, y); y += 44;
-    x.fillStyle = "#e7e9ef"; x.font = "400 34px Inter,sans-serif";
+    x.fillStyle = "#9c6f1f"; x.font = "600 24px Inter,sans-serif"; x.fillText(b.toUpperCase(), P, y); y += 44;
+    x.fillStyle = "#3a352c"; x.font = "400 34px Inter,sans-serif";
     sar(x, m, W - 2 * P).forEach(l => { if(y < H - 150){ x.fillText(l, P, y); y += 46; } });
   };
   blok("Neyden", f.neyden);
   blok("Vay be", f.vayBe);
-  x.fillStyle = "#6a6e7c"; x.font = "400 28px Inter,sans-serif"; x.fillText("4c1z · fikir üreteci", P, H - 64);
+  x.fillStyle = "#a89e86"; x.font = "400 28px Inter,sans-serif"; x.fillText("4c1z · fikir üreteci", P, H - 64);
   const blob = await new Promise(r => c.toBlob(r, "image/png"));
   return new File([blob], "4c1z-fikir.png", { type: "image/png" });
 }
