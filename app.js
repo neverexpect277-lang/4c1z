@@ -260,7 +260,7 @@ function bildir(){
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 // ---- Model zinciri (prompt.js: ureticiPrompt, ustAkilPrompt, jsonAyikla) ----
-const POLL_MODELLER = ["openai", "mistral", "llama"]; // pollinations ücretsiz modelleri
+const POLL_MODELLER = ["deepseek", "openai", "mistral", "llama"]; // pollinations ücretsiz modelleri (Gemini'den sonra önce DeepSeek)
 
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
