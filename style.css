@@ -139,10 +139,10 @@ a{color:var(--accentDeep);}
   overflow:hidden;box-shadow:0 30px 70px rgba(60,45,15,.32);animation:selampop .38s cubic-bezier(.2,.8,.2,1) both;}
 .besmele{font-family:"Amiri","Amiri Quran",serif;font-size:30px;color:#c79a3a;direction:rtl;
   line-height:1.7;margin-bottom:16px;}
-.selamMetin{font-family:"Playfair Display",Georgia,"Times New Roman",serif;font-style:italic;
-  color:#3d3a33;font-size:20px;line-height:1.55;margin:0 0 16px;}
-.selamImza{display:block;font-family:"Playfair Display",Georgia,serif;font-style:italic;
-  color:#b08a3a;font-size:14px;margin-bottom:24px;}
+.selamMetin{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-style:italic;font-weight:600;
+  color:#3d3a33;font-size:26px;line-height:1.4;margin:0 0 14px;}
+.selamImza{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;
+  color:#b08a3a;font-size:17px;margin-bottom:24px;}
 .selamBtn{width:100%;border:1.5px solid #d9bd76;background:#fff;color:#c0922c;
   border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;}
 .selamBtn:hover{background:var(--cream);}
