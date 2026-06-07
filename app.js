@@ -4,6 +4,7 @@ const out = $("#out"), statusEl = $("#status");
 const alanInput = $("#alan");
 
 let mod = "yeni";              // "yeni" | "kayit"
+let kayitFiltre = "";          // Kayıtlılar alan filtresi ("" = tümü)
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
@@ -148,11 +149,23 @@ function cizFikirler(list){
 }
 function cizKayitlilar(){
   statusEl.textContent = "";
-  const a = favleriYukle();
+  const hepsi = favleriYukle();
   out.innerHTML = "";
-  if(!a.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
-  // Puana göre sırala (yüksek üstte); eşitlikte mevcut sıra (yeni→eski) korunur
-  a.slice().sort((x, y) => (y.puan || 0) - (x.puan || 0)).forEach(f => out.appendChild(fikirKart(f, true)));
+  if(!hepsi.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
+  // Alan filtresi çubuğu (1'den fazla alan varsa)
+  const alanlar = [...new Set(hepsi.map(f => f.alan || "Sınırsız"))];
+  if(kayitFiltre && !alanlar.includes(kayitFiltre)) kayitFiltre = "";  // silinmiş alan seçiliyse sıfırla
+  if(alanlar.length > 1){
+    const bar = document.createElement("div");
+    bar.className = "filtreler";
+    bar.innerHTML = `<button class="filtre ${kayitFiltre ? "" : "on"}" data-f="">Tümü</button>` +
+      alanlar.map(a => `<button class="filtre ${kayitFiltre === a ? "on" : ""}" data-f="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("");
+    bar.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => { kayitFiltre = b.dataset.f; cizKayitlilar(); }));
+    out.appendChild(bar);
+  }
+  // Filtrele + puana göre sırala (yüksek üstte); eşitlikte mevcut sıra (yeni→eski) korunur
+  (kayitFiltre ? hepsi.filter(f => (f.alan || "Sınırsız") === kayitFiltre) : hepsi)
+    .slice().sort((x, y) => (y.puan || 0) - (x.puan || 0)).forEach(f => out.appendChild(fikirKart(f, true)));
 }
 
 function kopyala(f){
@@ -406,6 +419,7 @@ async function uret(){
 
   if(fikirler && fikirler.length){
     const fikir = fikirler[0];                 // TEK fikir
+    fikir.alan = alan || "Sınırsız";           // filtre için üretildiği alanı etiketle
     sonUretilen.unshift(fikir);                // birer birer: yenisi en üste
     if(fikir.isim) uretilmisIsimler.push(fikir.isim);
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);

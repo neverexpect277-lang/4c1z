@@ -113,6 +113,13 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}
+/* Alan filtre çubuğu (Kayıtlılar) */
+.filtreler{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.filtre{background:var(--card);border:1px solid var(--line2);color:var(--soft);
+  border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;transition:.15s;}
+.filtre:hover{border-color:var(--accentSoft);color:var(--txt);}
+.filtre.on{border-color:var(--accent);color:var(--accentDeep);background:var(--cream);font-weight:600;}
+
 /* Puan yıldızları (sadece Kayıtlılar) */
 .puanlar{display:flex;gap:4px;margin-top:14px;}
 .puan{background:none;border:0;padding:2px;font-size:22px;line-height:1;cursor:pointer;
