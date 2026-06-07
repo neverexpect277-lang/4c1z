@@ -142,23 +142,23 @@ async function fikirGorseli(f){
     };
     if(ciz){ x.fillStyle = "#b9852a"; x.fillRect(P, y, 54, 4); }
     y += 22;
-    x.font = "800 32px Inter,sans-serif";
+    x.font = "700 32px Literata,Georgia,serif";
     if(ciz){ x.fillStyle = "#b9852a"; x.fillText("4c1z", P, y + 26); }
     y += 66;
-    yaz(f.isim, "800 56px Inter,sans-serif", "#2e2b24", 68);
+    yaz(f.isim, "700 56px Literata,Georgia,serif", "#2e2b24", 68);
     y += 8;
-    yaz(f.ne, "400 35px Inter,sans-serif", "#5d564a", 48);
+    yaz(f.ne, "400 35px Literata,Georgia,serif", "#5d564a", 48);
 
     if(Array.isArray(f.diyalog)){
       y += 14;
       const maxW = CW * 0.84, ip = 26, tpad = 24, nameH = 36, gap = 6, tl = 42, bpad = 26;
       for(const m of f.diyalog){
         const z = String(m.kim || "").toLocaleLowerCase("tr").startsWith("zeyneb");
-        x.font = "400 31px Inter,sans-serif";
+        x.font = "400 31px Literata,Georgia,serif";
         const lns = sar(x, m.soz || "", maxW - 2 * ip);
         let tw = 0; lns.forEach(l => tw = Math.max(tw, x.measureText(l).width));
         const ad = (z ? "🧕 " : "🧔🏽 ") + (m.kim || "");
-        x.font = "700 27px Inter,sans-serif"; tw = Math.max(tw, x.measureText(ad).width);
+        x.font = "700 27px Literata,Georgia,serif"; tw = Math.max(tw, x.measureText(ad).width);
         const bw = Math.min(maxW, tw + 2 * ip);
         const bh = tpad + nameH + gap + lns.length * tl + bpad;
         const bx = z ? (W - P - bw) : P;
@@ -166,9 +166,9 @@ async function fikirGorseli(f){
           x.fillStyle = z ? "#f6efdc" : "#eef2fb";
           x.strokeStyle = z ? "rgba(185,133,42,.4)" : "rgba(91,123,196,.4)";
           x.lineWidth = 2; rrect(x, bx, y, bw, bh, 22); x.fill(); x.stroke();
-          x.font = "700 27px Inter,sans-serif"; x.fillStyle = z ? "#9c6f1f" : "#5b7bc4";
+          x.font = "700 27px Literata,Georgia,serif"; x.fillStyle = z ? "#9c6f1f" : "#5b7bc4";
           x.fillText(ad, bx + ip, y + tpad + 27);
-          x.font = "400 31px Inter,sans-serif"; x.fillStyle = "#2e2b24";
+          x.font = "400 31px Literata,Georgia,serif"; x.fillStyle = "#2e2b24";
           let ty = y + tpad + nameH + gap + 31;
           for(const l of lns){ x.fillText(l, bx + ip, ty); ty += tl; }
         }
@@ -179,10 +179,10 @@ async function fikirGorseli(f){
     const blok = (b, m) => {
       if(!m) return;
       y += 18;
-      x.font = "700 23px Inter,sans-serif";
+      x.font = "700 23px Literata,Georgia,serif";
       if(ciz){ x.fillStyle = "#9c6f1f"; x.fillText(b.toUpperCase(), P, y + 18); }
       y += 38;
-      yaz(m, "400 33px Inter,sans-serif", "#3a352c", 44);
+      yaz(m, "400 33px Literata,Georgia,serif", "#3a352c", 44);
     };
     blok("Neyden", f.neyden);
     blok("Hangi derde", f.derde);
@@ -190,14 +190,14 @@ async function fikirGorseli(f){
 
     if(f.vayBe){
       y += 22;
-      x.font = "400 33px Inter,sans-serif";
+      x.font = "400 33px Literata,Georgia,serif";
       const vl = sar(x, f.vayBe, CW - 56);
       const vh = 24 + 30 + 8 + vl.length * 44 + 26;
       if(ciz){
         x.fillStyle = "#f6efdc"; x.strokeStyle = "rgba(185,133,42,.4)"; x.lineWidth = 2;
         rrect(x, P, y, CW, vh, 18); x.fill(); x.stroke();
-        x.font = "700 23px Inter,sans-serif"; x.fillStyle = "#9c6f1f"; x.fillText("VAY BE", P + 28, y + 24 + 18);
-        x.font = "400 33px Inter,sans-serif"; x.fillStyle = "#2e2b24";
+        x.font = "700 23px Literata,Georgia,serif"; x.fillStyle = "#9c6f1f"; x.fillText("VAY BE", P + 28, y + 24 + 18);
+        x.font = "400 33px Literata,Georgia,serif"; x.fillStyle = "#2e2b24";
         let ty = y + 24 + 30 + 8 + 32;
         for(const l of vl){ x.fillText(l, P + 28, ty); ty += 44; }
       }
@@ -205,7 +205,7 @@ async function fikirGorseli(f){
     }
 
     y += 50;
-    x.font = "400 26px Inter,sans-serif";
+    x.font = "400 26px Literata,Georgia,serif";
     if(ciz){ x.fillStyle = "#a89e86"; x.fillText("4c1z · fikir üreteci", P, y); }
     y += 36;
     return y;
