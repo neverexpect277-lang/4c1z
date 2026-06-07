@@ -369,6 +369,16 @@ async function uret(){
 
 $("#gen").addEventListener("click", uret);
 
+// Girişte Osmanlıca karşılama penceresi (giren herkes görür)
+(function selamGoster(){
+  const m = $("#selamModal"); if(!m || typeof KARSILAMA === "undefined") return;
+  $("#selamMetin").textContent = "“" + KARSILAMA[Math.floor(Math.random() * KARSILAMA.length)] + "”";
+  m.hidden = false;
+  const kapat = () => { m.classList.add("kapan"); setTimeout(() => m.remove(), 260); };
+  $("#selamKapat").addEventListener("click", kapat);
+  m.addEventListener("click", e => { if(e.target === m) kapat(); });
+})();
+
 // init
 favleriKaydet(favleriYukle());
 cizFikirler([]);

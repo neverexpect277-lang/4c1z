@@ -129,3 +129,21 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 
 footer{text-align:center;color:#a89e86;font-size:12px;margin-top:34px;line-height:1.7;}
 a{color:var(--accentDeep);}
+
+/* Giriş karşılama penceresi */
+.selamModal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(40,30,10,.4);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:selamfade .3s ease both;}
+.selamModal[hidden]{display:none;}
+.selamModal.kapan{opacity:0;transition:opacity .25s ease;}
+.selamKart{background:#fff;border-radius:24px;padding:32px 26px 24px;max-width:380px;width:100%;text-align:center;
+  box-shadow:0 30px 70px rgba(60,45,15,.32);animation:selampop .38s cubic-bezier(.2,.8,.2,1) both;}
+.besmele{font-size:28px;color:var(--accent);direction:rtl;line-height:1.5;margin-bottom:22px;
+  font-family:"Geeza Pro","Scheherazade New","Amiri","Times New Roman",serif;}
+.selamMetin{font-style:italic;color:var(--txt);font-size:18px;line-height:1.62;margin:0 0 14px;}
+.selamImza{display:block;color:var(--dim);font-style:italic;font-size:13px;margin-bottom:24px;}
+.selamBtn{width:100%;border:1.5px solid var(--accent);background:#fff;color:var(--accentDeep);
+  border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;}
+.selamBtn:hover{background:var(--cream);}
+.selamBtn:active{transform:translateY(1px);}
+@keyframes selamfade{from{opacity:0}to{opacity:1}}
+@keyframes selampop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
