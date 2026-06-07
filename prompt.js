@@ -115,16 +115,16 @@ GÖREVİN:
 - En zayıf, klişe, hayalci veya zaten-var olan adayları ELE.
 - En güçlü adayları seç; gerekirse İKİ adayı harmanlayıp tek, daha güçlü fikir yap.
 - Hepsini yarı-teknolojik ve YERE BASAN hale getir: varsayım/hayal/bilimkurgu temizle, gerçek ucuz parçalarla üretilebilir olsun.
-- Kullanıcının isteğini sonuçlara entegre et.
-- Sonuç: EN İYİ 3 fikir.
+- Kullanıcının isteğini sonuca entegre et.
+- Sonuç: SADECE 1 (EN İYİ) fikir. Birden fazla VERME.
 ${ORTAK_KURAL}
 Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 - ÇAVUŞ (esmer erkek, çok detaycı, bilime aşık): fikri ortaya atar ve SAVUNUR; Zeyneb'i yarı zarif sözle yarı bilim/mantıkla ikna eder.
 - ZEYNEB (kapalı/başörtülü doçent hanım): HİÇBİR ŞEYİ hemen beğenmez, eleştirir, kusur arar, itiraz eder; Çavuş ikna edince gönülsüzce "ikna ettin" der.
 - 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.
-ÇIKTI: SADECE geçerli bir JSON dizisi döndür (EN İYİ 3 fikir), markdown yok:
+ÇIKTI: SADECE geçerli bir JSON dizisi döndür (TEK elemanlı, yani 1 fikir), markdown yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;
-  const kullanici = `${alanCumlesi(alan)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; EN İYİ 3'ünü diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
+  const kullanici = `${alanCumlesi(alan)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; SADECE EN İYİ 1'ini seç ve diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
   return { sistem, kullanici };
 }
 

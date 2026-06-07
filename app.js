@@ -314,7 +314,6 @@ async function uret(){
   if(mod !== "yeni") setMod("yeni");
   calisiyor = true;
   $("#gen").disabled = true;
-  out.innerHTML = "";
   const alan = alanInput.value.trim();
   const mesajlar = [
     "Çavuş ve Zeyneb istişare ediyor…",
@@ -346,7 +345,7 @@ async function uret(){
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }
-    if(!fikirler) fikirler = adaylar.slice(0, 3); // 2. aşama olmazsa adayları göster
+    if(!fikirler) fikirler = adaylar.slice(0, 1); // 2. aşama olmazsa en iyi adayı göster
   }
 
   clearInterval(dongu);
@@ -354,18 +353,19 @@ async function uret(){
   $("#gen").disabled = false;
 
   if(fikirler && fikirler.length){
-    sonUretilen = fikirler;
-    fikirler.forEach(f => { if(f.isim) uretilmisIsimler.push(f.isim); });
+    const fikir = fikirler[0];                 // TEK fikir
+    sonUretilen.unshift(fikir);                // birer birer: yenisi en üste
+    if(fikir.isim) uretilmisIsimler.push(fikir.isim);
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
     statusEl.textContent = "";
-    cizFikirler(fikirler);
+    cizFikirler(sonUretilen);
     bildir();
   }else{
-    statusEl.innerHTML = `Çavuş şu an bulamadı, birkaç saniye sonra tekrar dene.`;
+    statusEl.innerHTML = `Çavuş şu an bulamadı — `;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
-    out.innerHTML = ""; out.appendChild(b);
+    statusEl.appendChild(b);
   }
 }
 
