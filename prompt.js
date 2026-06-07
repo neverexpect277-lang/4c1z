@@ -69,14 +69,39 @@ function alanCumlesi(alan){
 const ORTAK_KURAL =
 `YARI TEKNOLOJİK serbest: basit sensör, mıknatıs, pil, yay, ısı, küçük elektronik, telefon-uygulaması bağlantısı kullanılabilir. AMA bilimkurgu, hayal ve VARSAYIM YASAK; bugünün ucuz, gerçek parçalarıyla üretilebilir olmalı, 10 saniyede anlaşılmalı. Her ürün MUTLAKA mevcut 2-3 sıradan nesnenin/ürünün BEKLENMEDİK HARMANI olmalı. Piyasada zaten satılan, klişe, bariz veya işe yaramaz şeyler YASAK.`;
 
+// Çeşitlilik için rastgele bakış açıları (her turda farklı fikir çıksın)
+const ACILAR = [
+  "beklenmedik iki ev eşyasını birleştir",
+  "bir israfı (su, yemek, enerji, zaman) önle",
+  "yaşlılar veya engelliler için bir işi kolaylaştır",
+  "çocuklu ailelerin bir sıkıntısını çöz",
+  "tek elle veya çok hızlı kullanım sağla",
+  "küçük bir yere sığsın, taşınabilir olsun",
+  "bir şeyi temiz/düzenli tutmayı kolaylaştır",
+  "kazayı/tehlikeyi önleyen güvenlik ürünü",
+  "gözle görülür para tasarrufu sağla",
+  "seyahat/araba/dışarı için pratik bir çözüm",
+  "evcil hayvan sahiplerinin bir derdini çöz",
+  "mutfakta zaman kazandıran bir alet",
+  "kişisel bakım/sağlık için basit bir yardımcı",
+  "bir nesneyi yeniden kullanılabilir/çevreci yap",
+  "ofis/okul masasında bir karmaşayı çöz",
+  "yağmur/soğuk/sıcak gibi hava derdine çare"
+];
+
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan){
+function ureticiPrompt(alan, kacinilacak){
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
 ${ORTAK_KURAL}
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (6 aday), markdown yok, açıklama yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün/nesnenin harmanı","derde":"çözdüğü gerçek günlük sorun","nedenYok":"bu kadar mantıklıysa neden hâlâ yok","vayBe":"insanı neden şaşırtır"}]`;
-  const kullanici = `${alanCumlesi(alan)} Birbirinden tamamen farklı 6 aday üret. Cesur ama gerçekçi ol; hayal kurma.`;
+  const acilar = karistirSec(ACILAR, 3);
+  const tohum = Math.floor(Math.random() * 1e6);
+  const yasak = (Array.isArray(kacinilacak) && kacinilacak.length)
+    ? ` ŞU fikirler DAHA ÖNCE üretildi; bunları ve çok benzerlerini KESİNLİKLE TEKRARLAMA: ${kacinilacak.slice(-45).join("; ")}.`
+    : "";
+  const kullanici = `${alanCumlesi(alan)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 

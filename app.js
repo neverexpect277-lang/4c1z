@@ -331,10 +331,12 @@ async function uret(){
   // 1. AŞAMA: aday fikir üretimi
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
-    const p = ureticiPrompt(alan);
+    const p = ureticiPrompt(alan, uretilmisIsimler);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
+  // tekrarı önlemek için aday isimlerini de hatırla
+  if(adaylar) adaylar.forEach(a => { if(a.isim) uretilmisIsimler.push(a.isim); });
 
   // 2. AŞAMA: aday fikirleri süz ve güçlendir
   let fikirler = null;
