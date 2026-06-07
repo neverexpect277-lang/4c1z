@@ -132,10 +132,10 @@ async function fikirGorseli(f){
   g.addColorStop(0, "#faf6ee"); g.addColorStop(1, "#f1ead9");
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   x.fillStyle = "#b9852a"; x.fillRect(P, 150, 56, 4);
-  x.fillStyle = "#b9852a"; x.font = "700 36px 'Playfair Display',Georgia,serif"; x.fillText("4c1z", P, 122);
+  x.fillStyle = "#b9852a"; x.font = "800 36px Inter,sans-serif"; x.fillText("4c1z", P, 122);
   let y = 250;
-  x.fillStyle = "#2e2b24"; x.font = "700 68px 'Playfair Display',Georgia,serif";
-  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 82; });
+  x.fillStyle = "#2e2b24"; x.font = "800 64px Inter,sans-serif";
+  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 80; });
   y += 16;
   x.fillStyle = "#5d564a"; x.font = "400 40px Inter,sans-serif";
   sar(x, f.ne, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 54; });
