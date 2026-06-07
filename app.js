@@ -77,8 +77,8 @@ function fikirKart(f){
     favToggle(f); ev.currentTarget.classList.toggle("on");
   });
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
-  el.querySelector('[data-act="wa"]').addEventListener("click", () => whatsapp(f));
-  el.querySelector('[data-act="ig"]').addEventListener("click", () => instagram(f));
+  el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
+  el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
   return el;
 }
 function cizFikirler(list){
@@ -110,9 +110,6 @@ function paylasMetni(f){
   const dia = Array.isArray(f.diyalog) && f.diyalog.length
     ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
   return `💡 ${f.isim}\n${f.ne}${dia}\n\n🔧 Neyden: ${f.neyden}\n🎯 Hangi derde: ${f.derde}\n✨ Vay be: ${f.vayBe}\n\n— 4c1z`;
-}
-function whatsapp(f){
-  window.open("https://wa.me/?text=" + encodeURIComponent(paylasMetni(f)), "_blank");
 }
 // Metni canvas genişliğine göre satırlara böl
 function sar(ctx, metin, maxW){
@@ -155,18 +152,17 @@ async function fikirGorseli(f){
   const blob = await new Promise(r => c.toBlob(r, "image/png"));
   return new File([blob], "4c1z-fikir.png", { type: "image/png" });
 }
-async function instagram(f){
+// Görseli doğrudan paylaş menüsüne ver (WhatsApp/Instagram orada seçilir)
+async function gorselPaylas(f){
   let file;
-  try{ file = await fikirGorseli(f); }
-  catch(e){ window.open("https://www.instagram.com/", "_blank"); return; }
+  try{ file = await fikirGorseli(f); }catch(e){ return; }
   if(navigator.canShare && navigator.canShare({ files: [file] })){
-    try{ await navigator.share({ files: [file], title: f.isim }); return; }
-    catch(e){ if(e.name === "AbortError") return; }
+    try{ await navigator.share({ files: [file], title: f.isim, text: paylasMetni(f) }); }
+    catch(e){}
+    return;
   }
-  const url = URL.createObjectURL(file);
-  const a = document.createElement("a"); a.href = url; a.download = "4c1z-fikir.png"; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-  flash("Görsel indirildi — Instagram'a yükle");
+  // paylaşım API'si yoksa (masaüstü): metinle WhatsApp web
+  window.open("https://wa.me/?text=" + encodeURIComponent(paylasMetni(f)), "_blank");
 }
 function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
 
