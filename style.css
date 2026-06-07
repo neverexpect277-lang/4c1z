@@ -137,6 +137,11 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 
 .field{margin-top:11px;font-size:14.5px;color:var(--soft);}
 .field b{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);margin-bottom:2px;}
+/* Mühendislik katmanı (uzman heyeti) */
+.muhendislik{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.muhbaslik{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accentDeep);
+  font-weight:700;margin-bottom:6px;}
+
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}

@@ -312,33 +312,66 @@ console.log("\nBİRLEŞİK — hepsi bir arada");
      && w2.temalarYukle().length === 1);
 })();
 
-// ---- uret() boru hattı: 3 aşama (üretici → eleştirmen → üst akıl) ----
-console.log("\nuret() — 3 aşamalı boru hattı (fetch stub)");
-(async function(){
-  const w = yeniDom();
-  const cagrilar = [];
-  let n = 0;
-  w.fetch = async (url, opts) => {
-    n++;
-    cagrilar.push(JSON.parse(opts.body).text);   // her aşamanın promptunu yakala
+// ---- uret() boru hattı: 4 aşama (üretici → eleştirmen → üst akıl → uzman heyeti + web) ----
+console.log("\nuret() — 4 aşamalı boru hattı (fetch stub)");
+function stubUret(w, opts = {}){
+  const cag = [];          // /api/gen prompt metinleri
+  const state = { n: 0, aramaCagrildi: false };
+  w.fetch = async (url, o) => {
+    if(url.startsWith("/api/ara")){
+      state.aramaCagrildi = true;
+      if(opts.aramaHata) throw new Error("ağ yok");
+      return { ok: true, status: 200, json: async () => ({ sonuclar: opts.sonuclar || [{ baslik: "Mevcut Ürün X", ozet: "benzer bir şey" }] }) };
+    }
+    state.n++;
+    cag.push(JSON.parse(o.body).text);
     let text;
-    if(n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));        // üretici: 6 aday
-    else if(n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" }))); // eleştirmen: 3 aday
-    else text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]); // üst akıl: 1 final
+    if(state.n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));
+    else if(state.n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" })));
+    else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
+    else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", prototip: "karton maket yap" }]);
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
+  return { cag, state };
+}
+(async function(){
+  const w = yeniDom();
+  const { cag, state } = stubUret(w);
   w.document.querySelector("#alan").value = "banyo";
   await w.uret();
-  ok("3 aşama da çağrıldı (üretici→eleştirmen→üst akıl)", n === 3);
-  ok("2. aşama eleştirmen promptu kullanıldı", /KIRMIZI TAKIM/.test(cagrilar[1]));
-  ok("3. aşama üst akıl promptu kullanıldı", /ÜST AKLI/.test(cagrilar[2]));
-  ok("üst akla SÜZÜLMÜŞ adaylar gitti (ham değil)", /Süzülmüş0/.test(cagrilar[2]) && !/Aday0/.test(cagrilar[2]));
+  ok("4 aşama da çağrıldı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
+  ok("web araması çağrıldı", state.aramaCagrildi === true);
+  ok("2. aşama eleştirmen promptu", /KIRMIZI TAKIM/.test(cag[1]));
+  ok("3. aşama üst akıl promptu", /ÜST AKLI/.test(cag[2]));
+  ok("4. aşama uzman heyeti promptu", /UZMAN HEYETİSİN/.test(cag[3]));
+  ok("üst akla SÜZÜLMÜŞ adaylar gitti", /Süzülmüş0/.test(cag[2]) && !/Aday0/.test(cag[2]));
+  ok("uzman promptuna gerçek arama sonucu enjekte edildi", /Mevcut Ürün X/.test(cag[3]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
   ok("Çavuş & Zeyneb diyaloğu korundu", w.document.querySelectorAll("#out .card .dia .msg").length === 2);
+  ok("mühendislik bloğu render edildi", !!card.querySelector(".muhendislik"));
+  const muhMetin = card.querySelector(".muhendislik").textContent;
+  ok("Nasıl yapılır alanı var", /X\+Y parçalarıyla/.test(muhMetin));
+  ok("Tahmini maliyet alanı var", /100-200 TL/.test(muhMetin));
+  ok("Benzer ürünler 'web' etiketli", /web/.test(muhMetin) && /Mevcut Ürün X/.test(muhMetin));
+  ok("İlk prototip adımı var", /karton maket/.test(muhMetin));
   card.querySelector('[data-act="fav"]').click();
-  ok("üretilen fikir 'banyo' alanıyla kaydedildi", w.favleriYukle()[0].alan === "banyo");
-})().then(() => {
+  const k = w.favleriYukle()[0];
+  ok("mühendislik alanları kalıcı (kaydedildi)", k.nasil && k.maliyet && k.benzer && k.prototip && k.alan === "banyo");
+})().then(async () => {
+  // arama başarısız olsa bile uzman heyeti çalışmalı (graceful fallback)
+  console.log("\nuret() — web arama başarısız (graceful)");
+  const w = yeniDom();
+  const { state } = stubUret(w, { aramaHata: true });
+  w.document.querySelector("#alan").value = "ev";
+  await w.uret();
+  ok("arama hata verse de 4 aşama tamam", state.n === 4);
+  ok("arama denendi ama hata yutuldu", state.aramaCagrildi === true);
+  const card = w.document.querySelector("#out .card");
+  ok("fikir yine üretildi", !!card && card.querySelector("h2").textContent.includes("Final Fikir"));
+  ok("mühendislik yine geldi (websiz)", !!card.querySelector(".muhendislik"));
+  ok("websiz olunca 'web' etiketi YOK", !/· web/.test(card.querySelector(".muhendislik").textContent));
+}).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
 });
