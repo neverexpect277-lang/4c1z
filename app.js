@@ -122,33 +122,102 @@ function sar(ctx, metin, maxW){
   if(s) satir.push(s);
   return satir;
 }
-// Fikri paylaşılabilir bir görsele (PNG) çevir
+function rrect(x, a, b, w, h, r){
+  x.beginPath();
+  x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r);
+  x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath();
+}
+// Fikri, uygulamadaki kartın aynısı olacak şekilde görsele (PNG) çevir
 async function fikirGorseli(f){
   try{ await document.fonts.ready; }catch(e){}
-  const W = 1080, H = 1350, P = 88;
+  const W = 1080, P = 70, CW = W - 2 * P;
+
+  // Tek fonksiyon: ciz=false ölçer (yükseklik), ciz=true çizer. y matematiği iki geçişte aynı.
+  function yerlesim(x, ciz){
+    let y = 64;
+    const yaz = (lines, font, color, lh, px = P) => {
+      x.font = font;
+      for(const l of lines){ if(ciz){ x.fillStyle = color; x.fillText(l, px, y + lh * 0.74); } y += lh; }
+    };
+    if(ciz){ x.fillStyle = "#b9852a"; x.fillRect(P, y, 54, 4); }
+    y += 22;
+    x.font = "800 32px Inter,sans-serif";
+    if(ciz){ x.fillStyle = "#b9852a"; x.fillText("4c1z", P, y + 26); }
+    y += 66;
+    yaz(sar(x, f.isim, CW), "800 58px Inter,sans-serif", "#2e2b24", 70);
+    y += 8;
+    yaz(sar(x, f.ne, CW), "400 35px Inter,sans-serif", "#5d564a", 48);
+
+    if(Array.isArray(f.diyalog)){
+      y += 14;
+      const maxW = CW * 0.84, ip = 26, tpad = 24, nameH = 36, gap = 6, tl = 42, bpad = 26;
+      for(const m of f.diyalog){
+        const z = String(m.kim || "").toLocaleLowerCase("tr").startsWith("zeyneb");
+        x.font = "400 31px Inter,sans-serif";
+        const lns = sar(x, m.soz || "", maxW - 2 * ip);
+        let tw = 0; lns.forEach(l => tw = Math.max(tw, x.measureText(l).width));
+        const ad = (z ? "🧕 " : "🧔🏽 ") + (m.kim || "");
+        x.font = "700 27px Inter,sans-serif"; tw = Math.max(tw, x.measureText(ad).width);
+        const bw = Math.min(maxW, tw + 2 * ip);
+        const bh = tpad + nameH + gap + lns.length * tl + bpad;
+        const bx = z ? (W - P - bw) : P;
+        if(ciz){
+          x.fillStyle = z ? "#f6efdc" : "#eef2fb";
+          x.strokeStyle = z ? "rgba(185,133,42,.4)" : "rgba(91,123,196,.4)";
+          x.lineWidth = 2; rrect(x, bx, y, bw, bh, 22); x.fill(); x.stroke();
+          x.font = "700 27px Inter,sans-serif"; x.fillStyle = z ? "#9c6f1f" : "#5b7bc4";
+          x.fillText(ad, bx + ip, y + tpad + 27);
+          x.font = "400 31px Inter,sans-serif"; x.fillStyle = "#2e2b24";
+          let ty = y + tpad + nameH + gap + 31;
+          for(const l of lns){ x.fillText(l, bx + ip, ty); ty += tl; }
+        }
+        y += bh + 14;
+      }
+    }
+
+    const blok = (b, m) => {
+      if(!m) return;
+      y += 18;
+      x.font = "700 23px Inter,sans-serif";
+      if(ciz){ x.fillStyle = "#9c6f1f"; x.fillText(b.toUpperCase(), P, y + 18); }
+      y += 38;
+      yaz(sar(x, m, CW), "400 33px Inter,sans-serif", "#3a352c", 44);
+    };
+    blok("Neyden", f.neyden);
+    blok("Hangi derde", f.derde);
+    blok("Neden hâlâ yok", f.nedenYok);
+
+    if(f.vayBe){
+      y += 22;
+      x.font = "400 33px Inter,sans-serif";
+      const vl = sar(x, f.vayBe, CW - 56);
+      const vh = 24 + 30 + 8 + vl.length * 44 + 26;
+      if(ciz){
+        x.fillStyle = "#f6efdc"; x.strokeStyle = "rgba(185,133,42,.4)"; x.lineWidth = 2;
+        rrect(x, P, y, CW, vh, 18); x.fill(); x.stroke();
+        x.font = "700 23px Inter,sans-serif"; x.fillStyle = "#9c6f1f"; x.fillText("VAY BE", P + 28, y + 24 + 18);
+        x.font = "400 33px Inter,sans-serif"; x.fillStyle = "#2e2b24";
+        let ty = y + 24 + 30 + 8 + 32;
+        for(const l of vl){ x.fillText(l, P + 28, ty); ty += 44; }
+      }
+      y += vh;
+    }
+
+    y += 50;
+    x.font = "400 26px Inter,sans-serif";
+    if(ciz){ x.fillStyle = "#a89e86"; x.fillText("4c1z · fikir üreteci", P, y); }
+    y += 36;
+    return y;
+  }
+
+  const mc = document.createElement("canvas"); mc.width = W; mc.height = 10;
+  const H = Math.ceil(yerlesim(mc.getContext("2d"), false));
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
   const g = x.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, "#faf6ee"); g.addColorStop(1, "#f1ead9");
   x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.fillStyle = "#b9852a"; x.fillRect(P, 150, 56, 4);
-  x.fillStyle = "#b9852a"; x.font = "800 36px Inter,sans-serif"; x.fillText("4c1z", P, 122);
-  let y = 250;
-  x.fillStyle = "#2e2b24"; x.font = "800 64px Inter,sans-serif";
-  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 80; });
-  y += 16;
-  x.fillStyle = "#5d564a"; x.font = "400 40px Inter,sans-serif";
-  sar(x, f.ne, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 54; });
-  const blok = (b, m) => {
-    if(!m || y > H - 220) return;
-    y += 40;
-    x.fillStyle = "#9c6f1f"; x.font = "600 24px Inter,sans-serif"; x.fillText(b.toUpperCase(), P, y); y += 44;
-    x.fillStyle = "#3a352c"; x.font = "400 34px Inter,sans-serif";
-    sar(x, m, W - 2 * P).forEach(l => { if(y < H - 150){ x.fillText(l, P, y); y += 46; } });
-  };
-  blok("Neyden", f.neyden);
-  blok("Vay be", f.vayBe);
-  x.fillStyle = "#a89e86"; x.font = "400 28px Inter,sans-serif"; x.fillText("4c1z · fikir üreteci", P, H - 64);
+  yerlesim(x, true);
   const blob = await new Promise(r => c.toBlob(r, "image/png"));
   return new File([blob], "4c1z-fikir.png", { type: "image/png" });
 }
