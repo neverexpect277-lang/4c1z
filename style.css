@@ -46,6 +46,12 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .chip:hover{border-color:var(--accentSoft);color:var(--txt);}
 .chip:active{transform:scale(.96);}
 .chip.sinirsiz{border-color:var(--accent);color:var(--accentDeep);background:var(--cream);font-weight:600;}
+.tt.kt{margin-top:16px;}
+.kaynak{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:12px;padding:12px 14px;font-size:15px;font-family:var(--font);outline:none;resize:vertical;
+  min-height:64px;line-height:1.5;transition:border-color .2s, box-shadow .2s;}
+.kaynak::placeholder{color:#b3a98f;}
+.kaynak:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
 
 .gen{width:100%;margin-top:16px;border:0;border-radius:13px;padding:16px;
   font-family:var(--font);font-size:17px;font-weight:700;letter-spacing:.01em;color:#3a2f17;cursor:pointer;

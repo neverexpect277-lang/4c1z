@@ -260,7 +260,8 @@ function bildir(){
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 // ---- Model zinciri (prompt.js: ureticiPrompt, ustAkilPrompt, jsonAyikla) ----
-const POLL_MODELLER = ["deepseek", "openai", "mistral", "llama"]; // pollinations ücretsiz modelleri (Gemini'den sonra önce DeepSeek)
+// Pollinations ücretsiz modelleri (Gemini'den sonra yedek zincir; geçersiz slug otomatik atlanır)
+const POLL_MODELLER = ["deepseek", "gemini", "openai", "mistral", "qwen-coder", "phi", "llama"];
 
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
@@ -315,6 +316,7 @@ async function uret(){
   calisiyor = true;
   $("#gen").disabled = true;
   const alan = alanInput.value.trim();
+  const kaynak = (($("#kaynak") && $("#kaynak").value) || "").trim();
   const mesajlar = [
     "Çavuş ve Zeyneb istişare ediyor…",
     "Çavuş ürünleri tek tek tarıyor…",
@@ -330,7 +332,7 @@ async function uret(){
   // 1. AŞAMA: aday fikir üretimi
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
-    const p = ureticiPrompt(alan, uretilmisIsimler);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
@@ -341,7 +343,7 @@ async function uret(){
   let fikirler = null;
   if(adaylar){
     for(let d = 1; d <= 2 && !fikirler; d++){
-      const p = ustAkilPrompt(alan, adaylar);
+      const p = ustAkilPrompt(alan, adaylar, kaynak);
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }

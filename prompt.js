@@ -89,8 +89,15 @@ const ACILAR = [
   "yağmur/soğuk/sıcak gibi hava derdine çare"
 ];
 
+// Kaynak metin (NotebookLM gibi) varsa fikirleri ona dayandır
+function kaynakCumlesi(kaynak){
+  return kaynak
+    ? ` KAYNAK METİN (kullanıcının verdiği belge/not): """${kaynak}""" Fikirleri MUTLAKA bu kaynağa DAYANDIR; içindeki gerçek ihtiyaçları, kısıtları ve bilgileri kullan. Kaynakta olmayan şey UYDURMA.`
+    : "";
+}
+
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak){
+function ureticiPrompt(alan, kacinilacak, kaynak){
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
 ${ORTAK_KURAL}
@@ -101,12 +108,12 @@ ${ORTAK_KURAL}
   const yasak = (Array.isArray(kacinilacak) && kacinilacak.length)
     ? ` ŞU fikirler DAHA ÖNCE üretildi; bunları ve çok benzerlerini KESİNLİKLE TEKRARLAMA: ${kacinilacak.slice(-45).join("; ")}.`
     : "";
-  const kullanici = `${alanCumlesi(alan)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak} [çeşitlilik tohumu: ${tohum}]`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 
 // 2. AŞAMA — ÜST AKIL: ele, harmanla, güçlendir, diyalog yaz
-function ustAkilPrompt(alan, adaylar){
+function ustAkilPrompt(alan, adaylar, kaynak){
   const cavSoz = karistirSec(CAVUS_SOZ, 8);
   const zeySoz = karistirSec(ZEYNEB_SOZ, 8);
   const sistem =
@@ -124,7 +131,7 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 - 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (TEK elemanlı, yani 1 fikir), markdown yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;
-  const kullanici = `${alanCumlesi(alan)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; SADECE EN İYİ 1'ini seç ve diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; SADECE EN İYİ 1'ini seç ve diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
   return { sistem, kullanici };
 }
 
