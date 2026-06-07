@@ -114,14 +114,59 @@ function paylasMetni(f){
 function whatsapp(f){
   window.open("https://wa.me/?text=" + encodeURIComponent(paylasMetni(f)), "_blank");
 }
+// Metni canvas genişliğine göre satırlara böl
+function sar(ctx, metin, maxW){
+  const kelime = String(metin || "").split(/\s+/), satir = [];
+  let s = "";
+  for(const w of kelime){
+    const t = s ? s + " " + w : w;
+    if(ctx.measureText(t).width > maxW && s){ satir.push(s); s = w; } else s = t;
+  }
+  if(s) satir.push(s);
+  return satir;
+}
+// Fikri paylaşılabilir bir görsele (PNG) çevir
+async function fikirGorseli(f){
+  try{ await document.fonts.ready; }catch(e){}
+  const W = 1080, H = 1350, P = 88;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#13151c"); g.addColorStop(1, "#0a0b0f");
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = "#c4ad7c"; x.fillRect(P, 150, 56, 4);
+  x.fillStyle = "#c4ad7c"; x.font = "600 34px 'Space Grotesk',sans-serif"; x.fillText("4c1z", P, 122);
+  let y = 250;
+  x.fillStyle = "#f4f2ec"; x.font = "600 68px 'Space Grotesk',sans-serif";
+  sar(x, f.isim, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 80; });
+  y += 16;
+  x.fillStyle = "#c2c5cf"; x.font = "400 40px Inter,sans-serif";
+  sar(x, f.ne, W - 2 * P).forEach(l => { x.fillText(l, P, y); y += 54; });
+  const blok = (b, m) => {
+    if(!m || y > H - 220) return;
+    y += 40;
+    x.fillStyle = "#868a97"; x.font = "600 24px Inter,sans-serif"; x.fillText(b.toUpperCase(), P, y); y += 44;
+    x.fillStyle = "#e7e9ef"; x.font = "400 34px Inter,sans-serif";
+    sar(x, m, W - 2 * P).forEach(l => { if(y < H - 150){ x.fillText(l, P, y); y += 46; } });
+  };
+  blok("Neyden", f.neyden);
+  blok("Vay be", f.vayBe);
+  x.fillStyle = "#6a6e7c"; x.font = "400 28px Inter,sans-serif"; x.fillText("4c1z · fikir üreteci", P, H - 64);
+  const blob = await new Promise(r => c.toBlob(r, "image/png"));
+  return new File([blob], "4c1z-fikir.png", { type: "image/png" });
+}
 async function instagram(f){
-  const t = paylasMetni(f);
-  if(navigator.share){
-    try{ await navigator.share({ title: f.isim, text: t }); return; }
+  let file;
+  try{ file = await fikirGorseli(f); }
+  catch(e){ window.open("https://www.instagram.com/", "_blank"); return; }
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{ await navigator.share({ files: [file], title: f.isim }); return; }
     catch(e){ if(e.name === "AbortError") return; }
   }
-  try{ await navigator.clipboard.writeText(t); flash("Metin kopyalandı — Instagram'a yapıştır"); }catch(e){}
-  window.open("https://www.instagram.com/", "_blank");
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a"); a.href = url; a.download = "4c1z-fikir.png"; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  flash("Görsel indirildi — Instagram'a yükle");
 }
 function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
 
