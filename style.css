@@ -113,6 +113,14 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}
+/* Kayıtlarda arama (Kayıtlılar) */
+.kayitara{width:100%;margin-top:14px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:12px;padding:12px 14px;font-size:15px;font-family:var(--font);outline:none;
+  transition:border-color .2s, box-shadow .2s;}
+.kayitara::placeholder{color:#b3a98f;}
+.kayitara:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
+.bossonuc{text-align:center;color:var(--dim);font-size:14px;margin-top:28px;}
+
 /* Alan filtre çubuğu (Kayıtlılar) */
 .filtreler{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
 .filtre{background:var(--card);border:1px solid var(--line2);color:var(--soft);

@@ -5,6 +5,7 @@ const alanInput = $("#alan");
 
 let mod = "yeni";              // "yeni" | "kayit"
 let kayitFiltre = "";          // Kayıtlılar alan filtresi ("" = tümü)
+let kayitArama = "";           // Kayıtlılar metin araması
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
@@ -152,6 +153,17 @@ function cizKayitlilar(){
   const hepsi = favleriYukle();
   out.innerHTML = "";
   if(!hepsi.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
+  // Arama kutusu (yeniden çizimde focus + imleç geri yüklenir)
+  const ara = document.createElement("input");
+  ara.className = "kayitara"; ara.type = "text"; ara.placeholder = "Kayıtlarda ara…"; ara.value = kayitArama;
+  ara.addEventListener("input", () => {
+    kayitArama = ara.value;
+    const c = ara.selectionStart;
+    cizKayitlilar();
+    const y = out.querySelector(".kayitara");
+    if(y){ y.focus(); try{ y.setSelectionRange(c, c); }catch(e){} }
+  });
+  out.appendChild(ara);
   // Alan filtresi çubuğu (1'den fazla alan varsa)
   const alanlar = [...new Set(hepsi.map(f => f.alan || "Sınırsız"))];
   if(kayitFiltre && !alanlar.includes(kayitFiltre)) kayitFiltre = "";  // silinmiş alan seçiliyse sıfırla
@@ -163,9 +175,17 @@ function cizKayitlilar(){
     bar.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => { kayitFiltre = b.dataset.f; cizKayitlilar(); }));
     out.appendChild(bar);
   }
-  // Filtrele + puana göre sırala (yüksek üstte); eşitlikte mevcut sıra (yeni→eski) korunur
-  (kayitFiltre ? hepsi.filter(f => (f.alan || "Sınırsız") === kayitFiltre) : hepsi)
-    .slice().sort((x, y) => (y.puan || 0) - (x.puan || 0)).forEach(f => out.appendChild(fikirKart(f, true)));
+  // Alan filtresi + metin araması + puana göre sırala (eşitlikte yeni→eski korunur)
+  const q = kayitArama.trim().toLocaleLowerCase("tr");
+  let list = kayitFiltre ? hepsi.filter(f => (f.alan || "Sınırsız") === kayitFiltre) : hepsi;
+  if(q) list = list.filter(f => [f.isim, f.ne, f.neyden, f.derde, f.nedenYok, f.vayBe, f.not, f.alan]
+    .filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q));
+  list = list.slice().sort((x, y) => (y.puan || 0) - (x.puan || 0));
+  if(!list.length){
+    const d = document.createElement("div"); d.className = "bossonuc"; d.textContent = "Eşleşen fikir yok.";
+    out.appendChild(d); return;
+  }
+  list.forEach(f => out.appendChild(fikirKart(f, true)));
 }
 
 function kopyala(f){
