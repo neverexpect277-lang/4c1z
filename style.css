@@ -10,6 +10,7 @@
   --shadow:0 10px 28px rgba(120,95,40,.10);
   --radius:18px;
   --font:"Literata",Georgia,"Times New Roman",serif;
+  --font-d:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 }
 html,body{margin:0;padding:0;min-height:100vh;font-size:16px;line-height:1.55;color:var(--txt);
   font-family:var(--font);
@@ -22,7 +23,7 @@ html,body{margin:0;padding:0;min-height:100vh;font-size:16px;line-height:1.55;co
 
 /* Header */
 header{text-align:center;padding:14px 0 4px;}
-header h1{margin:0;font-family:var(--font);font-size:46px;font-weight:700;letter-spacing:-.02em;
+header h1{margin:0;font-family:var(--font-d);font-size:46px;font-weight:800;letter-spacing:-.035em;
   line-height:1;color:var(--accent);}
 header h1::after{content:"";display:block;width:46px;height:2px;margin:16px auto 0;border-radius:2px;
   background:var(--accent);opacity:.65;}
@@ -146,10 +147,10 @@ a{color:var(--accentDeep);}
   overflow:hidden;box-shadow:0 30px 80px rgba(60,45,15,.28);animation:selampop .4s cubic-bezier(.2,.8,.2,1) both;}
 .besmele{font-family:"Amiri","Amiri Quran",serif;font-size:clamp(16px,5.2vw,22px);color:#c79a3a;
   line-height:1.1;margin-bottom:22px;white-space:nowrap;}
-.selamMetin{font-family:var(--font);font-style:italic;font-weight:500;
-  color:#3a352c;font-size:21px;line-height:1.5;margin:0 0 16px;}
-.selamImza{display:block;font-family:var(--font);font-style:italic;
-  color:#a87f2e;font-size:15px;margin-bottom:26px;}
+.selamMetin{font-family:var(--font-d);font-weight:500;letter-spacing:-.01em;
+  color:#3a352c;font-size:20px;line-height:1.55;margin:0 0 16px;}
+.selamImza{display:block;font-family:var(--font-d);font-weight:600;letter-spacing:.02em;
+  color:#a87f2e;font-size:14px;margin-bottom:26px;}
 .selamBtn{width:100%;border:1.5px solid #cfae5e;background:rgba(255,255,255,.55);color:#a87714;
   border-radius:15px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;}
 .selamBtn:hover{background:var(--cream);}
