@@ -65,6 +65,8 @@ function kartHTML(f){
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
+      <button class="mini wa" data-act="wa">WhatsApp</button>
+      <button class="mini ig" data-act="ig">Instagram</button>
     </div>`;
 }
 function fikirKart(f){
@@ -75,6 +77,8 @@ function fikirKart(f){
     favToggle(f); ev.currentTarget.classList.toggle("on");
   });
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
+  el.querySelector('[data-act="wa"]').addEventListener("click", () => whatsapp(f));
+  el.querySelector('[data-act="ig"]').addEventListener("click", () => instagram(f));
   return el;
 }
 function cizFikirler(list){
@@ -101,6 +105,23 @@ function kopyala(f){
     () => flash("Kopyalandı"),
     () => flash("Kopyalanamadı")
   );
+}
+function paylasMetni(f){
+  const dia = Array.isArray(f.diyalog) && f.diyalog.length
+    ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
+  return `💡 ${f.isim}\n${f.ne}${dia}\n\n🔧 Neyden: ${f.neyden}\n🎯 Hangi derde: ${f.derde}\n✨ Vay be: ${f.vayBe}\n\n— 4c1z`;
+}
+function whatsapp(f){
+  window.open("https://wa.me/?text=" + encodeURIComponent(paylasMetni(f)), "_blank");
+}
+async function instagram(f){
+  const t = paylasMetni(f);
+  if(navigator.share){
+    try{ await navigator.share({ title: f.isim, text: t }); return; }
+    catch(e){ if(e.name === "AbortError") return; }
+  }
+  try{ await navigator.clipboard.writeText(t); flash("Metin kopyalandı — Instagram'a yapıştır"); }catch(e){}
+  window.open("https://www.instagram.com/", "_blank");
 }
 function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
 
@@ -184,29 +205,38 @@ async function uret(){
   $("#gen").disabled = true;
   out.innerHTML = "";
   const alan = alanInput.value.trim();
-  const durum = msg => { statusEl.innerHTML = `<span class="spin"></span>${msg}`; };
+  const mesajlar = [
+    "Çavuş ve Zeyneb istişare ediyor…",
+    "Çavuş ürünleri tek tek tarıyor…",
+    "Çavuş sıradan fikirleri eliyor…",
+    "Zeyneb: \"Efendi, hayretim arttı!\"",
+    "Zeyneb beğenmiyor, Çavuş ikna ediyor…",
+    "En iyileri birleştirip icat ediyor…"
+  ];
+  let mi = 0;
+  statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
+  const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2000);
 
   // 1. AŞAMA: aday fikir üretimi
-  durum("Çavuş aday fikirleri topluyor…");
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
     const p = ureticiPrompt(alan);
     adaylar = await zincir(p.sistem, p.kullanici);
-    if(!adaylar && d < 2){ durum("Servis yoğun, tekrar deniyor…"); await bekle(3000); }
+    if(!adaylar && d < 2) await bekle(3000);
   }
 
-  // 2. AŞAMA: üst akıl süzer, harmanlar, güçlendirir
+  // 2. AŞAMA: aday fikirleri süz ve güçlendir
   let fikirler = null;
   if(adaylar){
-    durum("Üst akıl en iyileri süzüyor ve harmanlıyor…");
     for(let d = 1; d <= 2 && !fikirler; d++){
       const p = ustAkilPrompt(alan, adaylar);
       fikirler = await zincir(p.sistem, p.kullanici);
-      if(!fikirler && d < 2){ durum("Üst akıl yeniden deniyor…"); await bekle(3000); }
+      if(!fikirler && d < 2) await bekle(3000);
     }
-    if(!fikirler) fikirler = adaylar.slice(0, 3); // üst akıl olmazsa adayları göster
+    if(!fikirler) fikirler = adaylar.slice(0, 3); // 2. aşama olmazsa adayları göster
   }
 
+  clearInterval(dongu);
   calisiyor = false;
   $("#gen").disabled = false;
 
