@@ -55,7 +55,7 @@ function kartHTML(f){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
     <h2>${escapeHtml(f.isim || "İsimsiz")}
-      <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav">☆</button>
+      <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
     <p class="ne">${escapeHtml(f.ne || "")}</p>
     ${diyalogHTML(f.diyalog)}
