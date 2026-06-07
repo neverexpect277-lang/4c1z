@@ -380,6 +380,48 @@ function stubUret(w, opts = {}){
   ok("fikir yine üretildi", !!card && card.querySelector("h2").textContent.includes("Final Fikir"));
   ok("mühendislik yine geldi (websiz)", !!card.querySelector(".muhendislik"));
   ok("websiz olunca 'web' etiketi YOK", !/· web/.test(card.querySelector(".muhendislik").textContent));
+}).then(async () => {
+  // api/ara.js çok kaynaklı arama mantığı (SearXNG -> DDG -> Wikipedia), global.fetch stub
+  console.log("\napi/ara.js — çok kaynaklı arama (fetch stub)");
+  const handler = require("../api/ara.js");
+  const cagir = (q, fetchStub) => new Promise(resolve => {
+    global.fetch = fetchStub;
+    handler({ query: { q } }, { status(){ return this; }, json(o){ resolve(o); } });
+  });
+
+  // SearXNG sonuç verir → DDG'ye düşmez; genel sorguda Wikipedia eklenir
+  const s1 = await cagir("uv dolap", async (url) => {
+    if(/format=json/.test(url) && /\/search\?q=/.test(url))
+      return { ok: true, json: async () => ({ results: [{ title: "SearX Hit", content: "içerik" }] }) };
+    if(/wikipedia\.org/.test(url))
+      return { ok: true, json: async () => ["uv dolap", ["UV Cabinet"], ["Bir dolap türü"], ["http://x"]] };
+    return { ok: true, text: async () => "" };
+  });
+  ok("SearXNG sonucu parse edildi", s1.sonuclar.some(s => /SearX Hit/.test(s.baslik)));
+  ok("kaynak searxng", s1.kaynak === "searxng");
+  ok("genel sorguda Wikipedia eklendi", s1.sonuclar.some(s => /Wikipedia: UV Cabinet/.test(s.baslik)));
+
+  // SearXNG boş → DuckDuckGo'ya düşer
+  const s2 = await cagir("xyz urun", async (url) => {
+    if(/format=json/.test(url)) return { ok: true, json: async () => ({ results: [] }) };
+    if(/duckduckgo\.com/.test(url)) return { ok: true, text: async () =>
+      '<a class="result__a" href="#">DDG Hit</a><a class="result__snippet">özet</a>' };
+    if(/wikipedia\.org/.test(url)) return { ok: true, json: async () => ["xyz", [], [], []] };
+    return { ok: true, text: async () => "" };
+  });
+  ok("SearXNG boşsa DuckDuckGo devreye girer", s2.sonuclar.some(s => /DDG Hit/.test(s.baslik)) && s2.kaynak === "ddg");
+
+  // patent sorgusunda Wikipedia EKLENMEZ
+  const s3 = await cagir("site:patents.google.com uv dolap", async (url) => {
+    if(/format=json/.test(url)) return { ok: true, json: async () => ({ results: [{ title: "Patent X", content: "p" }] }) };
+    if(/wikipedia\.org/.test(url)) return { ok: true, json: async () => ["q", ["OLMAMALI"], ["x"], ["y"]] };
+    return { ok: true, text: async () => "" };
+  });
+  ok("patent sorgusunda Wikipedia eklenmedi", !s3.sonuclar.some(s => /Wikipedia:/.test(s.baslik)));
+
+  // hepsi patlasa boş döner (kırılmaz)
+  const s4 = await cagir("hata testi", async () => { throw new Error("ağ yok"); });
+  ok("tüm kaynaklar patlasa boş sonuç (kırılmaz)", Array.isArray(s4.sonuclar) && s4.sonuclar.length === 0);
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
