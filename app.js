@@ -467,15 +467,26 @@ async function uret(){
   // tekrarı önlemek için aday isimlerini de hatırla
   if(adaylar) adaylar.forEach(a => { if(a.isim) uretilmisIsimler.push(a.isim); });
 
-  // 2. AŞAMA: aday fikirleri süz ve güçlendir
-  let fikirler = null;
+  // 2. AŞAMA: KIRMIZI TAKIM eleştirmen — zayıf/klişe/yapılamaz adayları ele, kalanı keskinleştir
+  let suzulmus = null;
   if(adaylar){
+    for(let d = 1; d <= 2 && !suzulmus; d++){
+      const p = elestirmenPrompt(alan, adaylar, kaynak);
+      suzulmus = await zincir(p.sistem, p.kullanici);
+      if(!suzulmus && d < 2) await bekle(3000);
+    }
+    if(!suzulmus) suzulmus = adaylar; // eleştirmen olmazsa ham adaylarla devam
+  }
+
+  // 3. AŞAMA: ÜST AKIL — süzülmüş adaylardan en iyi 1'ini diyaloğuyla sun
+  let fikirler = null;
+  if(suzulmus){
     for(let d = 1; d <= 2 && !fikirler; d++){
-      const p = ustAkilPrompt(alan, adaylar, kaynak);
+      const p = ustAkilPrompt(alan, suzulmus, kaynak);
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }
-    if(!fikirler) fikirler = adaylar.slice(0, 1); // 2. aşama olmazsa en iyi adayı göster
+    if(!fikirler) fikirler = suzulmus.slice(0, 1); // üst akıl olmazsa en iyi adayı göster
   }
 
   clearInterval(dongu);

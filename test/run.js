@@ -312,22 +312,30 @@ console.log("\nBİRLEŞİK — hepsi bir arada");
      && w2.temalarYukle().length === 1);
 })();
 
-// ---- uret() boru hattı (fetch stub) ----
-console.log("\nuret() — tam boru hattı (fetch stub)");
+// ---- uret() boru hattı: 3 aşama (üretici → eleştirmen → üst akıl) ----
+console.log("\nuret() — 3 aşamalı boru hattı (fetch stub)");
 (async function(){
   const w = yeniDom();
+  const cagrilar = [];
   let n = 0;
-  w.fetch = async () => {
+  w.fetch = async (url, opts) => {
     n++;
-    const text = n === 1
-      ? JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })))
-      : JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }] }]);
+    cagrilar.push(JSON.parse(opts.body).text);   // her aşamanın promptunu yakala
+    let text;
+    if(n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));        // üretici: 6 aday
+    else if(n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" }))); // eleştirmen: 3 aday
+    else text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]); // üst akıl: 1 final
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
   w.document.querySelector("#alan").value = "banyo";
   await w.uret();
+  ok("3 aşama da çağrıldı (üretici→eleştirmen→üst akıl)", n === 3);
+  ok("2. aşama eleştirmen promptu kullanıldı", /KIRMIZI TAKIM/.test(cagrilar[1]));
+  ok("3. aşama üst akıl promptu kullanıldı", /ÜST AKLI/.test(cagrilar[2]));
+  ok("üst akla SÜZÜLMÜŞ adaylar gitti (ham değil)", /Süzülmüş0/.test(cagrilar[2]) && !/Aday0/.test(cagrilar[2]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
+  ok("Çavuş & Zeyneb diyaloğu korundu", w.document.querySelectorAll("#out .card .dia .msg").length === 2);
   card.querySelector('[data-act="fav"]').click();
   ok("üretilen fikir 'banyo' alanıyla kaydedildi", w.favleriYukle()[0].alan === "banyo");
 })().then(() => {

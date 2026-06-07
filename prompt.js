@@ -112,7 +112,24 @@ ${ORTAK_KURAL}
   return { sistem, kullanici };
 }
 
-// 2. AŞAMA — ÜST AKIL: ele, harmanla, güçlendir, diyalog yaz
+// 2. AŞAMA — KIRMIZI TAKIM eleştirmen: acımasız fizibilite + özgünlük denetimi (diyalog YOK)
+function elestirmenPrompt(alan, adaylar, kaynak){
+  const sistem =
+`Sen acımasız bir KIRMIZI TAKIM eleştirmenisin: ürün fizibilitesi ve özgünlük denetçisi. Sana aday ürün fikirleri verilir; görevin zayıfları SERTÇE ELEMEK, kalanları KESKİNLEŞTİRMEK.
+ŞU adayları ELE (acımasız ol):
+- Piyasada zaten var olan, klişe, bariz olanlar.
+- Bilimkurgu, hayalci, bugünün ucuz gerçek parçalarıyla ÜRETİLEMEYECEK olanlar.
+- 10 saniyede anlaşılmayan ya da gerçek bir derde çözüm olmayanlar.
+- 2-3 mevcut nesnenin BEKLENMEDİK HARMANI olmayanlar.
+KALANLARI güçlendir: neyden/derde/nedenYok/vayBe alanlarını daha somut ve gerçekçi yap.
+${ORTAK_KURAL}
+ÇIKTI: SADECE geçerli bir JSON dizisi döndür — eleyip güçlendirdiğin EN İYİ 3 aday (diyalog YOK, markdown YOK, açıklama YOK):
+[{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü gerçek sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır"}]`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları acımasızca denetle: zayıf/klişe/yapılamaz olanları AT, kalan en güçlü 3'ünü somutlaştır. Diyalog YAZMA; bu bir ara eleme aşamasıdır.`;
+  return { sistem, kullanici };
+}
+
+// 3. AŞAMA — ÜST AKIL: ele, harmanla, güçlendir, diyalog yaz
 function ustAkilPrompt(alan, adaylar, kaynak){
   const cavSoz = karistirSec(CAVUS_SOZ, 8);
   const zeySoz = karistirSec(ZEYNEB_SOZ, 8);
