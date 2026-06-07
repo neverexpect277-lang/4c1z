@@ -1,12 +1,21 @@
 // Vercel serverless function: Gemini'yi sunucu tarafında çağırır.
 // Anahtar repoda DEĞİL — Vercel Environment Variable: GEMINI_KEY
-// Zincir: önce flash-lite, olmazsa flash (her modelin ayrı ücretsiz günlük kotası var).
-const MODELLER = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
+// Zincir: her modelin AYRI ücretsiz günlük kotası var; biri dolarsa (429) sıradakine geçilir.
+const MODELLER = [
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-flash-latest"
+];
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
   const key = process.env.GEMINI_KEY || Buffer.from("QVEuQWI4Uk42TDFqc2hDZVJLZGpLaHRXdDVPWFN5MzZzYXdWZnpOVmdnQXBidFpOQ19wWnc=", "base64").toString("utf8");
-  const text = (req.body && req.body.text) || "";
+  const body = req.body || {};
+  const text = body.text || "";
+  const temperature = typeof body.temperature === "number" ? body.temperature : 1.0;
+  const maxOutputTokens = typeof body.maxOutputTokens === "number" ? body.maxOutputTokens : 4096;
   let son = { status: 502, body: { error: "hiçbir model yanıt vermedi" } };
   for (const m of MODELLER) {
     try {
@@ -15,7 +24,7 @@ module.exports = async (req, res) => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 4096 } })
+          body: JSON.stringify({ contents: [{ parts: [{ text }] }], generationConfig: { temperature, maxOutputTokens } })
         }
       );
       const j = await r.json();

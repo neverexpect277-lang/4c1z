@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "api/gen.js": { "maxDuration": 60 }
+  }
+}
