@@ -1,0 +1,10 @@
+{
+  "name": "4c1z",
+  "private": true,
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}

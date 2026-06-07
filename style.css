@@ -66,6 +66,20 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .temakaydet{width:100%;margin-top:12px;background:var(--card2);border:1px dashed var(--line2);color:var(--soft);
   border-radius:11px;padding:11px;font-family:var(--font);font-size:13.5px;cursor:pointer;transition:.15s;}
 .temakaydet:hover{border-color:var(--accentSoft);color:var(--accentDeep);background:var(--cream);}
+.temakaydet[hidden]{display:none;}
+.temaform{display:flex;gap:8px;margin-top:12px;}
+.temaform[hidden]{display:none;}
+.temaad-input{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:11px;padding:11px 13px;font-size:15px;font-family:var(--font);outline:none;
+  transition:border-color .2s, box-shadow .2s;}
+.temaad-input::placeholder{color:#b3a98f;}
+.temaad-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
+.temaonay{background:var(--cream);border:1px solid var(--accent);color:var(--accentDeep);
+  border-radius:11px;padding:0 16px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
+.temaonay:hover{filter:brightness(1.03);}
+.temaiptal{background:var(--card2);border:1px solid var(--line2);color:var(--dim);
+  border-radius:11px;padding:0 14px;font-size:14px;cursor:pointer;transition:.15s;}
+.temaiptal:hover{color:var(--bad);border-color:var(--bad);}
 
 .gen{width:100%;margin-top:16px;border:0;border-radius:13px;padding:16px;
   font-family:var(--font);font-size:17px;font-weight:700;letter-spacing:.01em;color:#3a2f17;cursor:pointer;

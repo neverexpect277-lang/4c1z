@@ -26,16 +26,31 @@ function oturumKaydet(){
 const TEMA_KEY = "mucit_temalar";
 function temalarYukle(){ try{ return JSON.parse(localStorage.getItem(TEMA_KEY)) || []; }catch(e){ return []; } }
 function temalarKaydet(a){ localStorage.setItem(TEMA_KEY, JSON.stringify(a)); }
-function temaEkle(){
+function temaFormAc(){
   const alan = alanInput.value.trim();
   const kaynak = (($("#kaynak") && $("#kaynak").value) || "").trim();
   if(!alan && !kaynak){ flash("Önce alan ya da kaynak gir"); return; }
-  const ad = (prompt("Tema adı:", alan || "Tema") || "").trim();
-  if(!ad) return;
+  const inp = $("#temaAd");
+  inp.value = alan || "";
+  $("#temaForm").hidden = false;
+  $("#temaKaydet").hidden = true;
+  inp.focus(); inp.select();
+}
+function temaFormKapat(){
+  const f = $("#temaForm"); if(f) f.hidden = true;
+  const b = $("#temaKaydet"); if(b) b.hidden = false;
+}
+function temaOnayla(){
+  const inp = $("#temaAd");
+  const ad = (inp.value || "").trim();
+  if(!ad){ inp.focus(); return; }
+  const alan = alanInput.value.trim();
+  const kaynak = (($("#kaynak") && $("#kaynak").value) || "").trim();
   const a = temalarYukle().filter(t => t.ad !== ad);  // aynı ad → güncelle
   a.unshift({ ad, alan, kaynak });
   temalarKaydet(a);
   cizTemalar();
+  temaFormKapat();
   flash("Tema kaydedildi");
 }
 function temaSil(ad){ temalarKaydet(temalarYukle().filter(t => t.ad !== ad)); cizTemalar(); }
@@ -487,7 +502,13 @@ async function uret(){
 }
 
 $("#gen").addEventListener("click", uret);
-$("#temaKaydet").addEventListener("click", temaEkle);
+$("#temaKaydet").addEventListener("click", temaFormAc);
+$("#temaOnay").addEventListener("click", temaOnayla);
+$("#temaIptal").addEventListener("click", temaFormKapat);
+$("#temaAd").addEventListener("keydown", e => {
+  if(e.key === "Enter"){ e.preventDefault(); temaOnayla(); }
+  else if(e.key === "Escape"){ temaFormKapat(); }
+});
 
 // Girişte Osmanlıca karşılama penceresi (giren herkes görür)
 (function selamGoster(){
