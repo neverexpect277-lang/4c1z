@@ -9,6 +9,8 @@ let mod = "yeni";              // "yeni" | "kayit"
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
+// Girişte Çavuş'tan Zeyneb'e Osmanlıca karşılama (her açılışta rastgele biri)
+const selamlama = KARSILAMA[Math.floor(Math.random() * KARSILAMA.length)];
 
 function favleriYukle(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }catch(e){ return []; } }
 function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); $("#kayitSay").textContent = a.length; }
@@ -84,7 +86,10 @@ function fikirKart(f){
 function cizFikirler(list){
   out.innerHTML = "";
   if(!list || !list.length){
-    out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
+    out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>`
+      + `<p class="hosgeldin">"${escapeHtml(selamlama)}"</p>`
+      + `<span class="hosgeldinalt">— Çavuş'tan Zeyneb'e</span>`
+      + `<div class="emptyhint">Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div></div>`;
     return;
   }
   list.forEach(f => out.appendChild(fikirKart(f)));

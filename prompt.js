@@ -4,6 +4,60 @@ const CAVUS_SOZ = ["yârenim","Zeyneb'cim","nazenînim","cânım","gülüm","gü
 const ZEYNEB_SOZ = ["Çavuş'um","yiğidim","efendim","üstâdım","ârif Çavuş","mârifet ehli","dânişmendim","âlim efendi","fâzıl efendi","hikmet sâhibi","zekâ deryâsı","irfan ehli","gönül dostum","yârânım","hemdemim","sohbet üstâdı","kıymetli dostum","azîz dostum","civanmertim","âlicenâbım","necîb efendi","kerîm efendi","fütüvvet ehli","mert yârenim","gözü pek Çavuş","cesur yârenim","dil ehli","nükte-dânım","letâfet sâhibi","zarîf efendi","himmetli dostum","gayretli yârenim","fikir pehlivanım","mantık ustası","teferruât üstâdı","detay dervişi","ilim âşığı","hakîkat eri","gönlü zengin dostum","erdemli yârenim","âsil efendi","vefâlı dostum","sadâkatli yârenim","hünerli Çavuş'um","mâhir efendi","kâmil insan","gayûr efendi","çelebim","beyefendi"];
 const karistirSec = (arr,n) => [...arr].sort(()=>Math.random()-0.5).slice(0,n).join(", ");
 
+// Girişte Çavuş'un Zeyneb'i Osmanlıca karşılaması (50 cümle)
+const KARSILAMA = [
+  "Zeyneb'im, hoş geldin; kudûmunla meclisimiz şenlendi.",
+  "Sefâ geldin nazenînim, bezm-i irfânımıza nûr saçtın.",
+  "Teşrîfin başımıza tâc oldu Zeyneb Hanım, safâlar getirdin.",
+  "Dîdârınla gönül hânemiz münevver oldu, hoş geldin sultânım.",
+  "Hoş geldin ey ârife hanım, ilmimiz seninle behçet buldu.",
+  "Kudûmun mübârek olsun Zeyneb'im, dergâhımız şereflendi.",
+  "Safâ geldin gülizârım, gülşenimiz dîdârınla açıldı.",
+  "Bezmimize teşrîf ettin, hoş geldin ey dânişmend hanım.",
+  "Vuslatın bayram oldu bize, sefâlar getirdin nazenînim.",
+  "Hoş geldin cânım, mahfilimiz nûrunla aydınlandı.",
+  "Teşrîf-i âlîniz başımız üstüne Zeyneb Hanım, safâ geldiniz.",
+  "Gönlümüzün sultânı geldi; hoş geldin, sefâlar getirdin.",
+  "Dîvânımıza kadem bastın, münevver eyledin ey âlime hanım.",
+  "Hoş geldin gözümün nûru, hasretimiz vuslata erdi.",
+  "Sefâ geldin ey irfan ehli, meclis kelâmınla tatlandı.",
+  "Kudûmunla gülşen-i sohbet açıldı, hoş geldin gülüm.",
+  "Teşrîfin neş'e getirdi hânemize, safâ geldin nazenînim.",
+  "Hoş geldin fâzıla hanım, ilim meclisimiz şâd oldu.",
+  "Dîdârın bayram, kelâmın şeker; sefâlar getirdin Zeyneb'im.",
+  "Safâ geldin sultânım, dergâh-ı irfânımız münevver oldu.",
+  "Hoş geldin ey mârifet hazinesi, bezmimiz cevherlendi.",
+  "Kademlerine güller serdik, hoş geldin nazenîn-i zamân.",
+  "Teşrîf eyledin mahfilimizi, safâ geldin ey ârife hanım.",
+  "Hoş geldin gönül sultânım, hasret defteri kapandı bugün.",
+  "Vücûdun gülşene bahâr getirdi, sefâ geldin gülizârım.",
+  "Hoş geldin ilmin gülü, sohbetimiz seninle kemâle erdi.",
+  "Kudûmun devlet, dîdârın saâdet; safâlar getirdin Zeyneb'im.",
+  "Teşrîfinle dîvân-ı muhabbet kuruldu, hoş geldin sultânım.",
+  "Hoş geldin ey letâfet timsâli, meclis zarâfetinle süslendi.",
+  "Sefâ geldin nazenînim, gönül kâşânemiz şereflendi.",
+  "Hoş geldin cânımın içi, hasretin sona erdi nihâyet.",
+  "Kademin başım üstüne ey âlime hanım, safâlar getirdin.",
+  "Teşrîf-i hümâyûnun mübârek, hoş geldin gönül sultânım.",
+  "Sefâ geldin ey hikmet pınarı, irfanımız seninle çağladı.",
+  "Hoş geldin gülüm, gülşen-i sohbetimiz bülbülsüz kalmazdı.",
+  "Dîdârınla zulmet dağıldı, sefâ geldin ey nûr-ı dîde.",
+  "Hoş geldin nazenînim, meclis-i ilmimiz münevver oldu.",
+  "Kudûmun gülbang oldu gönülde, safâlar getirdin Zeyneb Hanım.",
+  "Teşrîf ettin bezmimizi, hoş geldin ey dânişmend sultân.",
+  "Hoş geldin gözümün nûru, vuslatın gönle şifâ oldu.",
+  "Sefâ geldin ey zarâfet sâhibi, mahfilimiz behçet buldu.",
+  "Hoş geldin sultânım, kademinle hânemiz cennete döndü.",
+  "Dîvânımız seninle tamam oldu, safâ geldin nazenînim.",
+  "Hoş geldin ârife hanım, kelâmın gönüllere derman.",
+  "Kudûmunla bahâr geldi gönle, hoş geldin gülizârım.",
+  "Teşrîfin saâdet, sohbetin devlet; sefâlar getirdin Zeyneb'im.",
+  "Hoş geldin ilim deryâsı, meclisimiz incilerle doldu.",
+  "Sefâ geldin gönül sultânım, hasret bahârı vuslata erdi.",
+  "Hoş geldin ey fâzıla hanım, irfan bezmimiz şereflendi.",
+  "Kademin mübârek, dîdârın münevver; hoş geldin nazenînim."
+];
+
 // Kullanıcının elle yazdığı metni yorumla: tema mı, kendi fikri/isteği mi
 function alanCumlesi(alan){
   return alan
