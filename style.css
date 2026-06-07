@@ -116,9 +116,6 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;
   animation:rise .5s cubic-bezier(.2,.7,.2,1) both;}
 .empty b{color:var(--accentDeep);}
-.hosgeldin{font-style:italic;color:var(--accentDeep);font-size:17px;line-height:1.65;max-width:430px;margin:0 auto 6px;}
-.hosgeldinalt{display:block;color:var(--dim);font-size:12px;letter-spacing:.04em;margin-bottom:24px;}
-.emptyhint{color:var(--dim);}
 .emblem{position:relative;width:92px;height:92px;margin:0 auto 24px;display:grid;place-items:center;}
 .emblem::before{content:"";position:absolute;inset:8px;border-radius:50%;
   background:radial-gradient(circle, rgba(185,133,42,.18), transparent 66%);

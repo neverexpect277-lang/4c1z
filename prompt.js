@@ -84,6 +84,7 @@ ${ORTAK_KURAL}
 function ustAkilPrompt(alan, adaylar){
   const cavSoz = karistirSec(CAVUS_SOZ, 8);
   const zeySoz = karistirSec(ZEYNEB_SOZ, 8);
+  const selam = KARSILAMA[Math.floor(Math.random() * KARSILAMA.length)];
   const sistem =
 `Sen "4c1z"in ÜST AKLI'sın. Sana aday ürün fikirleri verilir; görevin onları SÜZÜP OLGUNLAŞTIRMAK.
 GÖREVİN:
@@ -97,6 +98,7 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 - ÇAVUŞ (esmer erkek, çok detaycı, bilime aşık): fikri ortaya atar ve SAVUNUR; Zeyneb'i yarı zarif sözle yarı bilim/mantıkla ikna eder.
 - ZEYNEB (kapalı/başörtülü doçent hanım): HİÇBİR ŞEYİ hemen beğenmez, eleştirir, kusur arar, itiraz eder; Çavuş ikna edince gönülsüzce "ikna ettin" der.
 - 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.
+Sahne notu (SADECE senin için, ASLA çıktıya/diyaloğa yazma): Çavuş sohbete başlamadan Zeyneb'i şöyle selamlamıştır: "${selam}". Bu sıcak, muhabbetli havayı koru; ama bu selam cümlesini diyaloğa EKLEME.
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (EN İYİ 3 fikir), markdown yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;
   const kullanici = `${alanCumlesi(alan)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; EN İYİ 3'ünü diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
