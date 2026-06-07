@@ -113,6 +113,13 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}
+/* Durum etiketleri (sadece Kayıtlılar) */
+.durumlar{display:flex;gap:6px;margin-top:14px;}
+.durum{flex:1;background:var(--card2);border:1px solid var(--line2);color:var(--dim);
+  border-radius:10px;padding:8px;font-size:12.5px;cursor:pointer;transition:.15s;}
+.durum:hover{border-color:var(--accentSoft);color:var(--soft);}
+.durum.on{background:var(--cream);border-color:var(--accent);color:var(--accentDeep);font-weight:600;}
+
 .cardfoot{display:flex;gap:8px;margin-top:15px;}
 .mini{flex:1;background:var(--card);border:1px solid var(--line2);color:var(--soft);
   border-radius:11px;padding:10px;font-size:13px;cursor:pointer;text-align:center;transition:.15s;}

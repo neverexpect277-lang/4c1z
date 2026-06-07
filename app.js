@@ -8,6 +8,7 @@ let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
 const OTURUM_KEY = "mucit_oturum";
+const DURUMLAR = ["Ham", "Geliştirilecek", "Çöp"];
 function oturumYukle(){
   try{
     const o = JSON.parse(localStorage.getItem(OTURUM_KEY));
@@ -27,6 +28,15 @@ function favToggle(fikir){
   let a = favleriYukle();
   if(a.some(f => f.isim === fikir.isim)) a = a.filter(f => f.isim !== fikir.isim);
   else a.unshift(fikir);
+  favleriKaydet(a);
+  if(mod === "kayit") cizKayitlilar();
+}
+// Kayıtlı fikre durum ata (aynı duruma tekrar basınca kaldırır)
+function favDurumSet(isim, durum){
+  const a = favleriYukle();
+  const f = a.find(x => x.isim === isim);
+  if(!f) return;
+  f.durum = f.durum === durum ? "" : durum;
   favleriKaydet(a);
   if(mod === "kayit") cizKayitlilar();
 }
@@ -60,7 +70,11 @@ function diyalogHTML(d){
   };
   return `<div class="dia">${d.map(satir).join("")}</div>`;
 }
-function kartHTML(f){
+function durumHTML(f){
+  return `<div class="durumlar">${DURUMLAR.map(d =>
+    `<button class="durum ${f.durum === d ? "on" : ""}" data-durum="${d}">${d}</button>`).join("")}</div>`;
+}
+function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
     <h2>${escapeHtml(f.isim || "İsimsiz")}
@@ -72,22 +86,25 @@ function kartHTML(f){
     ${sec("Hangi derde", f.derde)}
     ${sec("Neden hâlâ yok", f.nedenYok)}
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
+    ${kayitli ? durumHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
       <button class="mini ig" data-act="ig">Instagram</button>
     </div>`;
 }
-function fikirKart(f){
+function fikirKart(f, kayitli){
   const el = document.createElement("div");
   el.className = "card";
-  el.innerHTML = kartHTML(f);
+  el.innerHTML = kartHTML(f, kayitli);
   el.querySelector('[data-act="fav"]').addEventListener("click", ev => {
     favToggle(f); ev.currentTarget.classList.toggle("on");
   });
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
+  if(kayitli) el.querySelectorAll("[data-durum]").forEach(b =>
+    b.addEventListener("click", () => favDurumSet(f.isim, b.dataset.durum)));
   return el;
 }
 function cizFikirler(list){
@@ -103,7 +120,7 @@ function cizKayitlilar(){
   const a = favleriYukle();
   out.innerHTML = "";
   if(!a.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
-  a.forEach(f => out.appendChild(fikirKart(f)));
+  a.forEach(f => out.appendChild(fikirKart(f, true)));
 }
 
 function kopyala(f){
