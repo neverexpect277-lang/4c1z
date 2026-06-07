@@ -135,18 +135,19 @@ async function fikirGorseli(f){
   // Tek fonksiyon: ciz=false ölçer (yükseklik), ciz=true çizer. y matematiği iki geçişte aynı.
   function yerlesim(x, ciz){
     let y = 64;
-    const yaz = (lines, font, color, lh, px = P) => {
+    // Önce fontu uygula, SONRA o fontla satırlara böl (yoksa satırlar yanlış ölçülüp taşar)
+    const yaz = (text, font, color, lh, maxw = CW, px = P) => {
       x.font = font;
-      for(const l of lines){ if(ciz){ x.fillStyle = color; x.fillText(l, px, y + lh * 0.74); } y += lh; }
+      for(const l of sar(x, text, maxw)){ if(ciz){ x.fillStyle = color; x.fillText(l, px, y + lh * 0.74); } y += lh; }
     };
     if(ciz){ x.fillStyle = "#b9852a"; x.fillRect(P, y, 54, 4); }
     y += 22;
     x.font = "800 32px Inter,sans-serif";
     if(ciz){ x.fillStyle = "#b9852a"; x.fillText("4c1z", P, y + 26); }
     y += 66;
-    yaz(sar(x, f.isim, CW), "800 58px Inter,sans-serif", "#2e2b24", 70);
+    yaz(f.isim, "800 56px Inter,sans-serif", "#2e2b24", 68);
     y += 8;
-    yaz(sar(x, f.ne, CW), "400 35px Inter,sans-serif", "#5d564a", 48);
+    yaz(f.ne, "400 35px Inter,sans-serif", "#5d564a", 48);
 
     if(Array.isArray(f.diyalog)){
       y += 14;
@@ -181,7 +182,7 @@ async function fikirGorseli(f){
       x.font = "700 23px Inter,sans-serif";
       if(ciz){ x.fillStyle = "#9c6f1f"; x.fillText(b.toUpperCase(), P, y + 18); }
       y += 38;
-      yaz(sar(x, m, CW), "400 33px Inter,sans-serif", "#3a352c", 44);
+      yaz(m, "400 33px Inter,sans-serif", "#3a352c", 44);
     };
     blok("Neyden", f.neyden);
     blok("Hangi derde", f.derde);
