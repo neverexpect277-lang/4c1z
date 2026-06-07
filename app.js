@@ -22,6 +22,36 @@ function oturumKaydet(){
   try{ localStorage.setItem(OTURUM_KEY, JSON.stringify({ ideas: sonUretilen.slice(0, 40), isimler: uretilmisIsimler.slice(-80) })); }catch(e){}
 }
 
+// ---- Temalar (isimli alan+kaynak ayarları) ----
+const TEMA_KEY = "mucit_temalar";
+function temalarYukle(){ try{ return JSON.parse(localStorage.getItem(TEMA_KEY)) || []; }catch(e){ return []; } }
+function temalarKaydet(a){ localStorage.setItem(TEMA_KEY, JSON.stringify(a)); }
+function temaEkle(){
+  const alan = alanInput.value.trim();
+  const kaynak = (($("#kaynak") && $("#kaynak").value) || "").trim();
+  if(!alan && !kaynak){ flash("Önce alan ya da kaynak gir"); return; }
+  const ad = (prompt("Tema adı:", alan || "Tema") || "").trim();
+  if(!ad) return;
+  const a = temalarYukle().filter(t => t.ad !== ad);  // aynı ad → güncelle
+  a.unshift({ ad, alan, kaynak });
+  temalarKaydet(a);
+  cizTemalar();
+  flash("Tema kaydedildi");
+}
+function temaSil(ad){ temalarKaydet(temalarYukle().filter(t => t.ad !== ad)); cizTemalar(); }
+function temaYukle(t){
+  alanInput.value = t.alan || "";
+  if($("#kaynak")) $("#kaynak").value = t.kaynak || "";
+}
+function cizTemalar(){
+  const el = $("#temalar"); if(!el) return;
+  const a = temalarYukle();
+  el.innerHTML = a.map((t, i) =>
+    `<span class="tema"><span class="tema-ad" data-yukle="${i}">${escapeHtml(t.ad)}</span><button class="tema-sil" data-sil="${i}" aria-label="Sil">✕</button></span>`).join("");
+  el.querySelectorAll("[data-yukle]").forEach(s => s.addEventListener("click", () => temaYukle(a[+s.dataset.yukle])));
+  el.querySelectorAll("[data-sil]").forEach(b => b.addEventListener("click", () => temaSil(a[+b.dataset.sil].ad)));
+}
+
 function favleriYukle(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }catch(e){ return []; } }
 function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); $("#kayitSay").textContent = a.length; }
 function favMi(isim){ return favleriYukle().some(f => f.isim === isim); }
@@ -457,6 +487,7 @@ async function uret(){
 }
 
 $("#gen").addEventListener("click", uret);
+$("#temaKaydet").addEventListener("click", temaEkle);
 
 // Girişte Osmanlıca karşılama penceresi (giren herkes görür)
 (function selamGoster(){
@@ -476,4 +507,5 @@ if("serviceWorker" in navigator){
 // init
 favleriKaydet(favleriYukle());
 oturumYukle();
+cizTemalar();
 cizFikirler(sonUretilen);

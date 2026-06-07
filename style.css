@@ -54,6 +54,19 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .kaynak::placeholder{color:#b3a98f;}
 .kaynak:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
 
+/* Temalar (kayıtlı alan+kaynak ayarları) */
+.temalar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.temalar:empty{margin-top:0;}
+.tema{display:inline-flex;align-items:center;gap:6px;background:var(--cream);
+  border:1px solid var(--accentSoft);border-radius:999px;padding:6px 8px 6px 13px;font-size:13px;}
+.tema-ad{color:var(--accentDeep);cursor:pointer;font-weight:600;}
+.tema-ad:hover{text-decoration:underline;}
+.tema-sil{background:none;border:0;color:var(--dim);font-size:12px;cursor:pointer;padding:2px 4px;line-height:1;border-radius:50%;}
+.tema-sil:hover{color:var(--bad);}
+.temakaydet{width:100%;margin-top:12px;background:var(--card2);border:1px dashed var(--line2);color:var(--soft);
+  border-radius:11px;padding:11px;font-family:var(--font);font-size:13.5px;cursor:pointer;transition:.15s;}
+.temakaydet:hover{border-color:var(--accentSoft);color:var(--accentDeep);background:var(--cream);}
+
 .gen{width:100%;margin-top:16px;border:0;border-radius:13px;padding:16px;
   font-family:var(--font);font-size:17px;font-weight:700;letter-spacing:.01em;color:#3a2f17;cursor:pointer;
   background:linear-gradient(135deg, #c5ac72, #ab8f50);
