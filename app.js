@@ -49,6 +49,14 @@ function favPuanSet(isim, puan){
   favleriKaydet(a);
   if(mod === "kayit") cizKayitlilar();
 }
+// Kayıtlı fikre not yaz — sessiz kaydeder (yeniden çizmez, textarea focus'u korunur)
+function favNotSet(isim, not){
+  const a = favleriYukle();
+  const f = a.find(x => x.isim === isim);
+  if(!f) return;
+  f.not = not;
+  favleriKaydet(a);
+}
 
 // ---- chips & input ----
 $("#chips").addEventListener("click", e => {
@@ -88,6 +96,9 @@ function puanHTML(f){
   return `<div class="puanlar">${[1,2,3,4,5].map(n =>
     `<button class="puan ${n <= p ? "on" : ""}" data-puan="${n}" aria-label="${n} yıldız"></button>`).join("")}</div>`;
 }
+function notHTML(f){
+  return `<textarea class="not" rows="2" placeholder="Kendi notun…">${escapeHtml(f.not || "")}</textarea>`;
+}
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
@@ -100,7 +111,7 @@ function kartHTML(f, kayitli){
     ${sec("Hangi derde", f.derde)}
     ${sec("Neden hâlâ yok", f.nedenYok)}
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
-    ${kayitli ? puanHTML(f) + durumHTML(f) : ""}
+    ${kayitli ? puanHTML(f) + durumHTML(f) + notHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
@@ -122,6 +133,8 @@ function fikirKart(f, kayitli){
       b.addEventListener("click", () => favDurumSet(f.isim, b.dataset.durum)));
     el.querySelectorAll("[data-puan]").forEach(b =>
       b.addEventListener("click", () => favPuanSet(f.isim, +b.dataset.puan)));
+    const nt = el.querySelector(".not");
+    if(nt) nt.addEventListener("input", () => favNotSet(f.isim, nt.value));
   }
   return el;
 }

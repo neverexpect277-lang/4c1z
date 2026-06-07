@@ -129,6 +129,13 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .durum:hover{border-color:var(--accentSoft);color:var(--soft);}
 .durum.on{background:var(--cream);border-color:var(--accent);color:var(--accentDeep);font-weight:600;}
 
+/* Kişisel not (sadece Kayıtlılar) */
+.not{width:100%;margin-top:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:10px;padding:10px 12px;font-size:14px;font-family:var(--font);line-height:1.5;
+  outline:none;resize:vertical;min-height:46px;transition:border-color .2s, box-shadow .2s;}
+.not::placeholder{color:#b3a98f;}
+.not:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
+
 .cardfoot{display:flex;gap:8px;margin-top:15px;}
 .mini{flex:1;background:var(--card);border:1px solid var(--line2);color:var(--soft);
   border-radius:11px;padding:10px;font-size:13px;cursor:pointer;text-align:center;transition:.15s;}
