@@ -1,5 +1,6 @@
 {
   "functions": {
-    "api/gen.js": { "maxDuration": 60 }
+    "api/gen.js": { "maxDuration": 60 },
+    "api/poll.js": { "maxDuration": 60 }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "4c1z — Fikir Üreteci",
+  "short_name": "4c1z",
+  "description": "Dünyada ve Türkiye'de olmayan, herkesin kullanacağı yeni ürün fikirleri.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3eee2",
+  "theme_color": "#f7f3ea",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

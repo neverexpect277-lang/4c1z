@@ -1,6 +1,4 @@
 // Arayüz, kaynak çağrıları ve kart çizimi. (prompt.js'ten sonra yüklenir)
-const ENDPOINT = "https://text.pollinations.ai/";
-const PK = "pk_9A76J8DMwl5fCL8X"; // pollinations publishable key (frontend-güvenli)
 const $ = s => document.querySelector(s);
 const out = $("#out"), statusEl = $("#status");
 const alanInput = $("#alan");
@@ -9,6 +7,17 @@ let mod = "yeni";              // "yeni" | "kayit"
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
+const OTURUM_KEY = "mucit_oturum";
+function oturumYukle(){
+  try{
+    const o = JSON.parse(localStorage.getItem(OTURUM_KEY));
+    if(o && Array.isArray(o.ideas)) sonUretilen = o.ideas;
+    if(o && Array.isArray(o.isimler)) uretilmisIsimler = o.isimler;
+  }catch(e){}
+}
+function oturumKaydet(){
+  try{ localStorage.setItem(OTURUM_KEY, JSON.stringify({ ideas: sonUretilen.slice(0, 40), isimler: uretilmisIsimler.slice(-80) })); }catch(e){}
+}
 
 function favleriYukle(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }catch(e){ return []; } }
 function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); $("#kayitSay").textContent = a.length; }
@@ -53,7 +62,9 @@ function diyalogHTML(d){
 }
 function kartHTML(f){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
+  const gp = encodeURIComponent(`ürün tanıtım fotoğrafı, ${f.isim || ""}: ${f.ne || ""}. ${f.neyden || ""}. sade arka plan, gerçekçi, yumuşak stüdyo ışığı`);
   return `
+    <div class="kartgorsel"><img loading="lazy" alt="${escapeHtml(f.isim || "")}" src="/api/image?p=${gp}&w=768&h=512"></div>
     <h2>${escapeHtml(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
@@ -79,6 +90,8 @@ function fikirKart(f){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
+  const img = el.querySelector(".kartgorsel img");
+  if(img) img.addEventListener("error", () => { const g = img.closest(".kartgorsel"); if(g) g.classList.add("gizli"); });
   return el;
 }
 function cizFikirler(list){
@@ -260,8 +273,7 @@ function bildir(){
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 // ---- Model zinciri (prompt.js: ureticiPrompt, ustAkilPrompt, jsonAyikla) ----
-// Pollinations ücretsiz modelleri (Gemini'den sonra yedek zincir; geçersiz slug otomatik atlanır)
-const POLL_MODELLER = ["deepseek", "gemini", "openai", "mistral", "qwen-coder", "phi", "llama"];
+// Pollinations modelleri artık sunucuda (api/poll.js) zincirleniyor.
 
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
@@ -280,25 +292,18 @@ async function geminiCagir(sistem, kullanici){
 }
 
 async function pollCagir(sistem, kullanici){
-  let son = new Error("pollinations yanıt vermedi");
-  for(const model of POLL_MODELLER){
-    const body = {
-      messages: [{ role: "system", content: sistem }, { role: "user", content: kullanici }],
-      model, seed: Math.floor(Math.random() * 1e9),
-      referrer: location.hostname || "4c1z", token: PK
-    };
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 45000);
-    try{
-      const r = await fetch(ENDPOINT + "?token=" + encodeURIComponent(PK) + "&key=" + encodeURIComponent(PK), {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body), signal: ctrl.signal
-      });
-      if(r.ok){ const t = await r.text(); if(t && t.trim()) return t; }
-      else { son = new Error("HTTP " + r.status); }
-    }catch(e){ son = e; } finally { clearTimeout(to); }
-  }
-  throw son;
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 55000);
+  try{
+    const r = await fetch("/api/poll", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [{ role: "system", content: sistem }, { role: "user", content: kullanici }] }),
+      signal: ctrl.signal
+    });
+    if(!r.ok) throw new Error("poll " + r.status);
+    const j = await r.json();
+    return j.text || "";
+  } finally { clearTimeout(to); }
 }
 
 // Bir promptu model zincirinden geçirip fikir dizisi döndürür (Gemini -> pollinations)
@@ -361,6 +366,7 @@ async function uret(){
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
     statusEl.textContent = "";
     cizFikirler(sonUretilen);
+    oturumKaydet();
     bildir();
   }else{
     statusEl.innerHTML = `Çavuş şu an bulamadı — `;
@@ -383,6 +389,12 @@ $("#gen").addEventListener("click", uret);
   m.addEventListener("click", e => { if(e.target === m) kapat(); });
 })();
 
+// PWA service worker
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+
 // init
 favleriKaydet(favleriYukle());
-cizFikirler([]);
+oturumYukle();
+cizFikirler(sonUretilen);
