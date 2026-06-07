@@ -113,6 +113,15 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}
+/* Puan yıldızları (sadece Kayıtlılar) */
+.puanlar{display:flex;gap:4px;margin-top:14px;}
+.puan{background:none;border:0;padding:2px;font-size:22px;line-height:1;cursor:pointer;
+  color:#c9bfa6;transition:.12s;}
+.puan:hover{color:var(--accent2);}
+.puan.on{color:var(--accent);}
+.puan.on::before{content:"★"}
+.puan::before{content:"☆"}
+
 /* Durum etiketleri (sadece Kayıtlılar) */
 .durumlar{display:flex;gap:6px;margin-top:14px;}
 .durum{flex:1;background:var(--card2);border:1px solid var(--line2);color:var(--dim);

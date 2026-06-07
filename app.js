@@ -40,6 +40,15 @@ function favDurumSet(isim, durum){
   favleriKaydet(a);
   if(mod === "kayit") cizKayitlilar();
 }
+// Kayıtlı fikre puan ver (aynı yıldıza tekrar basınca sıfırlar)
+function favPuanSet(isim, puan){
+  const a = favleriYukle();
+  const f = a.find(x => x.isim === isim);
+  if(!f) return;
+  f.puan = f.puan === puan ? 0 : puan;
+  favleriKaydet(a);
+  if(mod === "kayit") cizKayitlilar();
+}
 
 // ---- chips & input ----
 $("#chips").addEventListener("click", e => {
@@ -74,6 +83,11 @@ function durumHTML(f){
   return `<div class="durumlar">${DURUMLAR.map(d =>
     `<button class="durum ${f.durum === d ? "on" : ""}" data-durum="${d}">${d}</button>`).join("")}</div>`;
 }
+function puanHTML(f){
+  const p = f.puan || 0;
+  return `<div class="puanlar">${[1,2,3,4,5].map(n =>
+    `<button class="puan ${n <= p ? "on" : ""}" data-puan="${n}" aria-label="${n} yıldız"></button>`).join("")}</div>`;
+}
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
   return `
@@ -86,7 +100,7 @@ function kartHTML(f, kayitli){
     ${sec("Hangi derde", f.derde)}
     ${sec("Neden hâlâ yok", f.nedenYok)}
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
-    ${kayitli ? durumHTML(f) : ""}
+    ${kayitli ? puanHTML(f) + durumHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
@@ -103,8 +117,12 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
-  if(kayitli) el.querySelectorAll("[data-durum]").forEach(b =>
-    b.addEventListener("click", () => favDurumSet(f.isim, b.dataset.durum)));
+  if(kayitli){
+    el.querySelectorAll("[data-durum]").forEach(b =>
+      b.addEventListener("click", () => favDurumSet(f.isim, b.dataset.durum)));
+    el.querySelectorAll("[data-puan]").forEach(b =>
+      b.addEventListener("click", () => favPuanSet(f.isim, +b.dataset.puan)));
+  }
   return el;
 }
 function cizFikirler(list){
@@ -120,7 +138,8 @@ function cizKayitlilar(){
   const a = favleriYukle();
   out.innerHTML = "";
   if(!a.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
-  a.forEach(f => out.appendChild(fikirKart(f, true)));
+  // Puana göre sırala (yüksek üstte); eşitlikte mevcut sıra (yeni→eski) korunur
+  a.slice().sort((x, y) => (y.puan || 0) - (x.puan || 0)).forEach(f => out.appendChild(fikirKart(f, true)));
 }
 
 function kopyala(f){
