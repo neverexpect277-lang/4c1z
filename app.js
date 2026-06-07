@@ -147,11 +147,13 @@ function notHTML(f){
   return `<textarea class="not" rows="2" placeholder="Kendi notun…">${escapeHtml(f.not || "")}</textarea>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.prototip)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.patent || f.prototip)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${escapeHtml(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
-    sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) + sec("İlk prototip adımı", f.prototip) +
+    sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
+    sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
+    sec("İlk prototip adımı", f.prototip) +
     `</div>`;
 }
 function kartHTML(f, kayitli){
@@ -446,27 +448,34 @@ async function zincir(sistem, kullanici){
 }
 function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-// 4. AŞAMA yardımcısı: web araması (varsa) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
-async function uzmanlastir(alan, fikir, kaynak){
-  let arama = "";
+// Tek arama çağrısı (sonuç dizisi döndürür; hata olursa boş)
+async function araGetir(q){
   try{
-    const q = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 12000);
     const r = await fetch("/api/ara?q=" + encodeURIComponent(q), { signal: ctrl.signal });
     clearTimeout(to);
-    if(r.ok){
-      const j = await r.json();
-      if(Array.isArray(j.sonuclar) && j.sonuclar.length)
-        arama = j.sonuclar.slice(0, 4).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
-    }
+    if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)) return j.sonuclar; }
   }catch(e){}
+  return [];
+}
+// 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
+async function uzmanlastir(alan, fikir, kaynak){
+  const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
+  const [genel, patent] = await Promise.all([
+    araGetir(ad),
+    araGetir("site:patents.google.com " + (fikir.isim || fikir.ne || ""))
+  ]);
+  const fmt = arr => arr.slice(0, 4).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
+  const arama = genel.length ? fmt(genel) : "";
+  const patentArama = patent.length ? fmt(patent) : "";
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["nasil", "maliyet", "benzer", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["nasil", "maliyet", "benzer", "patent", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
+      if(patentArama) fikir.patentWeb = true;
     }
   }catch(e){}
 }

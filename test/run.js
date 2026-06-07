@@ -316,12 +316,18 @@ console.log("\nBİRLEŞİK — hepsi bir arada");
 console.log("\nuret() — 4 aşamalı boru hattı (fetch stub)");
 function stubUret(w, opts = {}){
   const cag = [];          // /api/gen prompt metinleri
-  const state = { n: 0, aramaCagrildi: false };
+  const state = { n: 0, aramaCagrildi: false, patentArandi: false };
   w.fetch = async (url, o) => {
     if(url.startsWith("/api/ara")){
       state.aramaCagrildi = true;
       if(opts.aramaHata) throw new Error("ağ yok");
-      return { ok: true, status: 200, json: async () => ({ sonuclar: opts.sonuclar || [{ baslik: "Mevcut Ürün X", ozet: "benzer bir şey" }] }) };
+      const patentSorgu = /patents\.google\.com/.test(decodeURIComponent(url));
+      if(patentSorgu) state.patentArandi = true;
+      return { ok: true, status: 200, json: async () => ({
+        sonuclar: patentSorgu
+          ? (opts.patentSonuc || [{ baslik: "US1234 Akıllı Tava Patenti", ozet: "benzer patent var" }])
+          : (opts.sonuclar || [{ baslik: "Mevcut Ürün X", ozet: "benzer bir şey" }])
+      }) };
     }
     state.n++;
     cag.push(JSON.parse(o.body).text);
@@ -329,7 +335,7 @@ function stubUret(w, opts = {}){
     if(state.n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));
     else if(state.n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" })));
     else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
-    else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", prototip: "karton maket yap" }]);
+    else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", patent: "US1234 benzer patent var", prototip: "karton maket yap" }]);
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
   return { cag, state };
@@ -341,11 +347,13 @@ function stubUret(w, opts = {}){
   await w.uret();
   ok("4 aşama da çağrıldı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
   ok("web araması çağrıldı", state.aramaCagrildi === true);
+  ok("patent araması (Google Patents) çağrıldı", state.patentArandi === true);
   ok("2. aşama eleştirmen promptu", /KIRMIZI TAKIM/.test(cag[1]));
   ok("3. aşama üst akıl promptu", /ÜST AKLI/.test(cag[2]));
   ok("4. aşama uzman heyeti promptu", /UZMAN HEYETİSİN/.test(cag[3]));
   ok("üst akla SÜZÜLMÜŞ adaylar gitti", /Süzülmüş0/.test(cag[2]) && !/Aday0/.test(cag[2]));
   ok("uzman promptuna gerçek arama sonucu enjekte edildi", /Mevcut Ürün X/.test(cag[3]));
+  ok("uzman promptuna gerçek PATENT sonucu enjekte edildi", /US1234 Akıllı Tava Patenti/.test(cag[3]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
   ok("Çavuş & Zeyneb diyaloğu korundu", w.document.querySelectorAll("#out .card .dia .msg").length === 2);
@@ -354,10 +362,11 @@ function stubUret(w, opts = {}){
   ok("Nasıl yapılır alanı var", /X\+Y parçalarıyla/.test(muhMetin));
   ok("Tahmini maliyet alanı var", /100-200 TL/.test(muhMetin));
   ok("Benzer ürünler 'web' etiketli", /web/.test(muhMetin) && /Mevcut Ürün X/.test(muhMetin));
+  ok("Patent durumu alanı var + 'web' etiketli", /Patent durumu · web/.test(muhMetin) && /US1234 benzer patent/.test(muhMetin));
   ok("İlk prototip adımı var", /karton maket/.test(muhMetin));
   card.querySelector('[data-act="fav"]').click();
   const k = w.favleriYukle()[0];
-  ok("mühendislik alanları kalıcı (kaydedildi)", k.nasil && k.maliyet && k.benzer && k.prototip && k.alan === "banyo");
+  ok("mühendislik alanları kalıcı (kaydedildi)", k.nasil && k.maliyet && k.benzer && k.patent && k.prototip && k.alan === "banyo");
 })().then(async () => {
   // arama başarısız olsa bile uzman heyeti çalışmalı (graceful fallback)
   console.log("\nuret() — web arama başarısız (graceful)");
