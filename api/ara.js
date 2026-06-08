@@ -28,19 +28,23 @@ async function zamanli(url, opts, ms){
 }
 
 async function searxng(q){
-  for (const base of SEARX) {
+  // İlk 4 instance'ı PARALEL dene (sıralı 8×9s = timeout riski yerine), ilk dolu sonucu al
+  const dene = async (base) => {
     try {
       const r = await zamanli(base + "/search?q=" + encodeURIComponent(q) + "&format=json", {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)", "Accept": "application/json" }
-      });
-      if (!r.ok) continue;
+      }, 5000);
+      if (!r.ok) return [];
       const j = await r.json();
       if (Array.isArray(j.results) && j.results.length)
         return j.results.slice(0, 6)
           .map(x => ({ baslik: temizle(x.title || ""), ozet: temizle(x.content || "") }))
           .filter(x => x.baslik);
     } catch (e) {}
-  }
+    return [];
+  };
+  const hepsi = await Promise.all(SEARX.slice(0, 4).map(dene));
+  for (const r of hepsi) if (r.length) return r;
   return [];
 }
 
@@ -48,7 +52,7 @@ async function ddg(q){
   try {
     const r = await zamanli("https://html.duckduckgo.com/html/?q=" + encodeURIComponent(q), {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)" }
-    });
+    }, 6000);
     const html = await r.text();
     const re = /class="result__a"[^>]*>([\s\S]*?)<\/a>[\s\S]*?class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
     const out = []; let m;
