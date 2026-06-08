@@ -153,12 +153,11 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 }
 
 // 4. AŞAMA — UZMAN HEYETİ: fikri mühendislik gözüyle somutlaştır (diyalog GÖNDERİLMEZ/ÜRETİLMEZ)
-function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, parcaArama){
+function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama){
   const sistem =
 `Sen bir UZMAN HEYETİSİN: Üretim Uzmanı + Maliyetçi + Rakip Analisti + Patent Denetçisi + Pazar Analisti + Ürün Müdürü tek heyet olarak bir ürün fikrini değerlendirir. Görevin onu MÜHENDİSLİK gözüyle somutlaştırmak. Hayal/varsayım YOK; bugünün ucuz gerçek parçaları ve gerçekçi rakamlarla, kısa ve net konuş.
 ${arama ? "GERÇEK WEB ARAMA SONUÇLARI (benzer ürünler VE talep tahmini için BUNLARI temel al; gerçekten benzer olanları belirt, alakasızları ele):\n" + arama : "Web araması yok; 'benzer ürünler' ve 'talep' için en iyi tahminini ver, abartma, uydurma."}
-${patentArama ? "GERÇEK PATENT KAYITLARI (resmi veritabanı ya da Google Patents): 'patent' alanını BUNLARA dayandır; gerçekten benzer patent var mı söyle, alakasızları ele:\n" + patentArama : "Patent kaydı bulunamadı; 'patent' alanında 'belirgin patent bulunamadı' de, uydurma."}
-${parcaArama ? "GERÇEK BİLEŞEN FİYATLARI (Digi-Key, birim fiyat): 'maliyet' tahminini mümkün olduğunca BU gerçek parça fiyatlarına dayandır:\n" + parcaArama : ""}
+${patentArama ? "GERÇEK PATENT ARAMA SONUÇLARI (Google Patents): 'patent' alanını BUNLARA dayandır; gerçekten benzer patent var mı söyle, alakasızları ele:\n" + patentArama : "Patent araması sonuç vermedi; 'patent' alanında 'belirgin patent bulunamadı' de, uydurma."}
 'talep' alanı: yukarıdaki gerçek arama sonuçlarına bakarak ilgiyi tahmin et — çok sonuç/forum/ürün varsa "talep yüksek", az/hiç yoksa "niş ama özgün" gibi; dürüst ol, abartma.
 ÇIKTI: SADECE geçerli bir JSON dizisi (TEK eleman), markdown YOK, açıklama YOK:
 [{"isim":"<sana verilen ismi AYNEN yaz>","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
