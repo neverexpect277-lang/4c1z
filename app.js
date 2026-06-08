@@ -147,13 +147,14 @@ function notHTML(f){
   return `<textarea class="not" rows="2" placeholder="Kendi notun…">${escapeHtml(f.not || "")}</textarea>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.prototip)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${escapeHtml(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
     sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
     sec("Talep / ilgi" + (f.benzerWeb ? " · web" : ""), f.talep) +
     sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
+    sec("Teknik gerçeklik", f.teknik) +
     sec("İlk prototip adımı", f.prototip) +
     `</div>`;
 }
@@ -474,7 +475,7 @@ async function uzmanlastir(alan, fikir, kaynak){
     const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["nasil", "maliyet", "benzer", "talep", "patent", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
       if(patentArama) fikir.patentWeb = true;
     }

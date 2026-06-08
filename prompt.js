@@ -156,12 +156,13 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama){
   const sistem =
 `Sen bir UZMAN HEYETİSİN: Üretim Uzmanı + Maliyetçi + Rakip Analisti + Patent Denetçisi + Pazar Analisti + Ürün Müdürü tek heyet olarak bir ürün fikrini değerlendirir. Görevin onu MÜHENDİSLİK gözüyle somutlaştırmak. Hayal/varsayım YOK; bugünün ucuz gerçek parçaları ve gerçekçi rakamlarla, kısa ve net konuş.
+ÜRETİM FİZİĞİ ZORUNLU: malzeme özellikleri (dayanım, ısı, ağırlık, iletkenlik), mekanik yükler, güç/enerji bütçesi ve üretilebilirlik açısından muhakeme et; sihir/temennî yok. En kritik fiziksel kısıtı bul ve fikrin bunu gerçekten geçip geçmediğini dürüstçe söyle.
 ${arama ? "GERÇEK WEB ARAMA SONUÇLARI (benzer ürünler VE talep tahmini için BUNLARI temel al; gerçekten benzer olanları belirt, alakasızları ele):\n" + arama : "Web araması yok; 'benzer ürünler' ve 'talep' için en iyi tahminini ver, abartma, uydurma."}
 ${patentArama ? "GERÇEK PATENT ARAMA SONUÇLARI (Google Patents): 'patent' alanını BUNLARA dayandır; gerçekten benzer patent var mı söyle, alakasızları ele:\n" + patentArama : "Patent araması sonuç vermedi; 'patent' alanında 'belirgin patent bulunamadı' de, uydurma."}
 'talep' alanı: yukarıdaki gerçek arama sonuçlarına bakarak ilgiyi tahmin et — çok sonuç/forum/ürün varsa "talep yüksek", az/hiç yoksa "niş ama özgün" gibi; dürüst ol, abartma.
 ÇIKTI: SADECE geçerli bir JSON dizisi (TEK eleman), markdown YOK, açıklama YOK:
-[{"isim":"<sana verilen ismi AYNEN yaz>","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nDeğerlendirilecek ürün fikri:\n${JSON.stringify({ isim: fikir.isim, ne: fikir.ne, neyden: fikir.neyden, derde: fikir.derde })}\nBu fikri uzman heyeti gözüyle somutlaştır. Diyalog veya istenmeyen alan EKLEME; sadece istenen 6 alanı doldur.`;
+[{"isim":"<sana verilen ismi AYNEN yaz>","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","teknik":"en kritik fiziksel/mühendislik kısıtı ve fikir bunu gerçekçi şekilde geçiyor mu (1 cümle)","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nDeğerlendirilecek ürün fikri:\n${JSON.stringify({ isim: fikir.isim, ne: fikir.ne, neyden: fikir.neyden, derde: fikir.derde })}\nBu fikri uzman heyeti gözüyle somutlaştır. Diyalog veya istenmeyen alan EKLEME; sadece istenen 7 alanı doldur.`;
   return { sistem, kullanici };
 }
 
