@@ -159,7 +159,11 @@ function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama){
 ÜRETİM FİZİĞİ ZORUNLU: malzeme özellikleri (dayanım, ısı, ağırlık, iletkenlik), mekanik yükler, güç/enerji bütçesi ve üretilebilirlik açısından muhakeme et; sihir/temennî yok. En kritik fiziksel kısıtı bul ve fikrin bunu gerçekten geçip geçmediğini dürüstçe söyle.
 ${arama ? "GERÇEK WEB ARAMA SONUÇLARI (benzer ürünler VE talep tahmini için BUNLARI temel al; gerçekten benzer olanları belirt, alakasızları ele):\n" + arama : "Web araması yok; 'benzer ürünler' ve 'talep' için en iyi tahminini ver, abartma, uydurma."}
 ${patentArama ? "GERÇEK PATENT ARAMA SONUÇLARI (Google Patents): 'patent' alanını BUNLARA dayandır; gerçekten benzer patent var mı söyle, alakasızları ele:\n" + patentArama : "Patent araması sonuç vermedi; 'patent' alanında 'belirgin patent bulunamadı' de, uydurma."}
-'talep' alanı: yukarıdaki gerçek arama sonuçlarına bakarak ilgiyi tahmin et — çok sonuç/forum/ürün varsa "talep yüksek", az/hiç yoksa "niş ama özgün" gibi; dürüst ol, abartma.
+SİNYAL YORUMU (arama sonuçlarındaki işaretleri OKU, körü körüne sayma):
+- GitHub ★/⑂ yüksek + güncel tarih, ya da HN yüksek puan = GÜÇLÜ mevcut rakip/ilgi → 'benzer' alanında bunu dürüstçe söyle ve fikrin nasıl FARKLILAŞTIĞINI belirt.
+- Çok "Soru:" ama az/zayıf çözüm = karşılanmamış GERÇEK ihtiyaç → talep yüksek.
+- Neredeyse hiç sonuç yok = ya gerçekten yeni ya da kimse istemiyor; bu ikisini dürüstçe AYIRT et, otomatik "talep yüksek" deme.
+'talep' alanını bu okumaya göre yaz; abartma, uydurma.
 ÇIKTI: SADECE geçerli bir JSON dizisi (TEK eleman), markdown YOK, açıklama YOK:
 [{"isim":"<sana verilen ismi AYNEN yaz>","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","teknik":"en kritik fiziksel/mühendislik kısıtı ve fikir bunu gerçekçi şekilde geçiyor mu (1 cümle)","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
   const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nDeğerlendirilecek ürün fikri:\n${JSON.stringify({ isim: fikir.isim, ne: fikir.ne, neyden: fikir.neyden, derde: fikir.derde })}\nBu fikri uzman heyeti gözüyle somutlaştır. Diyalog veya istenmeyen alan EKLEME; sadece istenen 7 alanı doldur.`;
