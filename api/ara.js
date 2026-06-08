@@ -127,6 +127,25 @@ async function hackernews(q){
   } catch (e) { return []; }
 }
 
+// arXiv — bilimsel makale (fizik/mühendislik); teknik fizibilite temeli. Anahtarsız, XML döner.
+async function arxiv(q){
+  try {
+    const r = await zamanli("https://export.arxiv.org/api/query?max_results=3&search_query=all:" + encodeURIComponent(q), {
+      headers: { "User-Agent": "4c1z/1.0" }
+    });
+    if (!r.ok) return [];
+    const xml = await r.text();
+    const out = []; const re = /<entry>([\s\S]*?)<\/entry>/g; let m;
+    while ((m = re.exec(xml)) && out.length < 2) {
+      const blok = m[1];
+      const baslik = temizle((blok.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "");
+      const ozet = temizle((blok.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1] || "").slice(0, 140);
+      if (baslik) out.push({ baslik: "arXiv: " + baslik, ozet });
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
 module.exports = async (req, res) => {
   const q = String((req.query && req.query.q) || "").slice(0, 200).trim();         // Türkçe (web)
   const en = String((req.query && req.query.en) || "").slice(0, 200).trim();        // İngilizce (tech kaynakları)
@@ -149,8 +168,8 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, w] = await Promise.all([ciftDil(github), ciftDil(stack), ciftDil(hackernews), wiki(temiz, enTemiz)]);
-      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
+      const [g, s, h, a, w] = await Promise.all([ciftDil(github), ciftDil(stack), ciftDil(hackernews), arxiv(enTemiz), wiki(temiz, enTemiz)]);
+      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), a.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });

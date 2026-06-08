@@ -164,6 +164,7 @@ SİNYAL YORUMU (arama sonuçlarındaki işaretleri OKU, körü körüne sayma):
 - GitHub ★/⑂ yüksek + güncel tarih, ya da HN yüksek puan = GÜÇLÜ mevcut rakip/ilgi → 'benzer' alanında bunu dürüstçe söyle ve fikrin nasıl FARKLILAŞTIĞINI belirt.
 - Çok "Soru:" ama az/zayıf çözüm = karşılanmamış GERÇEK ihtiyaç → talep yüksek.
 - Neredeyse hiç sonuç yok = ya gerçekten yeni ya da kimse istemiyor; bu ikisini dürüstçe AYIRT et, otomatik "talep yüksek" deme.
+- "arXiv:" ile başlayanlar BİLİMSEL MAKALEdir — rakip/ürün DEĞİL; 'teknik' alanını ve fizibiliteyi desteklemek için kullan, "benzer ürün" sayma.
 'talep' alanını bu okumaya göre yaz; abartma, uydurma.
 PREMIUM HÜKÜM: tüm sinyalleri (rakip gücü, talep, patent, teknik fizik) tart ve fikre 0-100 arası bir ÖZGÜNLÜK+UYGULANABİLİRLİK skoru ver ('skor'); 'hukum' alanına tek cümlede en güçlü yön + en büyük riski yaz. Güçlü rakip ya da yüksek teknik risk varsa skor DÜŞÜK olsun; abartma.
 FARKLILAŞMA: arama güçlü mevcut rakip gösteriyorsa 'farklilas' alanına fikri 'zaten var'dan kurtaracak SOMUT bir kıvrım yaz; belirgin rakip yoksa boş bırak.
