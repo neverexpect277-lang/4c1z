@@ -83,12 +83,12 @@ async function wiki(q){
 // GitHub açık kaynak projeleri (benzer proje + yıldız = ilgi). Anahtarsız (anonim).
 async function github(q){
   try {
-    const r = await zamanli("https://api.github.com/search/repositories?per_page=4&sort=stars&order=desc&q=" + encodeURIComponent(q), {
+    const r = await zamanli("https://api.github.com/search/repositories?per_page=10&sort=stars&order=desc&q=" + encodeURIComponent(q), {
       headers: { "User-Agent": "4c1z/1.0", "Accept": "application/vnd.github+json" }
     });
     if (!r.ok) return [];
     const j = await r.json();
-    return (j.items || []).slice(0, 3).map(x => {
+    return (j.items || []).slice(0, 7).map(x => {
       const konular = (Array.isArray(x.topics) && x.topics.length) ? " [" + x.topics.slice(0, 5).join(", ") + "]" : "";
       const guncel = x.pushed_at ? " · son: " + String(x.pushed_at).slice(0, 7) : "";
       return {
@@ -139,7 +139,7 @@ module.exports = async (req, res) => {
     if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
       const [g, s, h, w] = await Promise.all([github(temiz), stack(temiz), hackernews(temiz), wiki(temiz)]);
-      sonuclar = sonuclar.concat(g.slice(0, 2), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
+      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });
