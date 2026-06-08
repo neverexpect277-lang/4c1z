@@ -468,7 +468,7 @@ async function uzmanlastir(alan, fikir, kaynak){
     araGetir(ad),
     araGetir("site:patents.google.com " + (fikir.isim || fikir.ne || ""))
   ]);
-  const fmt = arr => arr.slice(0, 4).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
+  const fmt = arr => arr.slice(0, 8).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
   try{

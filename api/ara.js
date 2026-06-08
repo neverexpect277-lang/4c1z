@@ -80,19 +80,50 @@ async function wiki(q){
   return out;
 }
 
+// GitHub açık kaynak projeleri (benzer proje + yıldız = ilgi). Anahtarsız (anonim).
+async function github(q){
+  try {
+    const r = await zamanli("https://api.github.com/search/repositories?per_page=4&q=" + encodeURIComponent(q), {
+      headers: { "User-Agent": "4c1z/1.0", "Accept": "application/vnd.github+json" }
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    return (j.items || []).slice(0, 3).map(x => ({
+      baslik: "GitHub: " + (x.full_name || "") + " (★" + (x.stargazers_count || 0) + ")",
+      ozet: temizle(x.description || "")
+    })).filter(x => x.baslik.length > 9);
+  } catch (e) { return []; }
+}
+
+// Stack Exchange soruları (gerçek sorun/talep sinyali). Anahtarsız (anonim).
+async function stack(q){
+  try {
+    const r = await zamanli("https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&pagesize=4&site=stackoverflow&q=" + encodeURIComponent(q), {
+      headers: { "User-Agent": "4c1z/1.0" }
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    return (j.items || []).slice(0, 3).map(x => ({
+      baslik: "Soru: " + temizle(x.title || ""),
+      ozet: "skor " + (x.score || 0) + ", " + (x.answer_count || 0) + " cevap"
+    })).filter(x => x.baslik.length > 7);
+  } catch (e) { return []; }
+}
+
 module.exports = async (req, res) => {
   const q = String((req.query && req.query.q) || "").slice(0, 200).trim();
   if (!q) { res.status(200).json({ sonuclar: [] }); return; }
   const patentSorgu = /patents\.google\.com/i.test(q);
   try {
-    let sonuclar = await searxng(q);
+    let web = await searxng(q);
     let kaynak = "searxng";
-    if (!sonuclar.length) { sonuclar = await ddg(q); kaynak = "ddg"; }
-    // Wikipedia sadece genel sorguda (site:/patent sorgusunda anlamsız) — kavram doğrulaması olarak eklenir
+    if (!web.length) { web = await ddg(q); kaynak = "ddg"; }
+    let sonuclar = web.slice(0, 4);   // web baskın olmasın, ek kaynaklara yer kalsın
     if (!patentSorgu) {
-      const w = await wiki(q.replace(/^site:\S+\s*/, ""));
-      for (const it of w) { if (sonuclar.length < 8) sonuclar.push(it); }
-      if (!sonuclar.length && w.length) kaynak = "wikipedia";
+      const temiz = q.replace(/^site:\S+\s*/, "");
+      const [g, s, w] = await Promise.all([github(temiz), stack(temiz), wiki(temiz)]);
+      sonuclar = sonuclar.concat(g.slice(0, 2), s.slice(0, 2), w.slice(0, 2));
+      if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });
   } catch (e) {
