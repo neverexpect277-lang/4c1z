@@ -137,6 +137,14 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 
 .field{margin-top:11px;font-size:14.5px;color:var(--soft);}
 .field b{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);margin-bottom:2px;}
+/* "Önerilen Fikirler" başlığı (Yeni sekmesi, üretim çıktısının üstünde) */
+.onerilenBaslik{margin:18px 0 12px;padding:12px 16px;border-radius:13px;
+  background:var(--cream);border:1px solid var(--accentSoft);
+  font-family:var(--font);font-weight:700;font-size:16px;color:var(--accentDeep);
+  display:flex;align-items:center;gap:8px;}
+.onerilenBaslik[hidden]{display:none;}
+#onerilenSay{font-weight:600;font-size:13px;color:var(--soft);}
+
 /* Premium özgünlük+uygulanabilirlik skoru rozeti */
 .skor{display:flex;align-items:center;gap:11px;margin:4px 0 12px;padding:10px 13px;
   border-radius:13px;background:var(--card2);border:1px solid var(--line);}

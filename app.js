@@ -121,6 +121,7 @@ function setMod(m){
   $("#tabKayit").classList.toggle("on", m === "kayit");
   if(m === "kayit") cizKayitlilar();
   else { statusEl.textContent = ""; cizFikirler(sonUretilen); }
+  basligiGuncelle();
 }
 
 // ---- kart çizimi ----
@@ -206,13 +207,22 @@ function fikirKart(f, kayitli){
   }
   return el;
 }
+// "Önerilen Fikirler" başlığı: sadece Yeni sekmesinde, kart varken görünür
+function basligiGuncelle(){
+  const b = $("#onerilenBaslik"); if(!b) return;
+  const varMi = mod === "yeni" && !!out.querySelector(".card");
+  b.hidden = !varMi;
+  const say = $("#onerilenSay"); if(say) say.textContent = varMi ? "(" + out.querySelectorAll(".card").length + ")" : "";
+}
 function cizFikirler(list){
   out.innerHTML = "";
   if(!list || !list.length){
     out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
+    basligiGuncelle();
     return;
   }
   list.forEach(f => out.appendChild(fikirKart(f)));
+  basligiGuncelle();
 }
 function cizKayitlilar(){
   statusEl.textContent = "";
@@ -565,6 +575,8 @@ async function uret(){
     cizFikirler(sonUretilen);
     oturumKaydet();
     bildir();
+    // Fikir altta kalmasın: başlığa kaydır
+    try{ const ust = $("#onerilenBaslik"); if(ust && ust.scrollIntoView) ust.scrollIntoView({ behavior: "smooth", block: "start" }); }catch(e){}
   }else{
     statusEl.innerHTML = `Çavuş şu an bulamadı — `;
     const b = document.createElement("button");

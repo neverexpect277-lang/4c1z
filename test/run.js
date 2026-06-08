@@ -57,6 +57,23 @@ console.log("\n#1 — Durum etiketi");
   ok("Yeni Fikirler'de durum butonu yok", w2.document.querySelectorAll("#out [data-durum]").length === 0);
 })();
 
+// ---- "Önerilen Fikirler" başlığı ----
+console.log("\nÖnerilen Fikirler başlığı");
+(function(){
+  const w = yeniDom();
+  const b = w.document.querySelector("#onerilenBaslik");
+  ok("başta başlık gizli (fikir yok)", b.hidden === true);
+
+  w.cizFikirler([{ isim: "F1", ne: "a" }, { isim: "F2", ne: "b" }]);
+  ok("Yeni'de fikir varken başlık görünür", b.hidden === false);
+  ok("sayaç doğru (2)", w.document.querySelector("#onerilenSay").textContent === "(2)");
+  ok("başlık metni 'Önerilen Fikirler'", /Önerilen Fikirler/.test(b.textContent));
+
+  w.favToggle({ isim: "F1", ne: "a" });
+  w.setMod("kayit");
+  ok("Kayıtlılar sekmesinde başlık gizli", b.hidden === true);
+})();
+
 // ---- #2 Puan + sıralama ----
 console.log("\n#2 — Puan ve sıralama");
 (function(){
@@ -359,6 +376,7 @@ function stubUret(w, opts = {}){
   ok("uzman promptuna gerçek PATENT sonucu enjekte edildi", /US1234 Akıllı Tava Patenti/.test(cag[3]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
+  ok("üretimden sonra 'Önerilen Fikirler' başlığı görünür", w.document.querySelector("#onerilenBaslik").hidden === false);
   ok("Çavuş & Zeyneb diyaloğu korundu", w.document.querySelectorAll("#out .card .dia .msg").length === 2);
   ok("mühendislik bloğu render edildi", !!card.querySelector(".muhendislik"));
   const muhMetin = card.querySelector(".muhendislik").textContent;
