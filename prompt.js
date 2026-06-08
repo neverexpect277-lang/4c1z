@@ -146,8 +146,9 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 - ÇAVUŞ (esmer erkek, çok detaycı, bilime aşık): fikri ortaya atar ve SAVUNUR; Zeyneb'i yarı zarif sözle yarı bilim/mantıkla ikna eder.
 - ZEYNEB (kapalı/başörtülü doçent hanım): HİÇBİR ŞEYİ hemen beğenmez, eleştirir, kusur arar, itiraz eder; Çavuş ikna edince gönülsüzce "ikna ettin" der.
 - 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.
+- Ayrıca 'aramaEN' alanına bu ürünü İngilizce ararken kullanılacak 2-4 anahtar kelime yaz (SADECE arama motoru için; kullanıcıya GÖSTERİLMEZ, fikrin kendisi ve diyalog Türkçe kalır).
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (TEK elemanlı, yani 1 fikir), markdown yok:
-[{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;
+[{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","aramaEN":"2-4 İngilizce arama kelimesi (gösterilmez)","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;
   const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nAday fikirler:\n${JSON.stringify(adaylar)}\nBunları süz, gerekirse harmanla ve güçlendir; SADECE EN İYİ 1'ini seç ve diyaloğuyla sun. Hayalci/varsayımsal olanı düzelt ya da çıkar.`;
   return { sistem, kullanici };
 }

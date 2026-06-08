@@ -71,9 +71,9 @@ async function wikiLang(q, lang){
     return titles.map((t, i) => ({ baslik: "Wikipedia(" + lang + "): " + t, ozet: descs[i] || "" })).filter(x => x.baslik);
   } catch (e) { return []; }
 }
-// Türkçe + İngilizce Wikipedia (Türkçe öncelikli; kavram doğrulaması)
-async function wiki(q){
-  const [tr, en] = await Promise.all([wikiLang(q, "tr"), wikiLang(q, "en")]);
+// Türkçe + İngilizce Wikipedia (tr: Türkçe sorgu, en: İngilizce sorgu; kavram doğrulaması)
+async function wiki(qTr, qEn){
+  const [tr, en] = await Promise.all([wikiLang(qTr, "tr"), wikiLang(qEn || qTr, "en")]);
   const out = [];
   for (const it of tr) if (out.length < 3) out.push(it);
   for (const it of en) if (out.length < 4) out.push(it);
@@ -128,7 +128,8 @@ async function hackernews(q){
 }
 
 module.exports = async (req, res) => {
-  const q = String((req.query && req.query.q) || "").slice(0, 200).trim();
+  const q = String((req.query && req.query.q) || "").slice(0, 200).trim();         // Türkçe (web)
+  const en = String((req.query && req.query.en) || "").slice(0, 200).trim();        // İngilizce (tech kaynakları)
   if (!q) { res.status(200).json({ sonuclar: [] }); return; }
   const patentSorgu = /patents\.google\.com/i.test(q);
   try {
@@ -138,7 +139,8 @@ module.exports = async (req, res) => {
     let sonuclar = web.slice(0, 4);   // web baskın olmasın, ek kaynaklara yer kalsın
     if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
-      const [g, s, h, w] = await Promise.all([github(temiz), stack(temiz), hackernews(temiz), wiki(temiz)]);
+      const enTemiz = (en || q).replace(/^site:\S+\s*/, "");   // GitHub/HN/Stack İngilizce ile daha çok sonuç bulur
+      const [g, s, h, w] = await Promise.all([github(enTemiz), stack(enTemiz), hackernews(enTemiz), wiki(temiz, enTemiz)]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }

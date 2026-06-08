@@ -316,13 +316,14 @@ console.log("\nBİRLEŞİK — hepsi bir arada");
 console.log("\nuret() — 4 aşamalı boru hattı (fetch stub)");
 function stubUret(w, opts = {}){
   const cag = [];          // /api/gen prompt metinleri
-  const state = { n: 0, aramaCagrildi: false, patentArandi: false };
+  const state = { n: 0, aramaCagrildi: false, patentArandi: false, enGecti: false };
   w.fetch = async (url, o) => {
     if(url.startsWith("/api/ara")){
       state.aramaCagrildi = true;
       if(opts.aramaHata) throw new Error("ağ yok");
       const patentSorgu = /patents\.google\.com/.test(decodeURIComponent(url));
       if(patentSorgu) state.patentArandi = true;
+      else if(/[?&]en=/.test(url)) state.enGecti = true;   // genel aramaya İngilizce kelime bağlandı mı
       return { ok: true, status: 200, json: async () => ({
         sonuclar: patentSorgu
           ? (opts.patentSonuc || [{ baslik: "US1234 Akıllı Tava Patenti", ozet: "benzer patent var" }])
@@ -334,7 +335,7 @@ function stubUret(w, opts = {}){
     let text;
     if(state.n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));
     else if(state.n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" })));
-    else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
+    else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", aramaEN: "smart pan sensor", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
     else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", talep: "aramada çok sonuç var, talep yüksek", patent: "US1234 benzer patent var", teknik: "kritik kısıt ısıl dayanım, geçer", prototip: "karton maket yap" }]);
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
@@ -347,6 +348,8 @@ function stubUret(w, opts = {}){
   await w.uret();
   ok("4 aşama da çağrıldı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
   ok("web araması çağrıldı", state.aramaCagrildi === true);
+  ok("üst aklın gizli İngilizce kelimesi aramaya bağlandı (en=)", state.enGecti === true);
+  ok("aramaEN kullanıcıya gösterilmez (kartta İngilizce yok)", !/smart pan sensor/.test(w.document.querySelector("#out .card").textContent));
   ok("patent araması (Google Patents) çağrıldı", state.patentArandi === true);
   ok("2. aşama eleştirmen promptu", /KIRMIZI TAKIM/.test(cag[1]));
   ok("3. aşama üst akıl promptu", /ÜST AKLI/.test(cag[2]));
@@ -386,10 +389,17 @@ function stubUret(w, opts = {}){
   // api/ara.js çok kaynaklı arama mantığı (SearXNG -> DDG -> Wikipedia), global.fetch stub
   console.log("\napi/ara.js — çok kaynaklı arama (fetch stub)");
   const handler = require("../api/ara.js");
-  const cagir = (q, fetchStub) => new Promise(resolve => {
+  const cagir = (q, fetchStub, en) => new Promise(resolve => {
     global.fetch = fetchStub;
-    handler({ query: { q } }, { status(){ return this; }, json(o){ resolve(o); } });
+    handler({ query: { q, en } }, { status(){ return this; }, json(o){ resolve(o); } });
   });
+
+  // İngilizce 'en' parametresi: web Türkçe (q) ile, GitHub/HN/Stack İngilizce (en) ile aranır
+  const urller = [];
+  await cagir("akıllı dolap", async (url) => { urller.push(url); return { ok: true, json: async () => ({ results: [] }), text: async () => "" }; }, "smart cabinet");
+  ok("web (SearXNG) Türkçe sorgu ile arandı", urller.some(u => /search\?q=/.test(u) && /ak/i.test(decodeURIComponent(u)) && !/smart\+cabinet|smart%20cabinet|smart cabinet/.test(decodeURIComponent(u))));
+  ok("GitHub İngilizce (smart cabinet) ile arandı", urller.some(u => /api\.github\.com/.test(u) && /smart cabinet/.test(decodeURIComponent(u))));
+  ok("Hacker News İngilizce ile arandı", urller.some(u => /hn\.algolia\.com/.test(u) && /smart cabinet/.test(decodeURIComponent(u))));
 
   // SearXNG sonuç verir → DDG'ye düşmez; genel sorguda Wikipedia eklenir
   const s1 = await cagir("uv dolap", async (url) => {

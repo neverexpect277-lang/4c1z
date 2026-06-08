@@ -450,12 +450,14 @@ async function zincir(sistem, kullanici){
 }
 function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-// Tek arama çağrısı (sonuç dizisi döndürür; hata olursa boş)
-async function araGetir(q){
+// Tek arama çağrısı (en: İngilizce kelimeler, sadece tech kaynakları için; web Türkçe kalır)
+async function araGetir(q, en){
   try{
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 12000);
-    const r = await fetch("/api/ara?q=" + encodeURIComponent(q), { signal: ctrl.signal });
+    let url = "/api/ara?q=" + encodeURIComponent(q);
+    if(en) url += "&en=" + encodeURIComponent(en);
+    const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(to);
     if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)) return j.sonuclar; }
   }catch(e){}
@@ -464,9 +466,11 @@ async function araGetir(q){
 // 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
 async function uzmanlastir(alan, fikir, kaynak){
   const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
+  const enQ = (fikir.aramaEN || "").trim();            // üst aklın ürettiği gizli İngilizce kelimeler
+  const anahtar = fikir.isim || fikir.ne || "";
   const [genel, patent] = await Promise.all([
-    araGetir(ad),
-    araGetir("site:patents.google.com " + (fikir.isim || fikir.ne || ""))
+    araGetir(ad, enQ),
+    araGetir("site:patents.google.com " + (enQ || anahtar))
   ]);
   const fmt = arr => arr.slice(0, 12).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
   const arama = genel.length ? fmt(genel) : "";
