@@ -335,7 +335,7 @@ function stubUret(w, opts = {}){
     if(state.n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));
     else if(state.n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" })));
     else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
-    else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", patent: "US1234 benzer patent var", prototip: "karton maket yap" }]);
+    else text = JSON.stringify([{ isim: "Final Fikir", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", talep: "aramada çok sonuç var, talep yüksek", patent: "US1234 benzer patent var", prototip: "karton maket yap" }]);
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
   return { cag, state };
@@ -362,11 +362,12 @@ function stubUret(w, opts = {}){
   ok("Nasıl yapılır alanı var", /X\+Y parçalarıyla/.test(muhMetin));
   ok("Tahmini maliyet alanı var", /100-200 TL/.test(muhMetin));
   ok("Benzer ürünler 'web' etiketli", /web/.test(muhMetin) && /Mevcut Ürün X/.test(muhMetin));
+  ok("Talep / ilgi alanı var + 'web' etiketli", /Talep \/ ilgi · web/.test(muhMetin) && /talep yüksek/.test(muhMetin));
   ok("Patent durumu alanı var + 'web' etiketli", /Patent durumu · web/.test(muhMetin) && /US1234 benzer patent/.test(muhMetin));
   ok("İlk prototip adımı var", /karton maket/.test(muhMetin));
   card.querySelector('[data-act="fav"]').click();
   const k = w.favleriYukle()[0];
-  ok("mühendislik alanları kalıcı (kaydedildi)", k.nasil && k.maliyet && k.benzer && k.patent && k.prototip && k.alan === "banyo");
+  ok("mühendislik alanları kalıcı (kaydedildi)", k.nasil && k.maliyet && k.benzer && k.talep && k.patent && k.prototip && k.alan === "banyo");
 })().then(async () => {
   // arama başarısız olsa bile uzman heyeti çalışmalı (graceful fallback)
   console.log("\nuret() — web arama başarısız (graceful)");
