@@ -400,7 +400,7 @@ function stubUret(w, opts = {}){
   });
   ok("SearXNG sonucu parse edildi", s1.sonuclar.some(s => /SearX Hit/.test(s.baslik)));
   ok("kaynak searxng", s1.kaynak === "searxng");
-  ok("genel sorguda Wikipedia eklendi", s1.sonuclar.some(s => /Wikipedia: UV Cabinet/.test(s.baslik)));
+  ok("genel sorguda Wikipedia (tr/en) eklendi", s1.sonuclar.some(s => /Wikipedia\((tr|en)\): UV Cabinet/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
@@ -418,7 +418,7 @@ function stubUret(w, opts = {}){
     if(/wikipedia\.org/.test(url)) return { ok: true, json: async () => ["q", ["OLMAMALI"], ["x"], ["y"]] };
     return { ok: true, text: async () => "" };
   });
-  ok("patent sorgusunda Wikipedia eklenmedi", !s3.sonuclar.some(s => /Wikipedia:/.test(s.baslik)));
+  ok("patent sorgusunda Wikipedia eklenmedi", !s3.sonuclar.some(s => /Wikipedia/.test(s.baslik)));
 
   // hepsi patlasa boş döner (kırılmaz)
   const s4 = await cagir("hata testi", async () => { throw new Error("ağ yok"); });

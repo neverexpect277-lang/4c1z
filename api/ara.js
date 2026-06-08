@@ -9,7 +9,16 @@ function temizle(s){
 }
 
 // Public SearXNG instance'ları (rotasyon; biri JSON'u kapatmışsa sıradakine geçilir)
-const SEARX = ["https://searx.be", "https://search.inetol.net", "https://priv.au"];
+const SEARX = [
+  "https://searx.be",
+  "https://search.inetol.net",
+  "https://priv.au",
+  "https://searx.tiekoetter.com",
+  "https://baresearch.org",
+  "https://search.rhscz.eu",
+  "https://opnxng.com",
+  "https://search.bus-hit.me"
+];
 
 async function zamanli(url, opts, ms){
   const ctrl = new AbortController();
@@ -51,16 +60,24 @@ async function ddg(q){
   } catch (e) { return []; }
 }
 
-async function wiki(q){
+async function wikiLang(q, lang){
   try {
-    const r = await zamanli("https://en.wikipedia.org/w/api.php?action=opensearch&limit=3&format=json&search=" + encodeURIComponent(q), {
+    const r = await zamanli("https://" + lang + ".wikipedia.org/w/api.php?action=opensearch&limit=3&format=json&search=" + encodeURIComponent(q), {
       headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)" }
     });
     if (!r.ok) return [];
     const j = await r.json();            // [terim, [başlıklar], [açıklamalar], [url'ler]]
     const titles = j[1] || [], descs = j[2] || [];
-    return titles.map((t, i) => ({ baslik: "Wikipedia: " + t, ozet: descs[i] || "" })).filter(x => x.baslik);
+    return titles.map((t, i) => ({ baslik: "Wikipedia(" + lang + "): " + t, ozet: descs[i] || "" })).filter(x => x.baslik);
   } catch (e) { return []; }
+}
+// Türkçe + İngilizce Wikipedia (Türkçe öncelikli; kavram doğrulaması)
+async function wiki(q){
+  const [tr, en] = await Promise.all([wikiLang(q, "tr"), wikiLang(q, "en")]);
+  const out = [];
+  for (const it of tr) if (out.length < 3) out.push(it);
+  for (const it of en) if (out.length < 4) out.push(it);
+  return out;
 }
 
 module.exports = async (req, res) => {
