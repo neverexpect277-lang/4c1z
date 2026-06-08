@@ -419,10 +419,15 @@ function stubUret(w, opts = {}){
 
   // İngilizce 'en' parametresi: web Türkçe (q) ile, GitHub/HN/Stack İngilizce (en) ile aranır
   const urller = [];
-  await cagir("akıllı dolap", async (url) => { urller.push(url); return { ok: true, json: async () => ({ results: [] }), text: async () => "" }; }, "smart cabinet");
+  await cagir("akıllı dolap", async (url) => {
+    urller.push(url);
+    if(/api\.datamuse\.com/.test(url)) return { ok: true, json: async () => [{ word: "cupboard" }] };
+    return { ok: true, json: async () => ({ results: [] }), text: async () => "" };
+  }, "smart cabinet");
   ok("web (SearXNG) Türkçe sorgu ile arandı", urller.some(u => /search\?q=/.test(u) && /ak/i.test(decodeURIComponent(u)) && !/smart\+cabinet|smart%20cabinet|smart cabinet/.test(decodeURIComponent(u))));
   ok("GitHub İngilizce (smart cabinet) ile arandı", urller.some(u => /api\.github\.com/.test(u) && /smart cabinet/.test(decodeURIComponent(u))));
   ok("GitHub Türkçe (akıllı dolap) ile DE arandı", urller.some(u => /api\.github\.com/.test(u) && /akıllı dolap/.test(decodeURIComponent(u))));
+  ok("Datamuse ilişkili kelimeyle (cupboard) DE arandı", urller.some(u => /api\.github\.com/.test(u) && /cupboard/.test(decodeURIComponent(u))));
   ok("Hacker News İngilizce ile arandı", urller.some(u => /hn\.algolia\.com/.test(u) && /smart cabinet/.test(decodeURIComponent(u))));
 
   // SearXNG sonuç verir → DDG'ye düşmez; genel sorguda Wikipedia eklenir
@@ -439,6 +444,8 @@ function stubUret(w, opts = {}){
       return { ok: true, json: async () => ({ hits: [{ title: "Show HN: Akıllı Dolap", points: 120, num_comments: 33, url: "http://x.co" }] }) };
     if(/export\.arxiv\.org/.test(url))
       return { ok: true, text: async () => "<feed><entry><title>Smart Cabinet Sensing</title><summary>nem ölçümü</summary></entry></feed>" };
+    if(/api\.datamuse\.com/.test(url))
+      return { ok: true, json: async () => [{ word: "cupboard" }, { word: "wardrobe" }] };
     return { ok: true, text: async () => "" };
   });
   ok("SearXNG sonucu parse edildi", s1.sonuclar.some(s => /SearX Hit/.test(s.baslik)));

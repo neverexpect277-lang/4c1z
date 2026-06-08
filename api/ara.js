@@ -127,6 +127,16 @@ async function hackernews(q){
   } catch (e) { return []; }
 }
 
+// Datamuse — bir terime İLİŞKİLİ kelimeler (arama kapsamını genişletmek için). Anahtarsız.
+async function datamuse(q){
+  try {
+    const r = await zamanli("https://api.datamuse.com/words?max=4&ml=" + encodeURIComponent(q));
+    if (!r.ok) return [];
+    const j = await r.json();
+    return (Array.isArray(j) ? j : []).slice(0, 2).map(x => x && x.word).filter(Boolean);
+  } catch (e) { return []; }
+}
+
 // arXiv — bilimsel makale (fizik/mühendislik); teknik fizibilite temeli. Anahtarsız, XML döner.
 async function arxiv(q){
   try {
@@ -159,16 +169,18 @@ module.exports = async (req, res) => {
     if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
       const enTemiz = (en || q).replace(/^site:\S+\s*/, "");
-      // GitHub/HN/Stack'i HEM İngilizce HEM Türkçe ara (Türkçe repolar/projeler de gelsin), tekrarı ele
-      const ciftDil = async (fn) => {
-        const isler = [fn(enTemiz)];
-        if (temiz && temiz.toLowerCase() !== enTemiz.toLowerCase()) isler.push(fn(temiz));
-        const dilim = await Promise.all(isler);
+      // Terim seti: İngilizce + Türkçe + Datamuse'un ilişkili kelimeleri (kapsamı genişletir → daha çok repo)
+      const terimler = [enTemiz];
+      if (temiz && temiz.toLowerCase() !== enTemiz.toLowerCase()) terimler.push(temiz);
+      for (const t of await datamuse(enTemiz)) if (terimler.length < 4 && t) terimler.push(t);
+      // GitHub/HN/Stack'i TÜM terimlerle ara, tekrarı ele
+      const cokDil = async (fn) => {
+        const dilim = await Promise.all(terimler.map(t => fn(t)));
         const gor = new Set(), out = [];
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, a, w] = await Promise.all([ciftDil(github), ciftDil(stack), ciftDil(hackernews), arxiv(enTemiz), wiki(temiz, enTemiz)]);
+      const [g, s, h, a, w] = await Promise.all([cokDil(github), cokDil(stack), cokDil(hackernews), arxiv(enTemiz), wiki(temiz, enTemiz)]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), a.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
