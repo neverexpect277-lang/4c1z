@@ -401,6 +401,8 @@ function stubUret(w, opts = {}){
       return { ok: true, json: async () => ({ items: [{ full_name: "user/akilli-dolap", description: "akıllı dolap projesi", stargazers_count: 42, forks_count: 7, pushed_at: "2024-05-01T00:00:00Z", topics: ["iot", "tarim"] }] }) };
     if(/api\.stackexchange\.com/.test(url))
       return { ok: true, json: async () => ({ items: [{ title: "dolap nem sorunu", score: 5, answer_count: 2 }] }) };
+    if(/hn\.algolia\.com/.test(url))
+      return { ok: true, json: async () => ({ hits: [{ title: "Show HN: Akıllı Dolap", points: 120, num_comments: 33, url: "http://x.co" }] }) };
     return { ok: true, text: async () => "" };
   });
   ok("SearXNG sonucu parse edildi", s1.sonuclar.some(s => /SearX Hit/.test(s.baslik)));
@@ -410,6 +412,7 @@ function stubUret(w, opts = {}){
   ok("GitHub topics (teknik etiketler) eklendi", s1.sonuclar.some(s => /\[iot, tarim\]/.test(s.ozet)));
   ok("GitHub canlılık sinyali (forks + son güncelleme)", s1.sonuclar.some(s => /⑂7/.test(s.baslik) && /son: 2024-05/.test(s.ozet)));
   ok("Stack Exchange sorusu eklendi (talep sinyali)", s1.sonuclar.some(s => /Soru: dolap nem sorunu/.test(s.baslik)));
+  ok("Hacker News eklendi (lansman/ilgi sinyali)", s1.sonuclar.some(s => /HN: Show HN: Akıllı Dolap.*120p, 33 yorum/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
@@ -427,7 +430,7 @@ function stubUret(w, opts = {}){
     if(/wikipedia\.org/.test(url)) return { ok: true, json: async () => ["q", ["OLMAMALI"], ["x"], ["y"]] };
     return { ok: true, text: async () => "" };
   });
-  ok("patent sorgusunda Wikipedia/GitHub/Stack eklenmedi", !s3.sonuclar.some(s => /Wikipedia|GitHub|Soru:/.test(s.baslik)));
+  ok("patent sorgusunda Wikipedia/GitHub/Stack/HN eklenmedi", !s3.sonuclar.some(s => /Wikipedia|GitHub|Soru:|HN:/.test(s.baslik)));
 
   // hepsi patlasa boş döner (kırılmaz)
   const s4 = await cagir("hata testi", async () => { throw new Error("ağ yok"); });

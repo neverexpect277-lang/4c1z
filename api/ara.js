@@ -114,6 +114,19 @@ async function stack(q){
   } catch (e) { return []; }
 }
 
+// Hacker News (Algolia) — ürün lansmanı/tartışma + puan = ilgi sinyali. Anahtarsız.
+async function hackernews(q){
+  try {
+    const r = await zamanli("https://hn.algolia.com/api/v1/search?tags=story&hitsPerPage=4&query=" + encodeURIComponent(q));
+    if (!r.ok) return [];
+    const j = await r.json();
+    return (j.hits || []).slice(0, 3).map(x => ({
+      baslik: "HN: " + temizle(x.title || "") + " (" + (x.points || 0) + "p, " + (x.num_comments || 0) + " yorum)",
+      ozet: x.url ? String(x.url).slice(0, 90) : ""
+    })).filter(x => x.baslik.length > 6);
+  } catch (e) { return []; }
+}
+
 module.exports = async (req, res) => {
   const q = String((req.query && req.query.q) || "").slice(0, 200).trim();
   if (!q) { res.status(200).json({ sonuclar: [] }); return; }
@@ -125,8 +138,8 @@ module.exports = async (req, res) => {
     let sonuclar = web.slice(0, 4);   // web baskın olmasın, ek kaynaklara yer kalsın
     if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
-      const [g, s, w] = await Promise.all([github(temiz), stack(temiz), wiki(temiz)]);
-      sonuclar = sonuclar.concat(g.slice(0, 2), s.slice(0, 2), w.slice(0, 2));
+      const [g, s, h, w] = await Promise.all([github(temiz), stack(temiz), hackernews(temiz), wiki(temiz)]);
+      sonuclar = sonuclar.concat(g.slice(0, 2), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });
