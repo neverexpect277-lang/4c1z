@@ -165,9 +165,11 @@ SİNYAL YORUMU (arama sonuçlarındaki işaretleri OKU, körü körüne sayma):
 - Çok "Soru:" ama az/zayıf çözüm = karşılanmamış GERÇEK ihtiyaç → talep yüksek.
 - Neredeyse hiç sonuç yok = ya gerçekten yeni ya da kimse istemiyor; bu ikisini dürüstçe AYIRT et, otomatik "talep yüksek" deme.
 'talep' alanını bu okumaya göre yaz; abartma, uydurma.
+PREMIUM HÜKÜM: tüm sinyalleri (rakip gücü, talep, patent, teknik fizik) tart ve fikre 0-100 arası bir ÖZGÜNLÜK+UYGULANABİLİRLİK skoru ver ('skor'); 'hukum' alanına tek cümlede en güçlü yön + en büyük riski yaz. Güçlü rakip ya da yüksek teknik risk varsa skor DÜŞÜK olsun; abartma.
+FARKLILAŞMA: arama güçlü mevcut rakip gösteriyorsa 'farklilas' alanına fikri 'zaten var'dan kurtaracak SOMUT bir kıvrım yaz; belirgin rakip yoksa boş bırak.
 ÇIKTI: SADECE geçerli bir JSON dizisi (TEK eleman), markdown YOK, açıklama YOK:
-[{"isim":"<sana verilen ismi AYNEN yaz>","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","teknik":"en kritik fiziksel/mühendislik kısıtı ve fikir bunu gerçekçi şekilde geçiyor mu (1 cümle)","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nDeğerlendirilecek ürün fikri:\n${JSON.stringify({ isim: fikir.isim, ne: fikir.ne, neyden: fikir.neyden, derde: fikir.derde })}\nBu fikri uzman heyeti gözüyle somutlaştır. Diyalog veya istenmeyen alan EKLEME; sadece istenen 7 alanı doldur.`;
+[{"isim":"<sana verilen ismi AYNEN yaz>","skor":"0-100 arası tek sayı","hukum":"tek cümle: en güçlü yön + en büyük risk","nasil":"nasıl yapılır + hangi gerçek parçalar, 1-2 cümle","maliyet":"kabaca birim üretim maliyeti aralığı (TL veya $)","benzer":"piyasadaki benzer/rakip ürünler ya da 'belirgin örnek yok'","farklilas":"güçlü rakip varsa farklılaştıracak somut kıvrım, yoksa boş","talep":"aramaya dayalı talep/ilgi tahmini (1 cümle)","patent":"benzer patent var mı; varsa kısaca hangisi, yoksa 'belirgin patent bulunamadı'","teknik":"en kritik fiziksel/mühendislik kısıtı ve fikir bunu gerçekçi şekilde geçiyor mu (1 cümle)","prototip":"ilk çalışan prototipi yapmak için atılacak ilk somut adım"}]`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)}\nDeğerlendirilecek ürün fikri:\n${JSON.stringify({ isim: fikir.isim, ne: fikir.ne, neyden: fikir.neyden, derde: fikir.derde })}\nBu fikri uzman heyeti gözüyle somutlaştır. Diyalog veya istenmeyen alan EKLEME; sadece istenen 10 alanı doldur.`;
   return { sistem, kullanici };
 }
 

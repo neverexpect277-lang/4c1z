@@ -137,6 +137,16 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 
 .field{margin-top:11px;font-size:14.5px;color:var(--soft);}
 .field b{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);margin-bottom:2px;}
+/* Premium özgünlük+uygulanabilirlik skoru rozeti */
+.skor{display:flex;align-items:center;gap:11px;margin:4px 0 12px;padding:10px 13px;
+  border-radius:13px;background:var(--card2);border:1px solid var(--line);}
+.skorNo{flex:none;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-weight:800;font-size:20px;color:#fff;background:var(--accent);}
+.skor.yuksek .skorNo{background:#3f9d6b;}
+.skor.orta .skorNo{background:var(--accent);}
+.skor.dusuk .skorNo{background:#c47a4a;}
+.skorHukum{font-size:13px;line-height:1.4;color:var(--soft);}
+
 /* Mühendislik katmanı (uzman heyeti) */
 .muhendislik{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
 .muhbaslik{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accentDeep);

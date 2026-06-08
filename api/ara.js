@@ -139,8 +139,17 @@ module.exports = async (req, res) => {
     let sonuclar = web.slice(0, 4);   // web baskın olmasın, ek kaynaklara yer kalsın
     if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
-      const enTemiz = (en || q).replace(/^site:\S+\s*/, "");   // GitHub/HN/Stack İngilizce ile daha çok sonuç bulur
-      const [g, s, h, w] = await Promise.all([github(enTemiz), stack(enTemiz), hackernews(enTemiz), wiki(temiz, enTemiz)]);
+      const enTemiz = (en || q).replace(/^site:\S+\s*/, "");
+      // GitHub/HN/Stack'i HEM İngilizce HEM Türkçe ara (Türkçe repolar/projeler de gelsin), tekrarı ele
+      const ciftDil = async (fn) => {
+        const isler = [fn(enTemiz)];
+        if (temiz && temiz.toLowerCase() !== enTemiz.toLowerCase()) isler.push(fn(temiz));
+        const dilim = await Promise.all(isler);
+        const gor = new Set(), out = [];
+        for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
+        return out;
+      };
+      const [g, s, h, w] = await Promise.all([ciftDil(github), ciftDil(stack), ciftDil(hackernews), wiki(temiz, enTemiz)]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }

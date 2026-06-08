@@ -146,12 +146,19 @@ function puanHTML(f){
 function notHTML(f){
   return `<textarea class="not" rows="2" placeholder="Kendi notun…">${escapeHtml(f.not || "")}</textarea>`;
 }
+function skorHTML(f){
+  const n = parseInt(f.skor, 10);
+  if(!(n >= 0)) return "";
+  const renk = n >= 75 ? "yuksek" : n >= 50 ? "orta" : "dusuk";
+  return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${escapeHtml(f.hukum || "")}</span></div>`;
+}
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${escapeHtml(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
     sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
+    sec("Farklılaş", f.farklilas) +
     sec("Talep / ilgi" + (f.benzerWeb ? " · web" : ""), f.talep) +
     sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
     sec("Teknik gerçeklik", f.teknik) +
@@ -164,6 +171,7 @@ function kartHTML(f, kayitli){
     <h2>${escapeHtml(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
+    ${skorHTML(f)}
     <p class="ne">${escapeHtml(f.ne || "")}</p>
     ${diyalogHTML(f.diyalog)}
     ${sec("Neyden", f.neyden)}
@@ -479,7 +487,7 @@ async function uzmanlastir(alan, fikir, kaynak){
     const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
       if(patentArama) fikir.patentWeb = true;
     }
