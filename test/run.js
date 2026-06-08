@@ -398,7 +398,7 @@ function stubUret(w, opts = {}){
     if(/wikipedia\.org/.test(url))
       return { ok: true, json: async () => ["uv dolap", ["UV Cabinet"], ["Bir dolap türü"], ["http://x"]] };
     if(/api\.github\.com/.test(url))
-      return { ok: true, json: async () => ({ items: [{ full_name: "user/akilli-dolap", description: "akıllı dolap projesi", stargazers_count: 42 }] }) };
+      return { ok: true, json: async () => ({ items: [{ full_name: "user/akilli-dolap", description: "akıllı dolap projesi", stargazers_count: 42, topics: ["iot", "tarim"] }] }) };
     if(/api\.stackexchange\.com/.test(url))
       return { ok: true, json: async () => ({ items: [{ title: "dolap nem sorunu", score: 5, answer_count: 2 }] }) };
     return { ok: true, text: async () => "" };
@@ -407,6 +407,7 @@ function stubUret(w, opts = {}){
   ok("kaynak searxng", s1.kaynak === "searxng");
   ok("genel sorguda Wikipedia (tr/en) eklendi", s1.sonuclar.some(s => /Wikipedia\((tr|en)\): UV Cabinet/.test(s.baslik)));
   ok("GitHub projesi eklendi (★ ilgi sinyali)", s1.sonuclar.some(s => /GitHub: user\/akilli-dolap.*★42/.test(s.baslik)));
+  ok("GitHub topics (teknik etiketler) eklendi", s1.sonuclar.some(s => /\[iot, tarim\]/.test(s.ozet)));
   ok("Stack Exchange sorusu eklendi (talep sinyali)", s1.sonuclar.some(s => /Soru: dolap nem sorunu/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer

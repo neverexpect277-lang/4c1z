@@ -88,10 +88,13 @@ async function github(q){
     });
     if (!r.ok) return [];
     const j = await r.json();
-    return (j.items || []).slice(0, 3).map(x => ({
-      baslik: "GitHub: " + (x.full_name || "") + " (★" + (x.stargazers_count || 0) + ")",
-      ozet: temizle(x.description || "")
-    })).filter(x => x.baslik.length > 9);
+    return (j.items || []).slice(0, 3).map(x => {
+      const konular = (Array.isArray(x.topics) && x.topics.length) ? " [" + x.topics.slice(0, 5).join(", ") + "]" : "";
+      return {
+        baslik: "GitHub: " + (x.full_name || "") + " (★" + (x.stargazers_count || 0) + ")",
+        ozet: temizle(x.description || "") + konular
+      };
+    }).filter(x => x.baslik.length > 9);
   } catch (e) { return []; }
 }
 
