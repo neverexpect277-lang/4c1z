@@ -316,18 +316,28 @@ console.log("\nBİRLEŞİK — hepsi bir arada");
 console.log("\nuret() — 4 aşamalı boru hattı (fetch stub)");
 function stubUret(w, opts = {}){
   const cag = [];          // /api/gen prompt metinleri
-  const state = { n: 0, aramaCagrildi: false, patentArandi: false };
+  const state = { n: 0, aramaCagrildi: false, patentArandi: false, patentViewArandi: false, parcaArandi: false };
+  const jr = o => ({ ok: true, status: 200, json: async () => o });
   w.fetch = async (url, o) => {
+    if(url.startsWith("/api/patent")){
+      state.patentViewArandi = true;
+      return jr(opts.patentsizView ? { patentler: [] }
+        : { patentler: [{ no: "US999", baslik: "Yapısal Patent", tarih: "2020-01-01", sahip: "ACME" }] });
+    }
+    if(url.startsWith("/api/parca")){
+      state.parcaArandi = true;
+      return jr(opts.parcasiz ? { parcalar: [] } : { parcalar: [{ ad: "NTC sensör", fiyat: "$0.85" }] });
+    }
     if(url.startsWith("/api/ara")){
       state.aramaCagrildi = true;
       if(opts.aramaHata) throw new Error("ağ yok");
       const patentSorgu = /patents\.google\.com/.test(decodeURIComponent(url));
       if(patentSorgu) state.patentArandi = true;
-      return { ok: true, status: 200, json: async () => ({
+      return jr({
         sonuclar: patentSorgu
           ? (opts.patentSonuc || [{ baslik: "US1234 Akıllı Tava Patenti", ozet: "benzer patent var" }])
           : (opts.sonuclar || [{ baslik: "Mevcut Ürün X", ozet: "benzer bir şey" }])
-      }) };
+      });
     }
     state.n++;
     cag.push(JSON.parse(o.body).text);
@@ -347,23 +357,25 @@ function stubUret(w, opts = {}){
   await w.uret();
   ok("4 aşama da çağrıldı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
   ok("web araması çağrıldı", state.aramaCagrildi === true);
-  ok("patent araması (Google Patents) çağrıldı", state.patentArandi === true);
+  ok("PatentsView (yapılandırılmış) çağrıldı", state.patentViewArandi === true);
+  ok("Digi-Key parça araması çağrıldı", state.parcaArandi === true);
   ok("2. aşama eleştirmen promptu", /KIRMIZI TAKIM/.test(cag[1]));
   ok("3. aşama üst akıl promptu", /ÜST AKLI/.test(cag[2]));
   ok("4. aşama uzman heyeti promptu", /UZMAN HEYETİSİN/.test(cag[3]));
   ok("üst akla SÜZÜLMÜŞ adaylar gitti", /Süzülmüş0/.test(cag[2]) && !/Aday0/.test(cag[2]));
   ok("uzman promptuna gerçek arama sonucu enjekte edildi", /Mevcut Ürün X/.test(cag[3]));
-  ok("uzman promptuna gerçek PATENT sonucu enjekte edildi", /US1234 Akıllı Tava Patenti/.test(cag[3]));
+  ok("uzman promptuna YAPILANDIRILMIŞ patent (PatentsView) enjekte edildi", /US999 Yapısal Patent/.test(cag[3]) && /ACME/.test(cag[3]));
+  ok("uzman promptuna gerçek PARÇA fiyatı (Digi-Key) enjekte edildi", /NTC sensör/.test(cag[3]) && /\$0\.85/.test(cag[3]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
   ok("Çavuş & Zeyneb diyaloğu korundu", w.document.querySelectorAll("#out .card .dia .msg").length === 2);
   ok("mühendislik bloğu render edildi", !!card.querySelector(".muhendislik"));
   const muhMetin = card.querySelector(".muhendislik").textContent;
   ok("Nasıl yapılır alanı var", /X\+Y parçalarıyla/.test(muhMetin));
-  ok("Tahmini maliyet alanı var", /100-200 TL/.test(muhMetin));
+  ok("Tahmini maliyet alanı var + 'parça' etiketli", /Tahmini maliyet · parça/.test(muhMetin) && /100-200 TL/.test(muhMetin));
   ok("Benzer ürünler 'web' etiketli", /web/.test(muhMetin) && /Mevcut Ürün X/.test(muhMetin));
   ok("Talep / ilgi alanı var + 'web' etiketli", /Talep \/ ilgi · web/.test(muhMetin) && /talep yüksek/.test(muhMetin));
-  ok("Patent durumu alanı var + 'web' etiketli", /Patent durumu · web/.test(muhMetin) && /US1234 benzer patent/.test(muhMetin));
+  ok("Patent durumu alanı var + 'resmi' etiketli (PatentsView)", /Patent durumu · resmi/.test(muhMetin) && /US1234 benzer patent/.test(muhMetin));
   ok("İlk prototip adımı var", /karton maket/.test(muhMetin));
   card.querySelector('[data-act="fav"]').click();
   const k = w.favleriYukle()[0];
@@ -423,6 +435,33 @@ function stubUret(w, opts = {}){
   // hepsi patlasa boş döner (kırılmaz)
   const s4 = await cagir("hata testi", async () => { throw new Error("ağ yok"); });
   ok("tüm kaynaklar patlasa boş sonuç (kırılmaz)", Array.isArray(s4.sonuclar) && s4.sonuclar.length === 0);
+
+  // api/patent.js — PatentsView (anahtarsız boş; anahtarlı parse)
+  console.log("\napi/patent.js — PatentsView (anahtar/parse)");
+  const patentHandler = require("../api/patent.js");
+  const cagirH = (h, q) => new Promise(res => h({ query: { q } }, { status(){ return this; }, json: res }));
+  process.env.PATENTSVIEW_KEY = "";
+  ok("anahtarsız boş döner", (await cagirH(patentHandler, "uv dolap")).patentler.length === 0);
+  process.env.PATENTSVIEW_KEY = "k";
+  global.fetch = async () => ({ ok: true, json: async () => ({ patents: [{ patent_id: "US1", patent_title: "Test", patent_date: "2021-01-01", assignees: [{ assignee_organization: "Org" }] }] }) });
+  const pp = await cagirH(patentHandler, "uv dolap");
+  ok("yanıt parse edilir (no/sahip)", pp.patentler.length === 1 && pp.patentler[0].no === "US1" && pp.patentler[0].sahip === "Org");
+  process.env.PATENTSVIEW_KEY = "";
+
+  // api/parca.js — Digi-Key (anahtarsız boş; OAuth token + arama parse)
+  console.log("\napi/parca.js — Digi-Key (anahtar/parse)");
+  const parcaHandler = require("../api/parca.js");
+  process.env.DIGIKEY_CLIENT_ID = ""; process.env.DIGIKEY_CLIENT_SECRET = "";
+  ok("anahtarsız boş döner", (await cagirH(parcaHandler, "sensör")).parcalar.length === 0);
+  process.env.DIGIKEY_CLIENT_ID = "id"; process.env.DIGIKEY_CLIENT_SECRET = "sec";
+  global.fetch = async (url) => {
+    if(/oauth2\/token/.test(url)) return { ok: true, json: async () => ({ access_token: "tok", expires_in: 600 }) };
+    if(/search\/keyword/.test(url)) return { ok: true, json: async () => ({ Products: [{ Description: { ProductDescription: "NTC Sensör" }, UnitPrice: 1.25 }] }) };
+    return { ok: true, json: async () => ({}) };
+  };
+  const dp = await cagirH(parcaHandler, "sensör");
+  ok("OAuth token alınıp arama parse edilir", dp.parcalar.length === 1 && dp.parcalar[0].ad === "NTC Sensör" && dp.parcalar[0].fiyat === 1.25);
+  process.env.DIGIKEY_CLIENT_ID = ""; process.env.DIGIKEY_CLIENT_SECRET = "";
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);

@@ -150,10 +150,11 @@ function muhHTML(f){
   if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.prototip)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${escapeHtml(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
-    sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
+    sec("Nasıl yapılır", f.nasil) +
+    sec("Tahmini maliyet" + (f.maliyetParca ? " · parça" : ""), f.maliyet) +
     sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
     sec("Talep / ilgi" + (f.benzerWeb ? " · web" : ""), f.talep) +
-    sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
+    sec("Patent durumu" + (f.patentResmi ? " · resmi" : (f.patentWeb ? " · web" : "")), f.patent) +
     sec("İlk prototip adımı", f.prototip) +
     `</div>`;
 }
@@ -449,34 +450,59 @@ async function zincir(sistem, kullanici){
 }
 function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-// Tek arama çağrısı (sonuç dizisi döndürür; hata olursa boş)
-async function araGetir(q){
+// Tek HTTP çağrısı → JSON (hata/zaman aşımı olursa null)
+async function jsonGetir(url){
   try{
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 12000);
-    const r = await fetch("/api/ara?q=" + encodeURIComponent(q), { signal: ctrl.signal });
+    const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(to);
-    if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)) return j.sonuclar; }
+    if(r.ok) return await r.json();
   }catch(e){}
-  return [];
+  return null;
 }
-// 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
+// /api/ara çağrısı → sonuç dizisi
+async function araGetir(q){
+  const j = await jsonGetir("/api/ara?q=" + encodeURIComponent(q));
+  return (j && Array.isArray(j.sonuclar)) ? j.sonuclar : [];
+}
+// 4. AŞAMA yardımcısı: web + patent(web) + PatentsView + Digi-Key (paralel) → uzman heyeti
 async function uzmanlastir(alan, fikir, kaynak){
   const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
-  const [genel, patent] = await Promise.all([
+  const anahtar = fikir.isim || fikir.ne || "";
+  const [genel, patentW, patentY, parca] = await Promise.all([
     araGetir(ad),
-    araGetir("site:patents.google.com " + (fikir.isim || fikir.ne || ""))
+    araGetir("site:patents.google.com " + anahtar),
+    jsonGetir("/api/patent?q=" + encodeURIComponent(anahtar)),   // PatentsView (anahtar yoksa boş)
+    jsonGetir("/api/parca?q=" + encodeURIComponent(anahtar))     // Digi-Key (anahtar yoksa boş)
   ]);
   const fmt = arr => arr.slice(0, 4).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
   const arama = genel.length ? fmt(genel) : "";
-  const patentArama = patent.length ? fmt(patent) : "";
+
+  // Patent: yapılandırılmış (PatentsView) varsa onu kullan, yoksa Google Patents'e düş
+  let patentArama = "", patentResmi = false, patentWeb = false;
+  if(patentY && Array.isArray(patentY.patentler) && patentY.patentler.length){
+    patentArama = patentY.patentler.map(p => `- ${p.no || ""} ${p.baslik || ""} (${p.sahip || "?"}, ${p.tarih || "?"})`).join("\n");
+    patentResmi = true;
+  }else if(patentW.length){
+    patentArama = fmt(patentW);
+    patentWeb = true;
+  }
+
+  // Parça fiyatları (Digi-Key) → maliyet temellendirmesi
+  let parcaArama = "";
+  if(parca && Array.isArray(parca.parcalar) && parca.parcalar.length)
+    parcaArama = parca.parcalar.map(p => `- ${p.ad || ""}: ${p.fiyat || "?"}`).join("\n");
+
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, parcaArama);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["nasil", "maliyet", "benzer", "talep", "patent", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
-      if(patentArama) fikir.patentWeb = true;
+      if(patentResmi) fikir.patentResmi = true;
+      else if(patentWeb) fikir.patentWeb = true;
+      if(parcaArama) fikir.maliyetParca = true;
     }
   }catch(e){}
 }
