@@ -83,16 +83,17 @@ async function wiki(q){
 // GitHub açık kaynak projeleri (benzer proje + yıldız = ilgi). Anahtarsız (anonim).
 async function github(q){
   try {
-    const r = await zamanli("https://api.github.com/search/repositories?per_page=4&q=" + encodeURIComponent(q), {
+    const r = await zamanli("https://api.github.com/search/repositories?per_page=4&sort=stars&order=desc&q=" + encodeURIComponent(q), {
       headers: { "User-Agent": "4c1z/1.0", "Accept": "application/vnd.github+json" }
     });
     if (!r.ok) return [];
     const j = await r.json();
     return (j.items || []).slice(0, 3).map(x => {
       const konular = (Array.isArray(x.topics) && x.topics.length) ? " [" + x.topics.slice(0, 5).join(", ") + "]" : "";
+      const guncel = x.pushed_at ? " · son: " + String(x.pushed_at).slice(0, 7) : "";
       return {
-        baslik: "GitHub: " + (x.full_name || "") + " (★" + (x.stargazers_count || 0) + ")",
-        ozet: temizle(x.description || "") + konular
+        baslik: "GitHub: " + (x.full_name || "") + " (★" + (x.stargazers_count || 0) + " ⑂" + (x.forks_count || 0) + ")",
+        ozet: temizle(x.description || "") + konular + guncel
       };
     }).filter(x => x.baslik.length > 9);
   } catch (e) { return []; }
