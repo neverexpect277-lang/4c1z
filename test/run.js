@@ -57,34 +57,6 @@ console.log("\n#1 — Durum etiketi");
   ok("Yeni Fikirler'de durum butonu yok", w2.document.querySelectorAll("#out [data-durum]").length === 0);
 })();
 
-// ---- Sesli okuma (Çavuş kalın, Zeyneb ince) ----
-console.log("\nSesli okuma (TTS)");
-(function(){
-  const w = yeniDom();
-  // speechSynthesis + SpeechSynthesisUtterance stub
-  const soylenen = [];
-  w.speechSynthesis = { speaking: false, pending: false, cancel(){ this.speaking = false; }, getVoices(){ return [{ lang: "tr-TR", name: "Yelda" }]; }, speak(u){ soylenen.push(u); } };
-  w.SpeechSynthesisUtterance = function(t){ this.text = t; this.pitch = 1; this.lang = ""; };
-
-  w.cizFikirler([{ isim: "Akıllı Tava", ne: "pişirir", diyalog: [
-    { kim: "Çavuş", soz: "bak şuna" }, { kim: "Zeyneb", soz: "ikna olmadım" }
-  ]}]);
-  const kart = w.document.querySelector("#out .card");
-  const ses = kart.querySelector('[data-act="ses"]');
-  ok("Dinle butonu var", !!ses);
-  ses.click();
-  ok("isim+açıklama + 2 diyalog = 3 parça seslendirildi", soylenen.length === 3);
-  ok("Türkçe ses + dil ayarı", soylenen[0].lang === "tr-TR");
-  ok("Çavuş kalın ton (pitch<1)", soylenen[1].pitch === 0.75);
-  ok("Zeyneb ince ton (pitch>1)", soylenen[2].pitch === 1.35);
-
-  // tekrar bas → durdur (cancel)
-  w.speechSynthesis.speaking = true;
-  let iptal = false; w.speechSynthesis.cancel = () => { iptal = true; };
-  ses.click();
-  ok("çalarken tekrar basınca durur (cancel)", iptal === true);
-})();
-
 // ---- "Önerilen Fikirler" başlığı ----
 console.log("\nÖnerilen Fikirler başlığı");
 (function(){

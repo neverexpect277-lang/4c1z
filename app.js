@@ -185,7 +185,6 @@ function kartHTML(f, kayitli){
     ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${metin(f.vayBe)}</div>` : ""}
     ${kayitli ? puanHTML(f) + durumHTML(f) + notHTML(f) : ""}
     <div class="cardfoot">
-      <button class="mini ses" data-act="ses">🔊 Dinle</button>
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
       <button class="mini ig" data-act="ig">Instagram</button>
@@ -201,7 +200,6 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
-  el.querySelector('[data-act="ses"]').addEventListener("click", () => seslendir(f));
   // Başlığa basınca kartı aç/kapa (yıldıza basınca değil)
   const h2 = el.querySelector("h2");
   if(h2) h2.addEventListener("click", ev => { if(ev.target.closest('[data-act="fav"]')) return; el.classList.toggle("kapali"); });
@@ -275,25 +273,6 @@ function cizKayitlilar(){
   list.forEach((f, i) => { const el = fikirKart(f, true); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
 }
 
-// Çavuş↔Zeyneb atışmasını sesli oku (tarayıcıda yerleşik, anahtarsız). Çavuş kalın, Zeyneb ince ton.
-function seslendir(f){
-  const synth = window.speechSynthesis;
-  if(!synth || typeof SpeechSynthesisUtterance === "undefined"){ flash("Tarayıcı sesli okumayı desteklemiyor"); return; }
-  if(synth.speaking || synth.pending){ synth.cancel(); flash("Durduruldu"); return; }   // tekrar bas → durdur
-  const trSes = (synth.getVoices() || []).find(v => /tr/i.test(v.lang || ""));
-  const soyle = (text, pitch) => {
-    if(!text) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "tr-TR"; u.pitch = pitch; u.rate = 1;
-    if(trSes) u.voice = trSes;
-    synth.speak(u);
-  };
-  soyle((f.isim || "") + ". " + (f.ne || ""), 1);
-  if(Array.isArray(f.diyalog)) f.diyalog.forEach(m => {
-    const zeyneb = String(m.kim || "").toLocaleLowerCase("tr").startsWith("zeyneb");
-    soyle((m.kim || "") + ", " + (m.soz || ""), zeyneb ? 1.35 : 0.75);
-  });
-}
 function kopyala(f){
   const dia = Array.isArray(f.diyalog) && f.diyalog.length
     ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
