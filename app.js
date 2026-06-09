@@ -131,7 +131,7 @@ function diyalogHTML(d){
     const zeyneb = String(m.kim||"").toLocaleLowerCase("tr").startsWith("zeyneb");
     const ikon = zeyneb ? "🧕" : "🧔🏽";
     const kls = zeyneb ? "zeyneb" : "cavus";
-    return `<div class="msg ${kls}"><span class="who">${ikon} ${escapeHtml(m.kim||"")}</span>${escapeHtml(m.soz||"")}</div>`;
+    return `<div class="msg ${kls}"><span class="who">${ikon} ${metin(m.kim||"")}</span>${metin(m.soz||"")}</div>`;
   };
   return `<div class="dia">${d.map(satir).join("")}</div>`;
 }
@@ -151,11 +151,11 @@ function skorHTML(f){
   const n = parseInt(f.skor, 10);
   if(!(n >= 0)) return "";
   const renk = n >= 75 ? "yuksek" : n >= 50 ? "orta" : "dusuk";
-  return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${escapeHtml(f.hukum || "")}</span></div>`;
+  return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${metin(f.hukum || "")}</span></div>`;
 }
 function muhHTML(f){
   if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas)) return "";
-  const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${escapeHtml(v)}</div>` : "";
+  const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
     sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
@@ -167,19 +167,19 @@ function muhHTML(f){
     `</div>`;
 }
 function kartHTML(f, kayitli){
-  const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${escapeHtml(v)}</div>` : "";
+  const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
   return `
-    <h2>${escapeHtml(f.isim || "İsimsiz")}
+    <h2>${metin(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
     ${skorHTML(f)}
-    <p class="ne">${escapeHtml(f.ne || "")}</p>
+    <p class="ne">${metin(f.ne || "")}</p>
     ${diyalogHTML(f.diyalog)}
     ${sec("Neyden", f.neyden)}
     ${sec("Hangi derde", f.derde)}
     ${sec("Neden hâlâ yok", f.nedenYok)}
     ${muhHTML(f)}
-    ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${escapeHtml(f.vayBe)}</div>` : ""}
+    ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${metin(f.vayBe)}</div>` : ""}
     ${kayitli ? puanHTML(f) + durumHTML(f) + notHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
@@ -197,6 +197,9 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
+  // Başlığa basınca kartı aç/kapa (yıldıza basınca değil)
+  const h2 = el.querySelector("h2");
+  if(h2) h2.addEventListener("click", ev => { if(ev.target.closest('[data-act="fav"]')) return; el.classList.toggle("kapali"); });
   if(kayitli){
     el.querySelectorAll("[data-durum]").forEach(b =>
       b.addEventListener("click", () => favDurumSet(f.isim, b.dataset.durum)));
@@ -221,7 +224,7 @@ function cizFikirler(list){
     basligiGuncelle();
     return;
   }
-  list.forEach(f => out.appendChild(fikirKart(f)));
+  list.forEach((f, i) => { const el = fikirKart(f); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
   basligiGuncelle();
 }
 function cizKayitlilar(){
@@ -261,7 +264,7 @@ function cizKayitlilar(){
     const d = document.createElement("div"); d.className = "bossonuc"; d.textContent = "Eşleşen fikir yok.";
     out.appendChild(d); return;
   }
-  list.forEach(f => out.appendChild(fikirKart(f, true)));
+  list.forEach((f, i) => { const el = fikirKart(f, true); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
 }
 
 function kopyala(f){
@@ -425,6 +428,8 @@ function bildir(){
 }
 
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+// Model çıktısı için: önce stray HTML etiketlerini sök (ör. <h4>), sonra güvenli kaçışla. Kullanıcı metninde KULLANMA.
+function metin(s){ return escapeHtml(String(s || "").replace(/<[^>]*>/g, "")); }
 
 // ---- Model zinciri (prompt.js: ureticiPrompt, ustAkilPrompt, jsonAyikla) ----
 // Pollinations modelleri artık sunucuda (api/poll.js) zincirleniyor.
@@ -522,6 +527,7 @@ async function uret(){
   ];
   let mi = 0;
   statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
+  try{ if(statusEl.scrollIntoView) statusEl.scrollIntoView({ behavior: "smooth", block: "center" }); }catch(e){}
   const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2000);
 
   // 1. AŞAMA: aday fikir üretimi

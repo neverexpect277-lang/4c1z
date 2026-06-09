@@ -74,6 +74,32 @@ console.log("\nÖnerilen Fikirler başlığı");
   ok("Kayıtlılar sekmesinde başlık gizli", b.hidden === true);
 })();
 
+// ---- Katlanabilir kart + etiket temizliği ----
+console.log("\nKatlanabilir kart + etiket temizliği");
+(function(){
+  const w = yeniDom();
+  ok("metin() model etiketlerini temizler (<h4>)", w.metin("nasıl olacak?<h4></h4>") === "nasıl olacak?");
+  ok("escapeHtml kullanıcı '<' metnini korur", w.escapeHtml("a < b") === "a &lt; b");
+
+  w.cizFikirler([
+    { isim: "Yeni", ne: "n", diyalog: [{ kim: "Zeyneb", soz: "soru var mı?<h4></h4>" }] },
+    { isim: "Eski", ne: "e" }
+  ]);
+  const k = w.document.querySelectorAll("#out .card");
+  ok("en yeni kart AÇIK", !k[0].classList.contains("kapali"));
+  ok("eski kart KAPALI", k[1].classList.contains("kapali"));
+  ok("diyalogdan <h4> temizlendi", !/h4/.test(k[0].querySelector(".dia").innerHTML) && /soru var mı\?/.test(k[0].textContent));
+
+  k[1].querySelector("h2").click();
+  ok("eski başlığa tıkla → açıldı", !k[1].classList.contains("kapali"));
+  k[0].querySelector("h2").click();
+  ok("yeni başlığa tıkla → kapandı", k[0].classList.contains("kapali"));
+
+  k[0].classList.remove("kapali");
+  k[0].querySelector('[data-act="fav"]').click();
+  ok("yıldıza basınca KATLANMAZ", !k[0].classList.contains("kapali"));
+})();
+
 // ---- #2 Puan + sıralama ----
 console.log("\n#2 — Puan ve sıralama");
 (function(){

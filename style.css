@@ -137,6 +137,12 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 
 .field{margin-top:11px;font-size:14.5px;color:var(--soft);}
 .field b{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);margin-bottom:2px;}
+/* Katlanabilir kart: kapalıyken sadece başlık + skor görünür */
+.card h2{cursor:pointer;}
+.card h2::after{content:"▾";color:var(--dim);font-size:13px;font-weight:400;}
+.card.kapali h2::after{content:"▸";}
+.card.kapali > :not(h2):not(.skor){display:none;}
+
 /* "Önerilen Fikirler" başlığı (Yeni sekmesi, üretim çıktısının üstünde) */
 .onerilenBaslik{margin:18px 0 12px;padding:12px 16px;border-radius:13px;
   background:var(--cream);border:1px solid var(--accentSoft);
