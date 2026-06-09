@@ -1,6 +1,7 @@
 // Vercel serverless: Pollinations görselini SUNUCU tarafında çeker ve geri akıtır.
-// Neden proxy (302 değil): çalışan api/poll.js gibi token + referrer ile sunucudan
-// istemek, tarayıcı-referer allowlist sorununu aşar. Model zinciri: flux -> turbo.
+// Çok-stratejili: Pollinations'ın ÜCRETSIZ anonim katmanı yalnız referrer ister
+// (token istemez; ölü token 403 verir). Bu yüzden önce token'SIZ, sonra token'lı;
+// flux ve turbo ile sırayla denenir. İlk gerçek görsel kazanır.
 // Kullanım: <img src="/api/image?p=ürün açıklaması&w=768&h=512&s=seed">
 module.exports = async (req, res) => {
   const q = req.query || {};
@@ -9,11 +10,19 @@ module.exports = async (req, res) => {
   const h = Math.min(parseInt(q.h, 10) || 512, 1024);
   const seed = parseInt(q.s, 10) || Math.floor(Math.random() * 1e6);
   const key = process.env.POLL_KEY || "pk_9A76J8DMwl5fCL8X";
-  for (const model of ["flux", "turbo"]) {
+  const base = "https://image.pollinations.ai/prompt/" + encodeURIComponent(p)
+    + "?width=" + w + "&height=" + h + "&seed=" + seed + "&nologo=true&referrer=4c1z";
+
+  // Denenecek varyantlar: önce anahtarsız (ücretsiz katman), sonra anahtarlı.
+  const denemeler = [];
+  for (const tok of ["", key]) {
+    for (const model of ["flux", "turbo"]) {
+      denemeler.push(base + "&model=" + model + (tok ? "&token=" + encodeURIComponent(tok) : ""));
+    }
+  }
+
+  for (const url of denemeler) {
     try {
-      const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(p)
-        + "?width=" + w + "&height=" + h + "&seed=" + seed
-        + "&nologo=true&model=" + model + "&referrer=4c1z&token=" + encodeURIComponent(key);
       const r = await fetch(url, { headers: { Referer: "https://4c1z.vercel.app/" } });
       const ct = r.headers.get("content-type") || "";
       if (r.ok && ct.startsWith("image/")) {
@@ -24,7 +33,7 @@ module.exports = async (req, res) => {
         res.end(buf);
         return;
       }
-    } catch (e) { /* sıradaki modele geç */ }
+    } catch (e) { /* sıradaki varyanta geç */ }
   }
   res.statusCode = 502;
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
