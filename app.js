@@ -169,6 +169,60 @@ function muhHTML(f){
     sec("İlk prototip adımı", f.prototip) +
     `</div>`;
 }
+// ---- ComfyUI ilhamı: düğüm tabanlı görsel üretimi ----
+// Düğümler (Konu → Stil → Arka plan → Çıktı) tek görsel prompt'a zincirlenir.
+// Prompt İngilizce kurulur (görsel modelleri İngilizceyi sever); arayüz %100 Türkçe.
+const GORSEL_STIL = [
+  { v: "foto", ad: "Ürün fotoğrafı", p: "professional product photography, studio lighting, high detail" },
+  { v: "cizim", ad: "Teknik çizim", p: "technical line drawing, blueprint style, white background" },
+  { v: "3d", ad: "3B render", p: "3D render, realistic materials, soft shadows" },
+  { v: "izometrik", ad: "İzometrik", p: "isometric illustration, clean flat vector style" }
+];
+const GORSEL_ARKA = [
+  { v: "studyo", ad: "Stüdyo", p: "plain studio backdrop" },
+  { v: "sade", ad: "Sade beyaz", p: "minimal pure white background" },
+  { v: "baglam", ad: "Bağlam içinde", p: "in a real-world lifestyle context" }
+];
+function gorselPrompt(f, sec){
+  sec = sec || {};
+  const ne = String((f && f.ne) || "").replace(/<[^>]*>/g, "").trim().slice(0, 90);
+  const konu = [(f && f.isim) || "", ne].filter(Boolean).join(", ");
+  const stil = (GORSEL_STIL.find(x => x.v === sec.stil) || GORSEL_STIL[0]).p;
+  const arka = (GORSEL_ARKA.find(x => x.v === sec.arka) || GORSEL_ARKA[0]).p;
+  return [konu, stil, arka].filter(Boolean).join(", ");
+}
+function gorselPanelHTML(f){
+  const opt = (arr, name) => `<select class="nodesel" data-node="${name}">` +
+    arr.map(x => `<option value="${x.v}">${x.ad}</option>`).join("") + `</select>`;
+  return `<div class="nodes">
+    <div class="node"><span class="nodelbl">Konu</span><span class="nodeval">${metin((f && f.isim) || "")}</span></div>
+    <div class="nodewire"></div>
+    <div class="node"><span class="nodelbl">Stil</span>${opt(GORSEL_STIL, "stil")}</div>
+    <div class="nodewire"></div>
+    <div class="node"><span class="nodelbl">Arka plan</span>${opt(GORSEL_ARKA, "arka")}</div>
+    <div class="nodewire"></div>
+    <button class="node node-uret" data-act="uret">⚙ Üret</button>
+    <div class="gorselWrap"></div>
+  </div>`;
+}
+function gorselUret(el, f){
+  const wrap = el.querySelector(".gorselWrap");
+  if(!wrap) return;
+  const sec = {
+    stil: el.querySelector('[data-node="stil"]') && el.querySelector('[data-node="stil"]').value,
+    arka: el.querySelector('[data-node="arka"]') && el.querySelector('[data-node="arka"]').value
+  };
+  const p = gorselPrompt(f, sec);
+  const seed = Math.floor(Math.random() * 1e6);
+  const src = "/api/image?p=" + encodeURIComponent(p) + "&w=768&h=512&s=" + seed;
+  wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor…</div>`;
+  const img = new Image();
+  img.alt = (f && f.isim) || "ürün görseli";
+  img.className = "uretilenGorsel";
+  img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
+  img.onerror = () => { wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi, tekrar dene.</div>`; };
+  img.src = src;
+}
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
   return `
@@ -188,7 +242,9 @@ function kartHTML(f, kayitli){
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
       <button class="mini ig" data-act="ig">Instagram</button>
-    </div>`;
+      <button class="mini gorsel" data-act="gorsel">🎨 Görsel</button>
+    </div>
+    ${gorselPanelHTML(f)}`;
 }
 function fikirKart(f, kayitli){
   const el = document.createElement("div");
@@ -200,6 +256,16 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
+  const gorselBtn = el.querySelector('[data-act="gorsel"]');
+  if(gorselBtn){
+    const panel = el.querySelector(".nodes");
+    gorselBtn.addEventListener("click", () => {
+      if(panel) panel.classList.toggle("acik");
+      gorselBtn.classList.toggle("on");
+    });
+    const uretBtn = el.querySelector('[data-act="uret"]');
+    if(uretBtn) uretBtn.addEventListener("click", () => gorselUret(el, f));
+  }
   // Başlığa basınca kartı aç/kapa (yıldıza basınca değil)
   const h2 = el.querySelector("h2");
   if(h2) h2.addEventListener("click", ev => { if(ev.target.closest('[data-act="fav"]')) return; el.classList.toggle("kapali"); });

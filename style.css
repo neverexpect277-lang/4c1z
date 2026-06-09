@@ -209,7 +209,7 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .not::placeholder{color:#b3a98f;}
 .not:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
 
-.cardfoot{display:flex;gap:8px;margin-top:15px;}
+.cardfoot{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;}
 .mini{flex:1;background:var(--card);border:1px solid var(--line2);color:var(--soft);
   border-radius:11px;padding:10px;font-size:13px;cursor:pointer;text-align:center;transition:.15s;}
 .mini:hover{border-color:var(--accentSoft);color:var(--accentDeep);}
@@ -218,6 +218,32 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .mini.wa:hover{background:rgba(63,158,110,.08);}
 .mini.ig{color:#bb4f93;border-color:rgba(187,79,147,.3);}
 .mini.ig:hover{background:rgba(187,79,147,.07);}
+.mini.gorsel{color:var(--accentDeep);border-color:var(--accentSoft);}
+.mini.gorsel:hover{background:var(--cream);}
+.mini.gorsel.on{background:var(--cream);border-color:var(--accent);}
+
+/* ComfyUI ilhamı: düğüm tabanlı görsel paneli */
+.nodes{display:none;flex-direction:column;align-items:stretch;gap:0;margin-top:13px;
+  padding:13px;background:var(--card2);border:1px solid var(--line);border-radius:13px;}
+.nodes.acik{display:flex;}
+.node{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;}
+.nodelbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);font-weight:600;}
+.nodeval{font-size:13.5px;color:var(--soft);text-align:right;flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nodesel{background:var(--card);border:1px solid var(--line2);color:var(--txt);
+  border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer;}
+.nodewire{width:2px;height:12px;align-self:center;background:var(--accentSoft);}
+.node-uret{justify-content:center;cursor:pointer;font-size:14px;font-weight:600;
+  color:var(--accentDeep);border-color:var(--accent);transition:.15s;}
+.node-uret:hover{background:var(--cream);}
+.node-uret:active{transform:scale(.97);}
+.gorselWrap:empty{display:none;}
+.gorselWrap{margin-top:11px;}
+.gorselYukle{display:flex;align-items:center;gap:9px;justify-content:center;
+  color:var(--dim);font-size:13.5px;padding:18px;}
+.gorselHata{text-align:center;color:#b5524a;font-size:13.5px;padding:14px;}
+.uretilenGorsel{width:100%;border-radius:12px;border:1px solid var(--line);display:block;}
 
 /* Boş ekran */
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;
