@@ -6,6 +6,7 @@ const alanInput = $("#alan");
 let mod = "yeni";              // "yeni" | "kayit"
 let kayitFiltre = "";          // Kayıtlılar alan filtresi ("" = tümü)
 let kayitArama = "";           // Kayıtlılar metin araması
+let onerilenAcik = false;      // "Önerilen Fikirler" kutusu açık mı (fikirler kutu içinde gizli)
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
 const FAV_KEY = "mucit_favoriler";
@@ -115,6 +116,8 @@ $("#clear").addEventListener("click", () => { alanInput.value = ""; alanInput.fo
 // ---- tabs ----
 $("#tabYeni").addEventListener("click", () => setMod("yeni"));
 $("#tabKayit").addEventListener("click", () => setMod("kayit"));
+// "Önerilen Fikirler" kutusuna basınca fikirleri aç/kapa
+$("#onerilenBaslik") && $("#onerilenBaslik").addEventListener("click", () => { onerilenAcik = !onerilenAcik; basligiGuncelle(); });
 function setMod(m){
   mod = m;
   $("#tabYeni").classList.toggle("on", m === "yeni");
@@ -210,12 +213,15 @@ function fikirKart(f, kayitli){
   }
   return el;
 }
-// "Önerilen Fikirler" başlığı: sadece Yeni sekmesinde, kart varken görünür
+// "Önerilen Fikirler" kutusu: Yeni sekmesinde kart varken görünür; fikirler kutu içinde gizli, basınca açılır
 function basligiGuncelle(){
   const b = $("#onerilenBaslik"); if(!b) return;
   const varMi = mod === "yeni" && !!out.querySelector(".card");
   b.hidden = !varMi;
   const say = $("#onerilenSay"); if(say) say.textContent = varMi ? "(" + out.querySelectorAll(".card").length + ")" : "";
+  b.classList.toggle("acik", onerilenAcik);
+  // Yeni modda kart varsa: kutu kapalıyken fikirleri GİZLE (ana sayfada gözükmesin). Kayıtlılar/boş durumda göster.
+  out.style.display = (varMi && !onerilenAcik) ? "none" : "";
 }
 function cizFikirler(list){
   out.innerHTML = "";
@@ -578,10 +584,11 @@ async function uret(){
     if(fikir.isim) uretilmisIsimler.push(fikir.isim);
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
     statusEl.textContent = "";
+    onerilenAcik = true;                         // üretince kutuyu aç ki yeni fikir görünsün
     cizFikirler(sonUretilen);
     oturumKaydet();
     bildir();
-    // Fikir altta kalmasın: başlığa kaydır
+    // Fikir altta kalmasın: kutuya kaydır
     try{ const ust = $("#onerilenBaslik"); if(ust && ust.scrollIntoView) ust.scrollIntoView({ behavior: "smooth", block: "start" }); }catch(e){}
   }else{
     statusEl.innerHTML = `Çavuş şu an bulamadı — `;

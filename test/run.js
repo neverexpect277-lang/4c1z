@@ -65,13 +65,21 @@ console.log("\nÖnerilen Fikirler başlığı");
   ok("başta başlık gizli (fikir yok)", b.hidden === true);
 
   w.cizFikirler([{ isim: "F1", ne: "a" }, { isim: "F2", ne: "b" }]);
-  ok("Yeni'de fikir varken başlık görünür", b.hidden === false);
+  ok("Yeni'de fikir varken kutu görünür", b.hidden === false);
   ok("sayaç doğru (2)", w.document.querySelector("#onerilenSay").textContent === "(2)");
   ok("başlık metni 'Önerilen Fikirler'", /Önerilen Fikirler/.test(b.textContent));
+  // fikirler kutu içinde GİZLİ (ana sayfada gözükmez)
+  ok("fikirler varsayılan GİZLİ (#out display:none)", w.document.querySelector("#out").style.display === "none");
+  ok("kutu kapalı göstergesi (acik değil)", !b.classList.contains("acik"));
+  b.click();
+  ok("kutuya basınca fikirler AÇILIR", w.document.querySelector("#out").style.display !== "none" && b.classList.contains("acik"));
+  b.click();
+  ok("tekrar basınca kapanır", w.document.querySelector("#out").style.display === "none");
 
   w.favToggle({ isim: "F1", ne: "a" });
   w.setMod("kayit");
-  ok("Kayıtlılar sekmesinde başlık gizli", b.hidden === true);
+  ok("Kayıtlılar sekmesinde kutu gizli", b.hidden === true);
+  ok("Kayıtlılar'da #out görünür", w.document.querySelector("#out").style.display !== "none");
 })();
 
 // ---- Katlanabilir kart + etiket temizliği ----
