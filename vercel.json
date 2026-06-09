@@ -2,6 +2,7 @@
   "functions": {
     "api/gen.js": { "maxDuration": 60 },
     "api/poll.js": { "maxDuration": 60 },
+    "api/image.js": { "maxDuration": 60 },
     "api/ara.js": { "maxDuration": 30 }
   }
 }
