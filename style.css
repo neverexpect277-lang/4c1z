@@ -218,6 +218,8 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .mini.wa:hover{background:rgba(63,158,110,.08);}
 .mini.ig{color:#bb4f93;border-color:rgba(187,79,147,.3);}
 .mini.ig:hover{background:rgba(187,79,147,.07);}
+.mini.ses{color:var(--accentDeep);border-color:var(--accentSoft);}
+.mini.ses:hover{background:var(--cream);}
 
 /* Boş ekran */
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;
