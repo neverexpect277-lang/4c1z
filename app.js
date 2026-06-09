@@ -479,6 +479,18 @@ async function zincir(sistem, kullanici){
 }
 function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
 
+// Güncel USD→TRY kuru (Frankfurter, anahtarsız + CORS). Hata olursa boş.
+async function kurGetir(){
+  try{
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch("https://api.frankfurter.app/latest?from=USD&to=TRY", { signal: ctrl.signal });
+    clearTimeout(to);
+    if(r.ok){ const j = await r.json(); if(j && j.rates && j.rates.TRY) return Math.round(j.rates.TRY); }
+  }catch(e){}
+  return "";
+}
+
 // Tek arama çağrısı (en: İngilizce kelimeler, sadece tech kaynakları için; web Türkçe kalır)
 async function araGetir(q, en){
   try{
@@ -497,15 +509,16 @@ async function uzmanlastir(alan, fikir, kaynak){
   const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
   const enQ = (fikir.aramaEN || "").trim();            // üst aklın ürettiği gizli İngilizce kelimeler
   const anahtar = fikir.isim || fikir.ne || "";
-  const [genel, patent] = await Promise.all([
+  const [genel, patent, kur] = await Promise.all([
     araGetir(ad, enQ),
-    araGetir("site:patents.google.com " + (enQ || anahtar))
+    araGetir("site:patents.google.com " + (enQ || anahtar)),
+    kurGetir()
   ]);
   const fmt = arr => arr.slice(0, 12).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });

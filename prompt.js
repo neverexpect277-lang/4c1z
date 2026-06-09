@@ -100,6 +100,7 @@ function kaynakCumlesi(kaynak){
 function ureticiPrompt(alan, kacinilacak, kaynak){
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
+Bir DIY/maker mucidi gibi düşün: her fikri kafanda kabaca KUR — hangi parça nereye, nasıl birleşir; zihninde kuramıyorsan o fikri YAZMA. Her aday bugünün ucuz parçalarıyla bir hafta sonunda prototiplenebilir olmalı.
 ${ORTAK_KURAL}
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (6 aday), markdown yok, açıklama yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün/nesnenin harmanı","derde":"çözdüğü gerçek günlük sorun","nedenYok":"bu kadar mantıklıysa neden hâlâ yok","vayBe":"insanı neden şaşırtır"}]`;
@@ -121,6 +122,7 @@ function elestirmenPrompt(alan, adaylar, kaynak){
 - Bilimkurgu, hayalci, bugünün ucuz gerçek parçalarıyla ÜRETİLEMEYECEK olanlar.
 - 10 saniyede anlaşılmayan ya da gerçek bir derde çözüm olmayanlar.
 - 2-3 mevcut nesnenin BEKLENMEDİK HARMANI olmayanlar.
+SOKRATİK ELEME — her aday için kendine SOR, bir cevap bile 'hayır' ise AT: (1) Gerçekten yeni mi, piyasada yok mu? (2) Bugünün ucuz parçalarıyla yapılır mı? (3) 10 saniyede anlaşılır mı? (4) Gerçek, sık yaşanan bir derde mi çözüm? (5) 2-3 nesnenin beklenmedik harmanı mı?
 KALANLARI güçlendir: neyden/derde/nedenYok/vayBe alanlarını daha somut ve gerçekçi yap.
 ${ORTAK_KURAL}
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür — eleyip güçlendirdiğin EN İYİ 3 aday (diyalog YOK, markdown YOK, açıklama YOK):
@@ -154,9 +156,10 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 }
 
 // 4. AŞAMA — UZMAN HEYETİ: fikri mühendislik gözüyle somutlaştır (diyalog GÖNDERİLMEZ/ÜRETİLMEZ)
-function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama){
+function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur){
   const sistem =
 `Sen bir UZMAN HEYETİSİN: Üretim Uzmanı + Maliyetçi + Rakip Analisti + Patent Denetçisi + Pazar Analisti + Ürün Müdürü tek heyet olarak bir ürün fikrini değerlendirir. Görevin onu MÜHENDİSLİK gözüyle somutlaştırmak. Hayal/varsayım YOK; bugünün ucuz gerçek parçaları ve gerçekçi rakamlarla, kısa ve net konuş.
+${kur ? "GÜNCEL KUR: 1 USD ≈ " + kur + " TRY. 'maliyet' alanını HEM ₺ HEM $ ver (ör. '≈900₺ / 26$'), bu güncel kuru kullan." : ""}
 ÜRETİM FİZİĞİ ZORUNLU: malzeme özellikleri (dayanım, ısı, ağırlık, iletkenlik), mekanik yükler, güç/enerji bütçesi ve üretilebilirlik açısından muhakeme et; sihir/temennî yok. En kritik fiziksel kısıtı bul ve fikrin bunu gerçekten geçip geçmediğini dürüstçe söyle.
 ${arama ? "GERÇEK WEB ARAMA SONUÇLARI (benzer ürünler VE talep tahmini için BUNLARI temel al; gerçekten benzer olanları belirt, alakasızları ele):\n" + arama : "Web araması yok; 'benzer ürünler' ve 'talep' için en iyi tahminini ver, abartma, uydurma."}
 ${patentArama ? "GERÇEK PATENT ARAMA SONUÇLARI (Google Patents): 'patent' alanını BUNLARA dayandır; gerçekten benzer patent var mı söyle, alakasızları ele:\n" + patentArama : "Patent araması sonuç vermedi; 'patent' alanında 'belirgin patent bulunamadı' de, uydurma."}

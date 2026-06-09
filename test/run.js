@@ -369,6 +369,7 @@ function stubUret(w, opts = {}){
   const cag = [];          // /api/gen prompt metinleri
   const state = { n: 0, aramaCagrildi: false, patentArandi: false, enGecti: false };
   w.fetch = async (url, o) => {
+    if(/frankfurter\.app/.test(url)){ state.kurCagrildi = true; return { ok: true, status: 200, json: async () => ({ rates: { TRY: 34 } }) }; }
     if(url.startsWith("/api/ara")){
       state.aramaCagrildi = true;
       if(opts.aramaHata) throw new Error("ağ yok");
@@ -407,6 +408,7 @@ function stubUret(w, opts = {}){
   ok("4. aşama uzman heyeti promptu", /UZMAN HEYETİSİN/.test(cag[3]));
   ok("üst akla SÜZÜLMÜŞ adaylar gitti", /Süzülmüş0/.test(cag[2]) && !/Aday0/.test(cag[2]));
   ok("uzman promptuna gerçek arama sonucu enjekte edildi", /Mevcut Ürün X/.test(cag[3]));
+  ok("Frankfurter kuru çağrıldı ve prompta girdi (1$≈34₺)", state.kurCagrildi === true && /1 USD ≈ 34 TRY/.test(cag[3]));
   ok("uzman promptuna gerçek PATENT sonucu enjekte edildi", /US1234 Akıllı Tava Patenti/.test(cag[3]));
   const card = w.document.querySelector("#out .card");
   ok("üretilen fikir ekranda", card && card.querySelector("h2").textContent.includes("Final Fikir"));
