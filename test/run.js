@@ -495,8 +495,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (4 seçim: aday/ton/toplu/oto + 2 onay: eleme/web)",
-     w.document.querySelectorAll("#akis .akissel").length === 4 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
+  ok("kontroller var (3 seçim: aday/ton/oto-kaydet + 2 onay: eleme/web)",
+     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -724,9 +724,15 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   await w2.uret();
   ok("eşik üstünde değilse oto-kaydet yapmaz", !w2.favleriYukle().some(f => f.isim === "Final Fikir"));
 
-  w2.ayarSet("toplu", 5);
-  ok("toplu üretim ayarı kalıcı", JSON.parse(w2.localStorage.getItem("mucit_ayarlar")).toplu === 5);
-  ok("toplu üretim tetikleyici fonksiyonu var", typeof w2.uretTetikle === "function");
+  ok("'Otomatik üret' butonu var (Fikir Üret yanında)", !!w2.document.querySelector("#genOto"));
+  ok("çoklu üretim fonksiyonu var (otomatik üret)", typeof w2.uretCoklu === "function");
+
+  // otomatik üret gerçekten arka arkaya birden fazla fikir üretir
+  const w3 = yeniDom();
+  stubUret(w3);
+  w3.document.querySelector("#alan").value = "ev";
+  await w3.uretCoklu(2);
+  ok("otomatik üret arka arkaya 2 fikir üretti", w3.document.querySelectorAll("#out .card").length === 2);
 
   // #10 generative-ai-for-beginners: uygulama içi öğren rehberi
   console.log("\n#10 — Öğren rehberi (generative-ai-for-beginners ilhamı)");

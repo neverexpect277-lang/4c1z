@@ -25,7 +25,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", toplu: 1, otoKaydet: 0 };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0 };
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -634,7 +634,7 @@ function akisKur(){
     const el = e.target.closest("[data-ayar]");
     if(!el) return;
     const k = el.dataset.ayar;
-    const v = el.type === "checkbox" ? el.checked : (["adaySayisi", "toplu", "otoKaydet"].includes(k) ? parseInt(el.value, 10) : el.value);
+    const v = el.type === "checkbox" ? el.checked : (["adaySayisi", "otoKaydet"].includes(k) ? parseInt(el.value, 10) : el.value);
     ayarSet(k, v);
   });
   akisCiz();
@@ -653,10 +653,8 @@ function akisCiz(){
   const akis = AJAN_ADIMLARI.map((ad, i) =>
     `<div class="akisdugum"><span class="akisik">${i + 1}</span><span class="akisad">${ad}</span>${dugumler[i]}</div>`
   ).join(`<span class="akiswire"></span>`);
-  // n8n ilhamı: otomasyon kuralları (toplu üretim + skor tetikli oto-kaydet)
+  // n8n ilhamı: otomasyon kuralı (skor tetikli oto-kaydet). Toplu üretim artık 'Otomatik üret' butonu.
   const oto = `<div class="akisoto"><div class="akisotobas">Otomasyon · n8n</div>` +
-    `<div class="akisdugum"><span class="akisad">Toplu üretim</span>` +
-      `<select class="akissel" data-ayar="toplu">${opt(ayarlar.toplu, [[1, "1 fikir"], [3, "3 fikir"], [5, "5 fikir"]])}</select></div>` +
     `<div class="akisdugum"><span class="akisad">Yüksek skoru oto-kaydet</span>` +
       `<select class="akissel" data-ayar="otoKaydet">${opt(ayarlar.otoKaydet, [[0, "kapalı"], [70, "70+"], [80, "80+"], [90, "90+"]])}</select></div></div>`;
   panel.innerHTML = akis + oto;
@@ -783,12 +781,17 @@ async function uret(){
   }
 }
 
-// n8n otomasyon: "Toplu üretim" ayarı kadar fikri arka arkaya üretir
-async function uretTetikle(){
-  const n = Math.max(1, parseInt(ayarlar.toplu, 10) || 1);
-  for(let i = 0; i < n; i++){ await uret(); }
+// n8n otomasyon: "Otomatik üret" → arka arkaya N fikir üretir (varsayılan 3)
+async function uretCoklu(n){
+  if(calisiyor) return;
+  n = Math.max(1, parseInt(n, 10) || 3);
+  const b = $("#genOto"); if(b) b.disabled = true;
+  try{ for(let i = 0; i < n; i++){ await uret(); } }
+  finally{ if(b) b.disabled = false; }
 }
-$("#gen").addEventListener("click", uretTetikle);
+$("#gen").addEventListener("click", uret);
+const _otoBtn = $("#genOto");
+if(_otoBtn) _otoBtn.addEventListener("click", () => uretCoklu(3));
 $("#temaKaydet").addEventListener("click", temaFormAc);
 $("#temaOnay").addEventListener("click", temaOnayla);
 $("#temaIptal").addEventListener("click", temaFormKapat);

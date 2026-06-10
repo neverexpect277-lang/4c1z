@@ -93,6 +93,11 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .gen:hover{filter:brightness(1.02);box-shadow:0 8px 20px rgba(150,118,55,.22);}
 .gen:active{transform:translateY(1px);}
 .gen:disabled{filter:grayscale(.4) brightness(.96);cursor:default;}
+.genrow{display:flex;gap:10px;align-items:stretch;}
+.genrow .gen{flex:2;}
+.gen.oto{flex:1;font-size:14px;color:var(--accentDeep);background:var(--cream);
+  border:1px solid var(--accentSoft);box-shadow:none;}
+.gen.oto:hover{background:#f0e6cd;box-shadow:none;}
 
 /* Tabs */
 .tabs{display:flex;gap:5px;margin-top:18px;background:var(--card2);border:1px solid var(--line);
