@@ -617,6 +617,14 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
       return { ok: true, json: async () => ({ hits: [{ title: "Show HN: Akıllı Dolap", points: 120, num_comments: 33, url: "http://x.co" }] }) };
     if(/reddit\.com\/search\.json/.test(url))
       return { ok: true, json: async () => ({ data: { children: [{ data: { title: "dolabım küf yapıyor ne yapsam", subreddit: "TurkeyHome", num_comments: 48, score: 210, selftext: "nem çok" } }] } }) };
+    if(/wikidata\.org/.test(url))
+      return { ok: true, json: async () => ({ search: [{ label: "akıllı dolap", description: "elektronik dolap" }] }) };
+    if(/registry\.npmjs\.org/.test(url))
+      return { ok: true, json: async () => ({ objects: [{ package: { name: "cabinet-sensor", description: "dolap sensör kütüphanesi" } }] }) };
+    if(/api\.semanticscholar\.org/.test(url))
+      return { ok: true, json: async () => ({ data: [{ title: "Humidity Sensing in Cabinets", abstract: "nem ölçüm çalışması" }] }) };
+    if(/openlibrary\.org/.test(url))
+      return { ok: true, json: async () => ({ docs: [{ title: "Smart Home Design", author_name: ["A. Yazar"] }] }) };
     if(/export\.arxiv\.org/.test(url))
       return { ok: true, text: async () => "<feed><entry><title>Smart Cabinet Sensing</title><summary>nem ölçümü</summary></entry></feed>" };
     if(/api\.datamuse\.com/.test(url))
@@ -633,6 +641,10 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("Hacker News eklendi (lansman/ilgi sinyali)", s1.sonuclar.some(s => /HN: Show HN: Akıllı Dolap.*120p, 33 yorum/.test(s.baslik)));
   ok("Reddit eklendi (gerçek kullanıcı dert/talep sinyali)", s1.sonuclar.some(s => /Reddit: dolabım küf.*r\/TurkeyHome, 48 yorum/.test(s.baslik) && /oy 210/.test(s.ozet)));
   ok("arXiv eklendi (bilimsel temel)", s1.sonuclar.some(s => /arXiv: Smart Cabinet Sensing/.test(s.baslik)));
+  ok("Wikidata eklendi (kavram varlığı)", s1.sonuclar.some(s => /Wikidata: akıllı dolap/.test(s.baslik)));
+  ok("npm eklendi (yazılım/teknoloji sinyali)", s1.sonuclar.some(s => /npm: cabinet-sensor/.test(s.baslik)));
+  ok("Semantic Scholar eklendi (geniş bilimsel)", s1.sonuclar.some(s => /Makale: Humidity Sensing/.test(s.baslik)));
+  ok("Open Library eklendi (kavram olgunluğu)", s1.sonuclar.some(s => /Kitap: Smart Home Design/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {

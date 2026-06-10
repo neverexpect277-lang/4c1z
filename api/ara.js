@@ -147,6 +147,48 @@ async function reddit(q){
   } catch (e) { return []; }
 }
 
+// Wikidata — yapılandırılmış kavram varlıkları (kavram gerçekten var mı?). Anahtarsız.
+async function wikidata(q){
+  try{
+    const r = await zamanli("https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=tr&uselang=tr&limit=3&search=" + encodeURIComponent(q), {
+      headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)" }
+    });
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.search || []).slice(0, 2).map(x => ({ baslik: "Wikidata: " + temizle(x.label || ""), ozet: temizle(x.description || "") })).filter(x => x.baslik.length > 10);
+  }catch(e){ return []; }
+}
+
+// npm registry — yazılım/teknoloji benimseme sinyali (hazır kütüphane var mı?). Anahtarsız.
+async function npmAra(q){
+  try{
+    const r = await zamanli("https://registry.npmjs.org/-/v1/search?size=3&text=" + encodeURIComponent(q));
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.objects || []).slice(0, 2).map(o => ({ baslik: "npm: " + temizle((o.package && o.package.name) || ""), ozet: temizle((o.package && o.package.description) || "") })).filter(x => x.baslik.length > 6);
+  }catch(e){ return []; }
+}
+
+// Semantic Scholar — geniş bilimsel makale taban (teknik fizibilite). Anahtarsız.
+async function semanticScholar(q){
+  try{
+    const r = await zamanli("https://api.semanticscholar.org/graph/v1/paper/search?limit=3&fields=title,abstract&query=" + encodeURIComponent(q));
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.data || []).slice(0, 2).map(p => ({ baslik: "Makale: " + temizle(p.title || ""), ozet: temizle(p.abstract || "").slice(0, 140) })).filter(x => x.baslik.length > 9);
+  }catch(e){ return []; }
+}
+
+// Open Library — konuda kitap var mı (kavram olgunluğu). Anahtarsız.
+async function openLibrary(q){
+  try{
+    const r = await zamanli("https://openlibrary.org/search.json?limit=3&q=" + encodeURIComponent(q));
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.docs || []).slice(0, 2).map(d => ({ baslik: "Kitap: " + temizle(d.title || ""), ozet: temizle((d.author_name && d.author_name[0]) || "") })).filter(x => x.baslik.length > 8);
+  }catch(e){ return []; }
+}
+
 // Datamuse — bir terime İLİŞKİLİ kelimeler (arama kapsamını genişletmek için). Anahtarsız.
 async function datamuse(q){
   try {
@@ -200,8 +242,12 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, rd, a, w] = await Promise.all([cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz)]);
-      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2));
+      const [g, s, h, rd, a, w, wd, np, ss, ol] = await Promise.all([
+        cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz),
+        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz)
+      ]);
+      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2),
+        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });
