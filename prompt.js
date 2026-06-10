@@ -97,7 +97,7 @@ function kaynakCumlesi(kaynak){
 }
 
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak, kaynak){
+function ureticiPrompt(alan, kacinilacak, kaynak, begenilen){
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
 Bir DIY/maker mucidi gibi düşün: her fikri kafanda kabaca KUR — hangi parça nereye, nasıl birleşir; zihninde kuramıyorsan o fikri YAZMA. Her aday bugünün ucuz parçalarıyla bir hafta sonunda prototiplenebilir olmalı.
@@ -109,7 +109,10 @@ ${ORTAK_KURAL}
   const yasak = (Array.isArray(kacinilacak) && kacinilacak.length)
     ? ` ŞU fikirler DAHA ÖNCE üretildi; bunları ve çok benzerlerini KESİNLİKLE TEKRARLAMA: ${kacinilacak.slice(-45).join("; ")}.`
     : "";
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak} [çeşitlilik tohumu: ${tohum}]`;
+  const begeni = (Array.isArray(begenilen) && begenilen.length)
+    ? ` Kullanıcı ŞU tarz fikirleri BEĞENDİ; ruhen/temadan benzer ama YEPYENİ fikirler üret (asla kopyalama): ${begenilen.slice(0, 8).join("; ")}.`
+    : "";
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 

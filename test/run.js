@@ -438,11 +438,44 @@ console.log("\n#7 — Düğüm tabanlı görsel (ComfyUI ilhamı)");
   ok("Üret'e basınca yükleme göstergesi çıktı", /üretiliyor/.test(wrap.textContent) || !!wrap.querySelector("img"));
 })();
 
+// ---- #8 mastra ilhamı: canlı ajan zinciri + öğrenen hafıza ----
+console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
+(function(){
+  const w = yeniDom();
+
+  // Canlı adım çizelgesi: aktif=2 → ilk ikisi bitti, 3. aktif, 4. bekliyor
+  w.ajanCiz(2, "Zeyneb: \"Efendi, hayretim arttı!\"");
+  const st = w.document.querySelector("#status");
+  const adimlar = st.querySelectorAll(".ajanadim");
+  ok("4 ajan adımı çizildi", adimlar.length === 4);
+  ok("tamamlanan aşamalar 'bitti'", st.querySelectorAll(".ajanadim.bitti").length === 2);
+  ok("o anki aşama 'aktif'", adimlar[2].classList.contains("aktif"));
+  ok("sıradaki aşama 'bekliyor'", adimlar[3].classList.contains("bekliyor"));
+  ok("adım isimleri doğru sırada (4 aşama motoru)",
+     [...adimlar].map(a => a.querySelector(".ajanad").textContent).join(",") === "Üretici,Eleştirmen,Üst akıl,Uzman heyeti");
+  ok("Osmanlıca atışma alt mesajı korundu", /hayretim arttı/.test(st.textContent));
+
+  // Öğrenen hafıza: beğenilen kayıtlar üreticiye pozitif sinyal olur
+  const pB = w.ureticiPrompt("mutfak", [], "", ["Akıllı Tava", "Oto Şemsiye"]);
+  ok("beğenilen fikirler üretici promptuna girdi", /BEĞEN/i.test(pB.kullanici) && /Akıllı Tava/.test(pB.kullanici));
+  const pS = w.ureticiPrompt("mutfak", [], "");
+  ok("beğeni yoksa pozitif sinyal eklenmez (geriye uyumlu)", !/BEĞEN/i.test(pS.kullanici));
+
+  // Hafıza rozeti: hafıza boşken görünmez
+  w.ajanCiz(0, "");
+  ok("hafıza boşken rozet yok", !/hafıza:/.test(w.document.querySelector("#status").textContent));
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);
   w.document.querySelector("#alan").value = "banyo";
+  // beğenilen kayıt: üretim hafızasına pozitif sinyal olarak girmeli
+  w.favToggle({ isim: "Sevilen Fikir", ne: "x", puan: 5 });
   await w.uret();
+  ok("#8 beğenilen kayıt üretici promptuna sinyal oldu", /Sevilen Fikir/.test(cag[0]));
+  w.ajanCiz(1, "");
+  ok("#8 hafıza rozeti üretimden sonra fikir sayısını gösterir", /hafıza:/.test(w.document.querySelector("#status").textContent));
   ok("4 aşama da çağrıldı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
   ok("web araması çağrıldı", state.aramaCagrildi === true);
   ok("üst aklın gizli İngilizce kelimesi aramaya bağlandı (en=)", state.enGecti === true);

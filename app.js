@@ -594,6 +594,23 @@ async function uzmanlastir(alan, fikir, kaynak){
   }catch(e){}
 }
 
+// ---- mastra ilhamı: canlı ajan zinciri + öğrenen hafıza ----
+const AJAN_ADIMLARI = ["Üretici", "Eleştirmen", "Üst akıl", "Uzman heyeti"];
+// aktif = o an çalışan aşamanın index'i; öncekiler 'bitti', sonrakiler 'bekliyor'.
+function ajanCiz(aktif, alt){
+  const adimlar = AJAN_ADIMLARI.map((ad, i) => {
+    const durum = i < aktif ? "bitti" : i === aktif ? "aktif" : "bekliyor";
+    const ik = durum === "bitti" ? "✓" : durum === "aktif" ? `<span class="spin"></span>` : String(i + 1);
+    return `<div class="ajanadim ${durum}"><span class="ajanik">${ik}</span><span class="ajanad">${ad}</span></div>`;
+  }).join(`<span class="ajanwire"></span>`);
+  const hafiza = uretilmisIsimler.length
+    ? `<span class="ajanhafiza" title="Daha önce üretilen fikirler hatırlanır, tekrarlanmaz">🧠 hafıza: ${uretilmisIsimler.length}</span>` : "";
+  statusEl.innerHTML =
+    `<div class="ajan"><div class="ajanbaslik"><span>Ajan zinciri</span>${hafiza}</div>` +
+    `<div class="ajanlar">${adimlar}</div>` +
+    (alt ? `<div class="ajanalt">${alt}</div>` : "") + `</div>`;
+}
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -611,17 +628,20 @@ async function uret(){
     "En iyileri birleştirip icat ediyor…"
   ];
   let mi = 0;
-  statusEl.innerHTML = `<span class="spin"></span>${mesajlar[0]}`;
+  let asama = 0;
+  ajanCiz(asama, mesajlar[0]);
   try{ if(statusEl.scrollIntoView) statusEl.scrollIntoView({ behavior: "smooth", block: "center" }); }catch(e){}
-  const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; statusEl.innerHTML = `<span class="spin"></span>${mesajlar[mi]}`; }, 2000);
+  const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; ajanCiz(asama, mesajlar[mi]); }, 2000);
 
-  // 1. AŞAMA: aday fikir üretimi
+  // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
+  const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
+  if(adaylar){ asama = 1; ajanCiz(asama, mesajlar[mi]); }
   // tekrarı önlemek için aday isimlerini de hatırla
   if(adaylar) adaylar.forEach(a => { if(a.isim) uretilmisIsimler.push(a.isim); });
 
@@ -635,6 +655,7 @@ async function uret(){
     }
     if(!suzulmus) suzulmus = adaylar; // eleştirmen olmazsa ham adaylarla devam
   }
+  if(suzulmus){ asama = 2; ajanCiz(asama, mesajlar[mi]); }
 
   // 3. AŞAMA: ÜST AKIL — süzülmüş adaylardan en iyi 1'ini diyaloğuyla sun
   let fikirler = null;
@@ -646,11 +667,13 @@ async function uret(){
     }
     if(!fikirler) fikirler = suzulmus.slice(0, 1); // üst akıl olmazsa en iyi adayı göster
   }
+  if(fikirler){ asama = 3; ajanCiz(asama, mesajlar[mi]); }
 
   // 4. AŞAMA: UZMAN HEYETİ — fikri web destekli mühendislik gözüyle zenginleştir (diyalog korunur)
   if(fikirler && fikirler.length){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
     await uzmanlastir(alan, fikirler[0], kaynak);
+    asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
   }
 
   clearInterval(dongu);
