@@ -263,6 +263,27 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .ajanwire{width:1.5px;height:11px;margin-left:11px;background:var(--line2);}
 .ajanalt{margin-top:12px;font-size:13px;color:var(--dim);font-style:italic;}
 
+/* dify ilhamı: ayarlanabilir görsel akış editörü */
+#akis{margin:0 0 12px;}
+.akisbas{width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);
+  color:var(--soft);border-radius:11px;padding:10px 13px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:7px;transition:.15s;}
+.akisbas:hover{border-color:var(--accentSoft);color:var(--accentDeep);}
+.akisetiket{margin-left:auto;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accentDeep);background:var(--cream);border:1px solid var(--accentSoft);
+  border-radius:999px;padding:2px 8px;}
+.akispanel{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);
+  border-top:none;border-radius:0 0 11px 11px;padding:12px 14px;}
+.akisdugum{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--txt);}
+.akisik{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;
+  border:1.5px solid var(--line2);font-size:11px;flex:none;background:var(--card2);color:var(--soft);}
+.akisad{flex:1;}
+.akissel{background:var(--card);border:1px solid var(--line2);color:var(--txt);
+  border-radius:8px;padding:5px 8px;font-size:13px;cursor:pointer;}
+.akistgl{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--soft);cursor:pointer;}
+.akistgl input{cursor:pointer;}
+.akiswire{width:1.5px;height:10px;margin-left:10px;background:var(--line2);}
+
 /* Boş ekran */
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;
   animation:rise .5s cubic-bezier(.2,.7,.2,1) both;}

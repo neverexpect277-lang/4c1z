@@ -466,6 +466,43 @@ console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
   ok("hafıza boşken rozet yok", !/hafıza:/.test(w.document.querySelector("#status").textContent));
 })();
 
+// ---- #9 dify ilhamı: ayarlanabilir görsel akış motoru ----
+console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
+(function(){
+  const w = yeniDom();
+
+  // Düğüm ayarları gerçek prompta bağlı: aday sayısı
+  ok("üretici aday sayısı ayarlanır (3)", /3 aday/.test(w.ureticiPrompt("a", [], "", null, 3).sistem));
+  ok("geçersiz sayı varsayılana düşer (6)", /6 aday/.test(w.ureticiPrompt("a", [], "", null, 99).sistem));
+  // diyalog tonu
+  ok("üst akıl ton=sert → sert yönerge", /SERT/.test(w.ustAkilPrompt("a", [{ isim: "x" }], "", "sert").sistem));
+  ok("üst akıl ton=mizahi → mizah yönergesi", /MİZAH/i.test(w.ustAkilPrompt("a", [{ isim: "x" }], "", "mizahi").sistem));
+  ok("ton=dengeli → ekstra ton yönergesi yok (geriye uyumlu)", !/(SERT|MİZAH)/i.test(w.ustAkilPrompt("a", [{ isim: "x" }], "", "dengeli").sistem));
+
+  // Görsel akış editörü
+  const host = w.document.querySelector("#akis");
+  ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
+  ok("panel başta kapalı", w.document.querySelector(".akispanel").hidden === true);
+  host.querySelector('[data-akis="tog"]').click();
+  ok("başlığa basınca panel açıldı", w.document.querySelector(".akispanel").hidden === false);
+  ok("4 düğüm çizildi (4 aşama motoru)", w.document.querySelectorAll(".akisdugum").length === 4);
+  ok("her aşamada kontrol var (2 seçim + 2 onay kutusu)",
+     w.document.querySelectorAll("#akis .akissel").length === 2 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
+
+  // Kontrol değişince ayar kalıcı kaydedilir
+  const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
+  sel.value = "9"; sel.dispatchEvent(new w.Event("change"));
+  ok("ayar değişikliği localStorage'a kalıcı yazıldı", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).adaySayisi === 9);
+
+  // Yeni oturum: kalıcı ayar yüklenir ve kontrollere yansır
+  const w2 = yeniDom();
+  w2.localStorage.setItem("mucit_ayarlar", JSON.stringify({ adaySayisi: 9, eleme: false, ton: "mizahi", web: false }));
+  w2.ayarYukle(); w2.akisCiz();
+  w2.document.querySelector('[data-akis="tog"]').click();
+  ok("kalıcı ayar yeni oturumda yüklendi (adaySayisi=9)", w2.document.querySelector('[data-ayar="adaySayisi"]').value === "9");
+  ok("eleme kapalı ayarı kontrole yansıdı", w2.document.querySelector('[data-ayar="eleme"]').checked === false);
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);
@@ -522,6 +559,17 @@ console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
   ok("fikir yine üretildi", !!card && card.querySelector("h2").textContent.includes("Final Fikir"));
   ok("mühendislik yine geldi (websiz)", !!card.querySelector(".muhendislik"));
   ok("websiz olunca 'web' etiketi YOK", !/· web/.test(card.querySelector(".muhendislik").textContent));
+}).then(async () => {
+  // dify: web kapalıyken /api/ara atlanır ama 4 aşama + fikir tamam
+  console.log("\nuret() — dify web kapalı (arama atlanır)");
+  const w = yeniDom();
+  const { state } = stubUret(w);
+  w.ayarSet("web", false);
+  w.document.querySelector("#alan").value = "test";
+  await w.uret();
+  ok("web kapalı: /api/ara çağrılmadı", state.aramaCagrildi === false);
+  ok("web kapalı olsa da 4 aşama çalıştı (üretici→eleştirmen→üst akıl→uzman)", state.n === 4);
+  ok("web kapalı: fikir yine üretildi", !!w.document.querySelector("#out .card"));
 }).then(async () => {
   // api/ara.js çok kaynaklı arama mantığı (SearXNG -> DDG -> Wikipedia), global.fetch stub
   console.log("\napi/ara.js — çok kaynaklı arama (fetch stub)");

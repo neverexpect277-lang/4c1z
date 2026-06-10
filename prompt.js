@@ -97,12 +97,13 @@ function kaynakCumlesi(kaynak){
 }
 
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak, kaynak, begenilen){
+function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi){
+  const n = [3, 6, 9].indexOf(adaySayisi) >= 0 ? adaySayisi : 6;
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
 Bir DIY/maker mucidi gibi düşün: her fikri kafanda kabaca KUR — hangi parça nereye, nasıl birleşir; zihninde kuramıyorsan o fikri YAZMA. Her aday bugünün ucuz parçalarıyla bir hafta sonunda prototiplenebilir olmalı.
 ${ORTAK_KURAL}
-ÇIKTI: SADECE geçerli bir JSON dizisi döndür (6 aday), markdown yok, açıklama yok:
+ÇIKTI: SADECE geçerli bir JSON dizisi döndür (${n} aday), markdown yok, açıklama yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün/nesnenin harmanı","derde":"çözdüğü gerçek günlük sorun","nedenYok":"bu kadar mantıklıysa neden hâlâ yok","vayBe":"insanı neden şaşırtır"}]`;
   const acilar = karistirSec(ACILAR, 3);
   const tohum = Math.floor(Math.random() * 1e6);
@@ -112,7 +113,7 @@ ${ORTAK_KURAL}
   const begeni = (Array.isArray(begenilen) && begenilen.length)
     ? ` Kullanıcı ŞU tarz fikirleri BEĞENDİ; ruhen/temadan benzer ama YEPYENİ fikirler üret (asla kopyalama): ${begenilen.slice(0, 8).join("; ")}.`
     : "";
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN 6 aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni} [çeşitlilik tohumu: ${tohum}]`;
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 
@@ -135,9 +136,14 @@ ${ORTAK_KURAL}
 }
 
 // 3. AŞAMA — ÜST AKIL: ele, harmanla, güçlendir, diyalog yaz
-function ustAkilPrompt(alan, adaylar, kaynak){
+function ustAkilPrompt(alan, adaylar, kaynak, ton){
   const cavSoz = karistirSec(CAVUS_SOZ, 8);
   const zeySoz = karistirSec(ZEYNEB_SOZ, 8);
+  const tonYonerge = ton === "sert"
+    ? "\n- ATIŞMA TONU: SERT ve iğneleyici olsun; Zeyneb acımasızca eleştirsin, Çavuş sabırla direnç kırsın."
+    : ton === "mizahi"
+    ? "\n- ATIŞMA TONU: MİZAHİ ve esprili olsun; tatlı kahkaha dozu yüksek, ama bilim/mantık korunsun."
+    : "";
   const sistem =
 `Sen "4c1z"in ÜST AKLI'sın. Sana aday ürün fikirleri verilir; görevin onları SÜZÜP OLGUNLAŞTIRMAK.
 GÖREVİN:
@@ -150,7 +156,7 @@ ${ORTAK_KURAL}
 Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 - ÇAVUŞ (esmer erkek, çok detaycı, bilime aşık): fikri ortaya atar ve SAVUNUR; Zeyneb'i yarı zarif sözle yarı bilim/mantıkla ikna eder.
 - ZEYNEB (kapalı/başörtülü doçent hanım): HİÇBİR ŞEYİ hemen beğenmez, eleştirir, kusur arar, itiraz eder; Çavuş ikna edince gönülsüzce "ikna ettin" der.
-- 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.
+- 3-5 KISA replik, samimi ve tatlı atışmalı. Seslenirken HER replikte FARKLI kelime kullan: ÇAVUŞ→ZEYNEB: ${cavSoz}. ZEYNEB→ÇAVUŞ: ${zeySoz}.${tonYonerge}
 - Ayrıca 'aramaEN' alanına bu ürünü İngilizce ararken kullanılacak 2-4 anahtar kelime yaz (SADECE arama motoru için; kullanıcıya GÖSTERİLMEZ, fikrin kendisi ve diyalog Türkçe kalır).
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (TEK elemanlı, yani 1 fikir), markdown yok:
 [{"isim":"","ne":"tek cümle","neyden":"hangi 2-3 ürünün harmanı","derde":"çözdüğü günlük sorun","nedenYok":"neden hâlâ yok","vayBe":"insanı neden şaşırtır","aramaEN":"2-4 İngilizce arama kelimesi (gösterilmez)","diyalog":[{"kim":"Çavuş","soz":"..."},{"kim":"Zeyneb","soz":"..."}]}]`;

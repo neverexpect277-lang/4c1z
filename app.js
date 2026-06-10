@@ -23,6 +23,13 @@ function oturumKaydet(){
   try{ localStorage.setItem(OTURUM_KEY, JSON.stringify({ ideas: sonUretilen.slice(0, 40), isimler: uretilmisIsimler.slice(-80) })); }catch(e){}
 }
 
+// ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
+const AYAR_KEY = "mucit_ayarlar";
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true };
+function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
+function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
+function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
+
 // ---- Temalar (isimli alan+kaynak ayarları) ----
 const TEMA_KEY = "mucit_temalar";
 function temalarYukle(){ try{ return JSON.parse(localStorage.getItem(TEMA_KEY)) || []; }catch(e){ return []; } }
@@ -571,15 +578,18 @@ async function araGetir(q, en){
   return [];
 }
 // 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
-async function uzmanlastir(alan, fikir, kaynak){
+async function uzmanlastir(alan, fikir, kaynak, webAcik){
   const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
   const enQ = (fikir.aramaEN || "").trim();            // üst aklın ürettiği gizli İngilizce kelimeler
   const anahtar = fikir.isim || fikir.ne || "";
-  const [genel, patent, kur] = await Promise.all([
-    araGetir(ad, enQ),
-    araGetir("site:patents.google.com " + (enQ || anahtar)),
-    kurGetir()
-  ]);
+  // web kapalı (dify ayarı): arama atlanır, sadece kur çekilir; uzman heyeti yine çalışır.
+  const [genel, patent, kur] = webAcik === false
+    ? [[], [], await kurGetir()]
+    : await Promise.all([
+        araGetir(ad, enQ),
+        araGetir("site:patents.google.com " + (enQ || anahtar)),
+        kurGetir()
+      ]);
   const fmt = arr => arr.slice(0, 12).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
@@ -611,6 +621,35 @@ function ajanCiz(aktif, alt){
     (alt ? `<div class="ajanalt">${alt}</div>` : "") + `</div>`;
 }
 
+// dify ilhamı: 4 aşamalı motoru düzenlenebilir görsel akış olarak çiz (her düğüm gerçek davranışa bağlı)
+let akisAcik = false;
+function akisCiz(){
+  const host = $("#akis");
+  if(!host) return;
+  const opt = (deger, secenekler) => secenekler.map(([v, ad]) =>
+    `<option value="${v}" ${String(deger) === String(v) ? "selected" : ""}>${ad}</option>`).join("");
+  const dugumler = [
+    `<select class="akissel" data-ayar="adaySayisi">${opt(ayarlar.adaySayisi, [[3, "3 aday"], [6, "6 aday"], [9, "9 aday"]])}</select>`,
+    `<label class="akistgl"><input type="checkbox" data-ayar="eleme" ${ayarlar.eleme ? "checked" : ""}/>eleme</label>`,
+    `<select class="akissel" data-ayar="ton">${opt(ayarlar.ton, [["sert", "sert ton"], ["dengeli", "dengeli ton"], ["mizahi", "mizahi ton"]])}</select>`,
+    `<label class="akistgl"><input type="checkbox" data-ayar="web" ${ayarlar.web ? "checked" : ""}/>web</label>`
+  ];
+  const satirlar = AJAN_ADIMLARI.map((ad, i) =>
+    `<div class="akisdugum"><span class="akisik">${i + 1}</span><span class="akisad">${ad}</span>${dugumler[i]}</div>`
+  ).join(`<span class="akiswire"></span>`);
+  host.innerHTML =
+    `<button type="button" class="akisbas" data-akis="tog">${akisAcik ? "▾" : "▸"} Motoru ayarla <span class="akisetiket">dify</span></button>` +
+    `<div class="akispanel" ${akisAcik ? "" : "hidden"}>${satirlar}</div>`;
+  host.querySelector('[data-akis="tog"]').addEventListener("click", () => { akisAcik = !akisAcik; akisCiz(); });
+  host.querySelectorAll("[data-ayar]").forEach(el => {
+    el.addEventListener("change", () => {
+      const k = el.dataset.ayar;
+      const v = el.type === "checkbox" ? el.checked : (k === "adaySayisi" ? parseInt(el.value, 10) : el.value);
+      ayarSet(k, v);
+    });
+  });
+}
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -637,7 +676,7 @@ async function uret(){
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
@@ -647,13 +686,15 @@ async function uret(){
 
   // 2. AŞAMA: KIRMIZI TAKIM eleştirmen — zayıf/klişe/yapılamaz adayları ele, kalanı keskinleştir
   let suzulmus = null;
-  if(adaylar){
+  if(adaylar && ayarlar.eleme){
     for(let d = 1; d <= 2 && !suzulmus; d++){
       const p = elestirmenPrompt(alan, adaylar, kaynak);
       suzulmus = await zincir(p.sistem, p.kullanici);
       if(!suzulmus && d < 2) await bekle(3000);
     }
     if(!suzulmus) suzulmus = adaylar; // eleştirmen olmazsa ham adaylarla devam
+  }else if(adaylar){
+    suzulmus = adaylar;               // eleme kapalı (dify ayarı): ham adaylarla devam
   }
   if(suzulmus){ asama = 2; ajanCiz(asama, mesajlar[mi]); }
 
@@ -661,7 +702,7 @@ async function uret(){
   let fikirler = null;
   if(suzulmus){
     for(let d = 1; d <= 2 && !fikirler; d++){
-      const p = ustAkilPrompt(alan, suzulmus, kaynak);
+      const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton);
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }
@@ -672,7 +713,7 @@ async function uret(){
   // 4. AŞAMA: UZMAN HEYETİ — fikri web destekli mühendislik gözüyle zenginleştir (diyalog korunur)
   if(fikirler && fikirler.length){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
-    await uzmanlastir(alan, fikirler[0], kaynak);
+    await uzmanlastir(alan, fikirler[0], kaynak, ayarlar.web);
     asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
   }
 
@@ -728,5 +769,7 @@ if("serviceWorker" in navigator){
 // init
 favleriKaydet(favleriYukle());
 oturumYukle();
+ayarYukle();
+akisCiz();
 cizTemalar();
 cizFikirler(sonUretilen);
