@@ -394,6 +394,33 @@ function stubUret(w, opts = {}){
   return { cag, state };
 }
 
+// ---- #7 ragflow ilhamı: akıllı kaynak seçimi (anahtarsız RAG) ----
+console.log("\n#7 — Akıllı kaynak seçimi (ragflow ilhamı)");
+(function(){
+  const w = yeniDom();
+  // Kısa kaynak değişmeden döner
+  ok("kısa kaynak olduğu gibi döner", w.kaynakSec("kısa bir not", "mutfak") === "kısa bir not");
+
+  // Uzun kaynak: alanla alakalı cümleler seçilir, alakasızlar elenir
+  const uzun = [
+    "Mutfakta tezgah çok dağınık oluyor ve bıçaklar tehlikeli duruyor.",
+    "Köpeğim parkta çok koşuyor ve sonra çok yoruluyor zavallı.",
+    "Tavalar dolapta çok yer kaplıyor, mutfak düzenini kurmak zor.",
+    "Hava bugün çok güzel olduğu için ailecek denize gittik.",
+    "Bulaşık süngeri 3 günde mutfakta bakteri topluyor, hijyen sorun."
+  ].join(" ") + " " + "z".repeat(500);   // 500+ alakasız dolgu → kaynak 'uzun' sayılır
+  const sec = w.kaynakSec(uzun, "mutfak");
+  ok("uzun kaynaktan alanla alakalı cümle seçildi", /tezgah|tava|bulaşık/i.test(sec));
+  ok("alakasız cümleler elendi (köpek/deniz)", !/köpeğim|denize gittik/i.test(sec));
+  ok("alakasız uzun dolgu elendi", !/zzzz/.test(sec));
+  ok("çıktı kısaltıldı (belge promptu boğmuyor)", sec.length < uzun.length);
+  ok("seçilen cümleler okuma sırasını korur", sec.indexOf("tezgah") < sec.indexOf("Bulaşık"));
+
+  // Alan boşken de kırılmaz, baştan anlamlı kısım döner
+  const s2 = w.kaynakSec(uzun, "");
+  ok("alan boşken de string döner (kırılmaz)", typeof s2 === "string" && s2.length > 0);
+})();
+
 // ---- #8 mastra ilhamı: canlı ajan zinciri + öğrenen hafıza ----
 console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
 (function(){

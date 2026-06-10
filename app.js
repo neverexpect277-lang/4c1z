@@ -590,6 +590,32 @@ function akisCiz(){
   ).join(`<span class="akiswire"></span>`);
 }
 
+// ---- ragflow ilhamı: akıllı kaynak seçimi (anahtarsız RAG) ----
+// Uzun kaynağı cümlelere böler, ALANLA en alakalı kısımları seçip kısaltır;
+// böylece belge promptu boğmaz, sadece ilgili bilgi fikre dayanak olur.
+function kaynakSec(kaynak, alan){
+  const ham = String(kaynak || "").trim();
+  if(ham.length <= 500) return ham;                                   // kısa → olduğu gibi
+  const parcalar = ham.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 12);
+  if(parcalar.length <= 1) return ham.slice(0, 600);
+  const kelimeler = String(alan || "").toLocaleLowerCase("tr").split(/[^a-zçğıöşü0-9]+/).filter(w => w.length >= 3);
+  const skor = p => {
+    const t = p.toLocaleLowerCase("tr");
+    let s = 0;
+    for(const k of kelimeler) if(t.includes(k)) s += 3;               // alan örtüşmesi
+    if(/\d/.test(p)) s += 1;                                          // sayı/ölçü = somut bilgi
+    return s;
+  };
+  const dizi = parcalar.map((p, i) => ({ p, i, s: skor(p) }));
+  const eslesme = dizi.some(x => x.s >= 3);
+  // alan eşleşmesi varsa SADECE alakalı (skorlu) cümleler; yoksa baştan (belge başı = bağlam)
+  const sirali = eslesme ? dizi.filter(x => x.s > 0).sort((a, b) => b.s - a.s) : dizi.slice();
+  const secili = []; let uz = 0;
+  for(const x of sirali){ if(uz + x.p.length > 700) continue; secili.push(x); uz += x.p.length; if(uz > 550) break; }
+  secili.sort((a, b) => a.i - b.i);                                   // okuma akışı için orijinal sıra
+  return secili.map(x => x.p).join(" ");
+}
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -597,7 +623,8 @@ async function uret(){
   calisiyor = true;
   $("#gen").disabled = true;
   const alan = alanInput.value.trim();
-  const kaynak = (($("#kaynak") && $("#kaynak").value) || "").trim();
+  const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
+  const kaynak = kaynakSec(kaynakHam, alan);   // ragflow: uzun belgeden alanla alakalı kısmı seç
   const mesajlar = [
     "Çavuş ve Zeyneb istişare ediyor…",
     "Çavuş ürünleri tek tek tarıyor…",
