@@ -13,7 +13,7 @@ Dünyada ve Türkiye'de olmayan, yarı-teknolojik, herkesin kullanabileceği **y
 ```
 
 ## Anahtarsız ajan ordusu (hiçbir API anahtarı gerekmez)
-Web arama (SearXNG + DuckDuckGo + Wikipedia tr/en) · GitHub (★/fork/topics) · Stack Exchange · Hacker News · Google Patents · arXiv · Datamuse kelime genişletme · Frankfurter güncel USD→TRY kuru. İngilizce arama perde arkasında çalışır, çıktı %100 Türkçe.
+Web arama (SearXNG + DuckDuckGo + Wikipedia tr/en) · GitHub (★/fork/topics) · Stack Exchange · Hacker News · Reddit (gerçek kullanıcı dert/talep sinyali) · Google Patents · arXiv · Datamuse kelime genişletme · Frankfurter güncel USD→TRY kuru. İngilizce arama perde arkasında çalışır, çıktı %100 Türkçe.
 
 ## Her fikir kartında
 Premium **skor (0-100)** + hüküm · Nasıl yapılır · Tahmini maliyet (₺/$) · Benzer ürünler · Talep/ilgi · Patent durumu · Teknik gerçeklik (üretim fiziği) · Farklılaş · İlk prototip adımı.
@@ -22,7 +22,7 @@ Premium **skor (0-100)** + hüküm · Nasıl yapılır · Tahmini maliyet (₺/$
 Kaydet (★) + durum/puan/not · alan filtresi + metin arama · isimli temalar · "Önerilen Fikirler" katlanabilir kutusu · kaynak alanı (NotebookLM mantığı) · **düğüm tabanlı görsel üretimi** (ComfyUI ilhamı: Konu→Stil→Arka plan→Üret düğümleri tek prompt'a zincirlenir, `/api/image` Gemini→Pollinations ile ürün görseli üretir) · **canlı ajan zinciri + öğrenen hafıza** (mastra ilhamı: 4 aşama ekranda adım adım ilerler; beğenilen kayıtlar üreticiye pozitif sinyal olur, geçmiş fikirler tekrarlanmaz) · **ayarlanabilir görsel akış motoru** (dify ilhamı: 4 aşamayı düzenlenebilir akış olarak gör; aday sayısı, eleme, diyalog tonu, web araması düğümden ayarlanır, ayarlar kalıcı) · PWA (telefona kurulur) · kalıcı oturum (localStorage).
 
 ## Teknik
-Saf vanilla JS + Vercel serverless (`api/gen` Gemini, `api/poll` Pollinations, `api/ara` çok-kaynaklı arama, `api/image`). Backend/veritabanı yok. 187 jsdom testi (`npm test`).
+Saf vanilla JS + Vercel serverless (`api/gen` Gemini, `api/poll` Pollinations, `api/ara` çok-kaynaklı arama, `api/image`). Backend/veritabanı yok. 189 jsdom testi (`npm test`).
 
 ---
 

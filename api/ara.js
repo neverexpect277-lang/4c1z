@@ -131,6 +131,22 @@ async function hackernews(q){
   } catch (e) { return []; }
 }
 
+// Reddit — gerçek kullanıcıların dert/talep tartışması (yorum + oy = ilgi sinyali). Anahtarsız (public .json).
+async function reddit(q){
+  try {
+    const r = await zamanli("https://www.reddit.com/search.json?limit=5&sort=relevance&q=" + encodeURIComponent(q), {
+      headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)" }
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const kids = (j.data && j.data.children) || [];
+    return kids.slice(0, 3).map(c => c && c.data).filter(Boolean).map(d => ({
+      baslik: "Reddit: " + temizle(d.title || "") + " (r/" + (d.subreddit || "") + ", " + (d.num_comments || 0) + " yorum)",
+      ozet: "oy " + (d.score || 0) + (d.selftext ? " · " + temizle(d.selftext).slice(0, 80) : "")
+    })).filter(x => x.baslik.length > 10);
+  } catch (e) { return []; }
+}
+
 // Datamuse — bir terime İLİŞKİLİ kelimeler (arama kapsamını genişletmek için). Anahtarsız.
 async function datamuse(q){
   try {
@@ -184,8 +200,8 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, a, w] = await Promise.all([cokDil(github), cokDil(stack), cokDil(hackernews), arxiv(enTemiz), wiki(temiz, enTemiz)]);
-      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), a.slice(0, 2), w.slice(0, 2));
+      const [g, s, h, rd, a, w] = await Promise.all([cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz)]);
+      sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });
