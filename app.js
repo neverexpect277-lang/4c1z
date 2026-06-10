@@ -181,7 +181,7 @@ function skorHTML(f){
   return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${metin(f.hukum || "")}</span></div>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
@@ -191,6 +191,7 @@ function muhHTML(f){
     sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
     sec("Teknik gerçeklik", f.teknik) +
     sec("İlk prototip adımı", f.prototip) +
+    sec("Açık kaynak yapı taşları", f.yapiTaslari) +
     `</div>`;
 }
 function kartHTML(f, kayitli){
@@ -568,7 +569,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
     const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
       if(patentArama) fikir.patentWeb = true;
     }

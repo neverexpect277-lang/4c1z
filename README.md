@@ -16,13 +16,13 @@ Dünyada ve Türkiye'de olmayan, yarı-teknolojik, herkesin kullanabileceği **y
 Web arama (SearXNG + DuckDuckGo + Wikipedia tr/en) · GitHub (★/fork/topics) · Stack Exchange · Hacker News · Reddit (gerçek kullanıcı dert/talep sinyali) · Google Patents · arXiv · Datamuse kelime genişletme · Frankfurter güncel USD→TRY kuru. İngilizce arama perde arkasında çalışır, çıktı %100 Türkçe.
 
 ## Her fikir kartında
-Premium **skor (0-100)** + hüküm · Nasıl yapılır · Tahmini maliyet (₺/$) · Benzer ürünler · Talep/ilgi · Patent durumu · Teknik gerçeklik (üretim fiziği) · Farklılaş · İlk prototip adımı.
+Premium **skor (0-100)** + hüküm · Nasıl yapılır · Tahmini maliyet (₺/$) · Benzer ürünler · Talep/ilgi · Patent durumu · Teknik gerçeklik (üretim fiziği) · Farklılaş · İlk prototip adımı · Açık kaynak yapı taşları.
 
 ## Özellikler
 Kaydet (★) + durum/puan/not · alan filtresi + metin arama · isimli temalar · **mod kalıpları** (fabric ilhamı: ucuz prototip / yüksek teknoloji / sosyal fayda / çevre / eğlence — tek tıkla üretimi o tarza yönlendirir) · "Önerilen Fikirler" katlanabilir kutusu · kaynak alanı (NotebookLM mantığı) · **URL'den kaynak çekme** (firecrawl ilhamı: kaynak kutusuna link yapıştır → "Linki çek" → sayfa sunucudan temiz metne dönüşür, `/api/cek`, anahtarsız) · **akıllı kaynak seçimi** (ragflow ilhamı: uzun belge cümlelere bölünür, alanla en alakalı kısımlar seçilip beslenir — belge promptu boğmaz, anahtarsız RAG) · **canlı ajan zinciri + öğrenen hafıza** (mastra ilhamı: 4 aşama ekranda adım adım ilerler; beğenilen kayıtlar üreticiye pozitif sinyal olur, geçmiş fikirler tekrarlanmaz) · **ayarlanabilir akış motoru** (dify ilhamı: 4 aşamayı düzenlenebilir akış olarak gör; aday sayısı, eleme, diyalog tonu, web araması düğümden ayarlanır, ayarlar kalıcı) · PWA (telefona kurulur) · kalıcı oturum (localStorage).
 
 ## Teknik
-Saf vanilla JS + Vercel serverless (`api/gen` Gemini, `api/poll` Pollinations, `api/ara` çok-kaynaklı arama, `api/cek` URL→metin). Backend/veritabanı yok. 193 jsdom testi (`npm test`).
+Saf vanilla JS + Vercel serverless (`api/gen` Gemini, `api/poll` Pollinations, `api/ara` çok-kaynaklı arama, `api/cek` URL→metin). Backend/veritabanı yok. 194 jsdom testi (`npm test`).
 
 ---
 

@@ -388,7 +388,7 @@ function stubUret(w, opts = {}){
     if(state.n === 1) text = JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ isim: "Aday" + i, ne: "a", neyden: "x+y" })));
     else if(state.n === 2) text = JSON.stringify(Array.from({ length: 3 }, (_, i) => ({ isim: "Süzülmüş" + i, ne: "s", neyden: "p+q" })));
     else if(state.n === 3) text = JSON.stringify([{ isim: "Final Fikir", ne: "sonuç", neyden: "a+b", aramaEN: "smart pan sensor", diyalog: [{ kim: "Çavuş", soz: "hah" }, { kim: "Zeyneb", soz: "ikna oldum" }] }]);
-    else text = JSON.stringify([{ isim: "Final Fikir", skor: "84", hukum: "güçlü dert, zayıf rakip · risk: ısıl", farklilas: "sensörü mıknatısla çıkarılabilir yap", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", talep: "aramada çok sonuç var, talep yüksek", patent: "US1234 benzer patent var", teknik: "kritik kısıt ısıl dayanım, geçer", prototip: "karton maket yap" }]);
+    else text = JSON.stringify([{ isim: "Final Fikir", skor: "84", hukum: "güçlü dert, zayıf rakip · risk: ısıl", farklilas: "sensörü mıknatısla çıkarılabilir yap", nasil: "X+Y parçalarıyla", maliyet: "100-200 TL", benzer: "Mevcut Ürün X", talep: "aramada çok sonuç var, talep yüksek", patent: "US1234 benzer patent var", teknik: "kritik kısıt ısıl dayanım, geçer", prototip: "karton maket yap", yapiTaslari: "Arduino + DHT nem kütüphanesi; okuma kolaylaşır" }]);
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
   };
   return { cag, state };
@@ -546,6 +546,7 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("Patent durumu alanı var + 'web' etiketli", /Patent durumu · web/.test(muhMetin) && /US1234 benzer patent/.test(muhMetin));
   ok("Teknik gerçeklik (üretim fiziği) alanı var", /Teknik gerçeklik/.test(muhMetin) && /ısıl dayanım/.test(muhMetin));
   ok("İlk prototip adımı var", /karton maket/.test(muhMetin));
+  ok("#7 Açık kaynak yapı taşları alanı var (awesome-opensource-ai)", /Açık kaynak yapı taşları/.test(muhMetin) && /Arduino \+ DHT/.test(muhMetin));
   ok("Farklılaş satırı var", /Farklılaş/.test(muhMetin) && /mıknatısla/.test(muhMetin));
   const rozet = card.querySelector(".skor");
   ok("premium skor rozeti render edildi", !!rozet);
