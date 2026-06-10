@@ -32,11 +32,11 @@ function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
 
 // ---- fabric ilhamı: hazır prompt kalıpları (tek tıkla mod) ----
 const KALIPLAR = [
-  { k: "ucuz", ad: "💰 Ucuz prototip", v: "Her fikir bir hafta sonunda 200 TL altı bütçeyle, kolay bulunan parçalarla prototiplenebilsin; pahalı/karmaşık olanı ELE." },
-  { k: "tech", ad: "🤖 Yüksek teknoloji", v: "Fikirler sensör/mikrodenetleyici/IoT/akıllı bileşen içersin; yine de bugünün ucuz hazır parçalarıyla kurulabilir olsun." },
-  { k: "sosyal", ad: "♿ Sosyal fayda", v: "Fikirler yaşlı, engelli veya çocuk gibi dezavantajlı grupların gündelik hayatını kolaylaştırmaya odaklansın." },
-  { k: "cevre", ad: "🌱 Çevre dostu", v: "Fikirler atık azaltma, geri dönüşüm, su veya enerji tasarrufu gibi çevresel faydaya odaklansın." },
-  { k: "eglence", ad: "🎉 Eğlence", v: "Fikirler oyunlaştırma ve keyif odaklı olsun; sıkıcı gündelik işleri eğlenceli hale getirsin." }
+  { k: "ucuz", ad: "Ucuz prototip", v: "Her fikir bir hafta sonunda 200 TL altı bütçeyle, kolay bulunan parçalarla prototiplenebilsin; pahalı/karmaşık olanı ELE." },
+  { k: "tech", ad: "Yüksek teknoloji", v: "Fikirler sensör/mikrodenetleyici/IoT/akıllı bileşen içersin; yine de bugünün ucuz hazır parçalarıyla kurulabilir olsun." },
+  { k: "sosyal", ad: "Sosyal fayda", v: "Fikirler yaşlı, engelli veya çocuk gibi dezavantajlı grupların gündelik hayatını kolaylaştırmaya odaklansın." },
+  { k: "cevre", ad: "Çevre dostu", v: "Fikirler atık azaltma, geri dönüşüm, su veya enerji tasarrufu gibi çevresel faydaya odaklansın." },
+  { k: "eglence", ad: "Eğlence", v: "Fikirler oyunlaştırma ve keyif odaklı olsun; sıkıcı gündelik işleri eğlenceli hale getirsin." }
 ];
 function kalipVurgu(){ const x = KALIPLAR.find(k => k.k === ayarlar.kalip); return x ? x.v : ""; }
 function kaliplarCiz(){
@@ -585,7 +585,7 @@ function ajanCiz(aktif, alt){
     return `<div class="ajanadim ${durum}"><span class="ajanik">${ik}</span><span class="ajanad">${ad}</span></div>`;
   }).join(`<span class="ajanwire"></span>`);
   const hafiza = uretilmisIsimler.length
-    ? `<span class="ajanhafiza" title="Daha önce üretilen fikirler hatırlanır, tekrarlanmaz">🧠 hafıza: ${uretilmisIsimler.length}</span>` : "";
+    ? `<span class="ajanhafiza" title="Daha önce üretilen fikirler hatırlanır, tekrarlanmaz">hafıza: ${uretilmisIsimler.length}</span>` : "";
   statusEl.innerHTML =
     `<div class="ajan"><div class="ajanbaslik"><span>Ajan zinciri</span>${hafiza}</div>` +
     `<div class="ajanlar">${adimlar}</div>` +
