@@ -47,6 +47,7 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .chip:hover{border-color:var(--accentSoft);color:var(--txt);}
 .chip:active{transform:scale(.96);}
 .chip.sinirsiz{border-color:var(--accent);color:var(--accentDeep);background:var(--cream);font-weight:600;}
+.chip.kalip.on{border-color:var(--accent);color:var(--accentDeep);background:var(--cream);font-weight:600;}
 .tt.kt{margin-top:16px;}
 .kaynak{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
   border-radius:12px;padding:12px 14px;font-size:15px;font-family:var(--font);outline:none;resize:vertical;

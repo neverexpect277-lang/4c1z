@@ -25,10 +25,27 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "" };
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
+
+// ---- fabric ilhamı: hazır prompt kalıpları (tek tıkla mod) ----
+const KALIPLAR = [
+  { k: "ucuz", ad: "💰 Ucuz prototip", v: "Her fikir bir hafta sonunda 200 TL altı bütçeyle, kolay bulunan parçalarla prototiplenebilsin; pahalı/karmaşık olanı ELE." },
+  { k: "tech", ad: "🤖 Yüksek teknoloji", v: "Fikirler sensör/mikrodenetleyici/IoT/akıllı bileşen içersin; yine de bugünün ucuz hazır parçalarıyla kurulabilir olsun." },
+  { k: "sosyal", ad: "♿ Sosyal fayda", v: "Fikirler yaşlı, engelli veya çocuk gibi dezavantajlı grupların gündelik hayatını kolaylaştırmaya odaklansın." },
+  { k: "cevre", ad: "🌱 Çevre dostu", v: "Fikirler atık azaltma, geri dönüşüm, su veya enerji tasarrufu gibi çevresel faydaya odaklansın." },
+  { k: "eglence", ad: "🎉 Eğlence", v: "Fikirler oyunlaştırma ve keyif odaklı olsun; sıkıcı gündelik işleri eğlenceli hale getirsin." }
+];
+function kalipVurgu(){ const x = KALIPLAR.find(k => k.k === ayarlar.kalip); return x ? x.v : ""; }
+function kaliplarCiz(){
+  const host = $("#kaliplar"); if(!host) return;
+  host.innerHTML = `<button type="button" class="chip kalip ${ayarlar.kalip ? "" : "on"}" data-k="">Mod yok</button>` +
+    KALIPLAR.map(x => `<button type="button" class="chip kalip ${ayarlar.kalip === x.k ? "on" : ""}" data-k="${x.k}">${x.ad}</button>`).join("");
+  host.querySelectorAll("[data-k]").forEach(b =>
+    b.addEventListener("click", () => { ayarlar.kalip = b.dataset.k; ayarKaydet(); kaliplarCiz(); }));
+}
 
 // ---- Temalar (isimli alan+kaynak ayarları) ----
 const TEMA_KEY = "mucit_temalar";
@@ -663,7 +680,7 @@ async function uret(){
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   let adaylar = null;
   for(let d = 1; d <= 2 && !adaylar; d++){
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu());
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
@@ -759,6 +776,7 @@ if("serviceWorker" in navigator){
 try{ favleriKaydet(favleriYukle()); }catch(e){}
 try{ oturumYukle(); }catch(e){}
 try{ ayarYukle(); }catch(e){}
+try{ kaliplarCiz(); }catch(e){}
 try{ akisKur(); }catch(e){}
 try{ cizTemalar(); }catch(e){}
 try{ cizFikirler(sonUretilen); }catch(e){}

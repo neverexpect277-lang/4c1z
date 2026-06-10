@@ -97,7 +97,7 @@ function kaynakCumlesi(kaynak){
 }
 
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi){
+function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip){
   const n = [3, 6, 9].indexOf(adaySayisi) >= 0 ? adaySayisi : 6;
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
@@ -113,7 +113,8 @@ ${ORTAK_KURAL}
   const begeni = (Array.isArray(begenilen) && begenilen.length)
     ? ` Kullanıcı ŞU tarz fikirleri BEĞENDİ; ruhen/temadan benzer ama YEPYENİ fikirler üret (asla kopyalama): ${begenilen.slice(0, 8).join("; ")}.`
     : "";
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni} [çeşitlilik tohumu: ${tohum}]`;
+  const mod = kalip ? ` SEÇİLİ KALIP/MOD (tüm adaylar buna uysun): ${kalip}` : "";
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni}${mod} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 

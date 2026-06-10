@@ -421,6 +421,34 @@ console.log("\n#7 — Akıllı kaynak seçimi (ragflow ilhamı)");
   ok("alan boşken de string döner (kırılmaz)", typeof s2 === "string" && s2.length > 0);
 })();
 
+// ---- #6 fabric ilhamı: hazır prompt kalıpları (mod) ----
+console.log("\n#6 — Mod kalıpları (fabric ilhamı)");
+(function(){
+  const w = yeniDom();
+  // Çipler çizildi (Mod yok + 5 kalıp)
+  const host = w.document.querySelector("#kaliplar");
+  ok("mod çipleri çizildi (yok + 5 kalıp)", host.querySelectorAll(".chip.kalip").length === 6);
+  ok("başta 'Mod yok' seçili", host.querySelector('[data-k=""]').classList.contains("on"));
+
+  // Kalıp seç → highlight + kalıcı
+  host.querySelector('[data-k="ucuz"]').click();
+  ok("kalıp seçilince işaretlenir", w.document.querySelector('[data-k="ucuz"]').classList.contains("on"));
+  ok("kalıp seçimi kalıcı (localStorage)", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).kalip === "ucuz");
+
+  // kalipVurgu seçilen kalıbın yönergesini döndürür
+  ok("kalipVurgu seçili kalıbın yönergesini verir", /200 TL altı/.test(w.kalipVurgu()));
+
+  // ureticiPrompt kalıbı enjekte eder (geriye uyumlu: kalıpsız → enjeksiyon yok)
+  ok("üretici promptuna kalıp girer", /KALIP\/MOD/.test(w.ureticiPrompt("ev", [], "", null, 6, "200 TL altı olsun").kullanici));
+  ok("kalıpsız üretici promptu temiz (geriye uyumlu)", !/KALIP\/MOD/.test(w.ureticiPrompt("ev", [], "").kullanici));
+
+  // Yeni oturum: kalıcı kalıp yüklenir ve çipe yansır
+  const w2 = yeniDom();
+  w2.localStorage.setItem("mucit_ayarlar", JSON.stringify({ kalip: "cevre" }));
+  w2.ayarYukle(); w2.kaliplarCiz();
+  ok("kalıcı kalıp yeni oturumda yüklendi", w2.document.querySelector('[data-k="cevre"]').classList.contains("on"));
+})();
+
 // ---- #8 mastra ilhamı: canlı ajan zinciri + öğrenen hafıza ----
 console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
 (function(){
