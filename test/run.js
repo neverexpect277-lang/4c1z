@@ -14,6 +14,7 @@ function yeniDom(){
   const w = dom.window;
   w.eval(fs.readFileSync(path.join(REPO, "prompt.js"), "utf8"));
   w.eval(fs.readFileSync(path.join(REPO, "embed.js"), "utf8"));
+  w.eval(fs.readFileSync(path.join(REPO, "wllm.js"), "utf8"));
   w.eval(fs.readFileSync(path.join(REPO, "app.js"), "utf8"));
   return w;
 }
@@ -496,8 +497,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (3 seçim: aday/ton/oto-kaydet + 3 onay: eleme/web/anlamsal)",
-     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 3);
+  ok("kontroller var (3 seçim + 4 onay: eleme/web/anlamsal/yerel)",
+     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 4);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -778,6 +779,24 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const sem = await w.kaynakSecAnlamsal(uzun, "mutfak");
   ok("anlamsal kaynak model yokken keyword'e düşer (aynı sonuç)", sem === w.kaynakSec(uzun, "mutfak"));
   ok("fallback yine de alakalı içerik döndürür", /tezgah|tava|bulaşık/i.test(sem));
+}).then(async () => {
+  // ---- web-llm: yerel LLM (WebGPU yoksa buluta graceful fallback) ----
+  console.log("\nALTYAPI — web-llm (yerel LLM)");
+  const w = yeniDom();
+  ok("WebGPU yokken yerel desteklenmez (jsdom)", w.yerelDestekli() === false);
+  ok("yerelUret WebGPU yokken null döner (kırılmaz)", (await w.yerelUret("a", "b")) === null);
+  const tgl = w.document.querySelector('[data-ayar="yerel"]');
+  ok("yerel LLM onay kutusu var (Motoru ayarla)", !!tgl && tgl.checked === false);
+  tgl.checked = true; tgl.dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("yerel LLM ayarı kalıcı", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).yerel === true);
+
+  // yerel açık ama WebGPU yok → üretim yine BULUTA düşüp çalışır
+  const w2 = yeniDom();
+  const { state } = stubUret(w2);
+  w2.ayarSet("yerel", true);
+  w2.document.querySelector("#alan").value = "ev";
+  await w2.uret();
+  ok("yerel açık + WebGPU yok → buluta düşüp fikir üretildi", !!w2.document.querySelector("#out .card"));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);

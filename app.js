@@ -25,7 +25,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false };
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -546,6 +546,10 @@ async function pollCagir(sistem, kullanici){
 
 // Bir promptu model zincirinden geçirip fikir dizisi döndürür (Gemini -> pollinations)
 async function zincir(sistem, kullanici){
+  // web-llm: yerel mod açık + WebGPU varsa önce tarayıcıda dene; geçersizse buluta düş
+  if(ayarlar.yerel){
+    try{ const t = await yerelUret(sistem, kullanici); if(t){ const f = jsonAyikla(t); if(f) return f; } }catch(e){}
+  }
   try{ const f = jsonAyikla(await geminiCagir(sistem, kullanici)); if(f) return f; }catch(e){}
   try{ const f = jsonAyikla(await pollCagir(sistem, kullanici)); if(f) return f; }catch(e){}
   return null;
@@ -659,7 +663,9 @@ function akisCiz(){
     `<div class="akisdugum"><span class="akisad">Yüksek skoru oto-kaydet</span>` +
       `<select class="akissel" data-ayar="otoKaydet">${opt(ayarlar.otoKaydet, [[0, "kapalı"], [70, "70+"], [80, "80+"], [90, "90+"]])}</select></div>` +
     `<div class="akisdugum"><span class="akisad">Anlamsal mod (deneysel · ilk kullanımda model iner)</span>` +
-      `<label class="akistgl"><input type="checkbox" data-ayar="anlamsal" ${ayarlar.anlamsal ? "checked" : ""}/>aç</label></div></div>`;
+      `<label class="akistgl"><input type="checkbox" data-ayar="anlamsal" ${ayarlar.anlamsal ? "checked" : ""}/>aç</label></div>` +
+    `<div class="akisdugum"><span class="akisad">Yerel LLM (deneysel · WebGPU · büyük indirme)</span>` +
+      `<label class="akistgl"><input type="checkbox" data-ayar="yerel" ${ayarlar.yerel ? "checked" : ""}/>aç</label></div></div>`;
   panel.innerHTML = akis + oto;
 }
 
