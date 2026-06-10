@@ -97,7 +97,7 @@ function kaynakCumlesi(kaynak){
 }
 
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip){
+function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip, persona){
   const n = [3, 6, 9].indexOf(adaySayisi) >= 0 ? adaySayisi : 6;
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
@@ -114,14 +114,18 @@ ${ORTAK_KURAL}
     ? ` Kullanıcı ŞU tarz fikirleri BEĞENDİ; ruhen/temadan benzer ama YEPYENİ fikirler üret (asla kopyalama): ${begenilen.slice(0, 8).join("; ")}.`
     : "";
   const mod = kalip ? ` SEÇİLİ KALIP/MOD (tüm adaylar buna uysun): ${kalip}` : "";
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni}${mod} [çeşitlilik tohumu: ${tohum}]`;
+  const bakis = persona ? ` BAKIŞ AÇIN (bu rolle üret): ${persona}` : "";
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni}${mod}${bakis} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 
 // 2. AŞAMA — KIRMIZI TAKIM eleştirmen: acımasız fizibilite + özgünlük denetimi (diyalog YOK)
-function elestirmenPrompt(alan, adaylar, kaynak){
+function elestirmenPrompt(alan, adaylar, kaynak, derin){
+  const heyet = derin
+    ? "\nHEYET MODU: Her adayı 4 AYRI MERCEKten ayrı ayrı denetle — (a) TEKNİK fizibilite, (b) PAZAR/talep, (c) MALİYET, (d) ÖZGÜNLÜK. Bir mercekten bile çakıyorsa zayıf say. Kalanları bu 4 açıdan güçlendir."
+    : "";
   const sistem =
-`Sen acımasız bir KIRMIZI TAKIM eleştirmenisin: ürün fizibilitesi ve özgünlük denetçisi. Sana aday ürün fikirleri verilir; görevin zayıfları SERTÇE ELEMEK, kalanları KESKİNLEŞTİRMEK.
+`Sen acımasız bir KIRMIZI TAKIM eleştirmenisin: ürün fizibilitesi ve özgünlük denetçisi. Sana aday ürün fikirleri verilir; görevin zayıfları SERTÇE ELEMEK, kalanları KESKİNLEŞTİRMEK.${heyet}
 ŞU adayları ELE (acımasız ol):
 - Piyasada zaten var olan, klişe, bariz olanlar.
 - Bilimkurgu, hayalci, bugünün ucuz gerçek parçalarıyla ÜRETİLEMEYECEK olanlar.
@@ -166,9 +170,12 @@ Her fikir için bir ÇAVUŞ↔ZEYNEB sohbeti yaz:
 }
 
 // 4. AŞAMA — UZMAN HEYETİ: fikri mühendislik gözüyle somutlaştır (diyalog GÖNDERİLMEZ/ÜRETİLMEZ)
-function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur){
+function uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, derin){
+  const genisHeyet = derin
+    ? " EK UZMANLAR (heyet modu): İmalat Mühendisi (üretim hattı/montaj), Ticari Stratejist (iş modeli/fiyat) ve Güvenlik & Etik Denetçisi (risk, yönetmelik) de masada — değerlendirmene bu açıları da kat."
+    : "";
   const sistem =
-`Sen bir UZMAN HEYETİSİN: Üretim Uzmanı + Maliyetçi + Rakip Analisti + Patent Denetçisi + Pazar Analisti + Ürün Müdürü tek heyet olarak bir ürün fikrini değerlendirir. Görevin onu MÜHENDİSLİK gözüyle somutlaştırmak. Hayal/varsayım YOK; bugünün ucuz gerçek parçaları ve gerçekçi rakamlarla, kısa ve net konuş.
+`Sen bir UZMAN HEYETİSİN: Üretim Uzmanı + Maliyetçi + Rakip Analisti + Patent Denetçisi + Pazar Analisti + Ürün Müdürü tek heyet olarak bir ürün fikrini değerlendirir.${genisHeyet} Görevin onu MÜHENDİSLİK gözüyle somutlaştırmak. Hayal/varsayım YOK; bugünün ucuz gerçek parçaları ve gerçekçi rakamlarla, kısa ve net konuş.
 ${kur ? "GÜNCEL KUR: 1 USD ≈ " + kur + " TRY. 'maliyet' alanını HEM ₺ HEM $ ver (ör. '≈900₺ / 26$'), bu güncel kuru kullan." : ""}
 ÜRETİM FİZİĞİ ZORUNLU: malzeme özellikleri (dayanım, ısı, ağırlık, iletkenlik), mekanik yükler, güç/enerji bütçesi ve üretilebilirlik açısından muhakeme et; sihir/temennî yok. En kritik fiziksel kısıtı bul ve fikrin bunu gerçekten geçip geçmediğini dürüstçe söyle.
 ${arama ? "GERÇEK WEB ARAMA SONUÇLARI (benzer ürünler VE talep tahmini için BUNLARI temel al; gerçekten benzer olanları belirt, alakasızları ele):\n" + arama : "Web araması yok; 'benzer ürünler' ve 'talep' için en iyi tahminini ver, abartma, uydurma."}

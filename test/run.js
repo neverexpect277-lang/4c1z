@@ -497,8 +497,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (3 seçim + 4 onay: eleme/web/anlamsal/yerel)",
-     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 4);
+  ok("kontroller var (3 seçim + 5 onay: eleme/web/anlamsal/yerel/heyet)",
+     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 5);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -797,6 +797,32 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   w2.document.querySelector("#alan").value = "ev";
   await w2.uret();
   ok("yerel açık + WebGPU yok → buluta düşüp fikir üretildi", !!w2.document.querySelector("#out .card"));
+}).then(async () => {
+  // ---- Çok-ajan HEYET modu: üretici aşamasında paralel personalar ----
+  console.log("\nHEYET — çok-ajan üretici (paralel persona)");
+  const w = yeniDom();
+  const cag = [];
+  // içerik tabanlı stub (paralel çağrılara dayanıklı): prompt içeriğine göre yanıt verir
+  w.fetch = async (url, o) => {
+    if(String(url).startsWith("/api/ara")) return { ok: true, json: async () => ({ sonuclar: [] }) };
+    if(/frankfurter/.test(url)) return { ok: true, json: async () => ({ rates: { TRY: 34 } }) };
+    const text = JSON.parse(o.body).text; cag.push(text);
+    let resp;
+    if(/ÜST AKLI/.test(text)) resp = [{ isim: "Final Fikir", ne: "x", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "h" }, { kim: "Zeyneb", soz: "ikna" }] }];
+    else if(/UZMAN HEYET/i.test(text)) resp = [{ isim: "Final Fikir", skor: "88", hukum: "h", nasil: "n", maliyet: "m", benzer: "b", talep: "t", patent: "p", teknik: "tk", prototip: "pr" }];
+    else if(/KIRMIZI TAKIM/.test(text)) resp = [{ isim: "Süz0", ne: "s", neyden: "p+q" }, { isim: "Süz1", ne: "s", neyden: "p+q" }];
+    else resp = [{ isim: "Aday" + cag.length, ne: "a", neyden: "x+y" }];   // üretici (persona)
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(resp) }] } }] }) };
+  };
+  w.ayarSet("heyet", true);
+  w.document.querySelector("#alan").value = "ev";
+  await w.uret();
+  const ureticiCagri = cag.filter(t => !/KIRMIZI TAKIM|ÜST AKLI|UZMAN HEYET/i.test(t));
+  ok("heyet modunda üretici ÇOK persona ile çalıştı (≥3 paralel)", ureticiCagri.length >= 3);
+  ok("üretici çağrılarına persona (BAKIŞ AÇIN) enjekte edildi", ureticiCagri.some(t => /BAKIŞ AÇIN/.test(t)));
+  ok("eleştirmen heyet merceğiyle çağrıldı (4 mercek)", cag.some(t => /HEYET MODU/.test(t)));
+  ok("uzman heyeti geniş heyetle çağrıldı (ek uzmanlar)", cag.some(t => /EK UZMANLAR/.test(t)));
+  ok("heyet modunda yine tek final fikir üretildi", !!w.document.querySelector("#out .card"));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);

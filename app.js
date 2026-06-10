@@ -25,7 +25,14 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false };
+// Çok-ajan heyet modu: üretici aşamasında paralel çalışan persona ajanları (çeşitlilik için)
+const PERSONALAR = [
+  "DIY/maker mucit — ucuz hazır parçalarla hafta sonu prototipi kurar.",
+  "endüstriyel tasarımcı — ergonomi, estetik, kullanım kolaylığına odaklanır.",
+  "girişimci — pazar boşluğu, talep ve ticari potansiyele odaklanır.",
+  "mühendis — mekanizma, malzeme ve fizik fizibilitesine odaklanır."
+];
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -598,7 +605,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
@@ -665,7 +672,9 @@ function akisCiz(){
     `<div class="akisdugum"><span class="akisad">Anlamsal mod (deneysel · ilk kullanımda model iner)</span>` +
       `<label class="akistgl"><input type="checkbox" data-ayar="anlamsal" ${ayarlar.anlamsal ? "checked" : ""}/>aç</label></div>` +
     `<div class="akisdugum"><span class="akisad">Yerel LLM (deneysel · WebGPU · büyük indirme)</span>` +
-      `<label class="akistgl"><input type="checkbox" data-ayar="yerel" ${ayarlar.yerel ? "checked" : ""}/>aç</label></div></div>`;
+      `<label class="akistgl"><input type="checkbox" data-ayar="yerel" ${ayarlar.yerel ? "checked" : ""}/>aç</label></div>` +
+    `<div class="akisdugum"><span class="akisad">Heyet modu (çok ajan · ${PERSONALAR.length} persona · daha yavaş)</span>` +
+      `<label class="akistgl"><input type="checkbox" data-ayar="heyet" ${ayarlar.heyet ? "checked" : ""}/>aç</label></div></div>`;
   panel.innerHTML = akis + oto;
 }
 
@@ -757,7 +766,17 @@ async function uret(){
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   let adaylar = null;
-  for(let d = 1; d <= 2 && !adaylar; d++){
+  if(ayarlar.heyet){
+    // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
+    const dilimler = await Promise.all(PERSONALAR.map(persona => {
+      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona);
+      return zincir(p.sistem, p.kullanici);
+    }));
+    const havuz = [];
+    for(const arr of dilimler){ if(Array.isArray(arr)) for(const a of arr) if(a && a.isim) havuz.push(a); }
+    if(havuz.length) adaylar = havuz;
+  }
+  for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
     const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu());
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
@@ -770,7 +789,7 @@ async function uret(){
   let suzulmus = null;
   if(adaylar && ayarlar.eleme){
     for(let d = 1; d <= 2 && !suzulmus; d++){
-      const p = elestirmenPrompt(alan, adaylar, kaynak);
+      const p = elestirmenPrompt(alan, adaylar, kaynak, ayarlar.heyet);
       suzulmus = await zincir(p.sistem, p.kullanici);
       if(!suzulmus && d < 2) await bekle(3000);
     }
