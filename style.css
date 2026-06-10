@@ -277,6 +277,8 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .akistgl{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--soft);cursor:pointer;}
 .akistgl input{cursor:pointer;}
 .akiswire{width:1.5px;height:10px;margin-left:10px;background:var(--line2);}
+.akisoto{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line2);display:flex;flex-direction:column;gap:8px;}
+.akisotobas{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);font-weight:600;}
 
 /* Boş ekran */
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;

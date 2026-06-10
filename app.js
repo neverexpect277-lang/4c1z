@@ -25,7 +25,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "" };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", toplu: 1, otoKaydet: 0 };
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -634,7 +634,7 @@ function akisKur(){
     const el = e.target.closest("[data-ayar]");
     if(!el) return;
     const k = el.dataset.ayar;
-    const v = el.type === "checkbox" ? el.checked : (k === "adaySayisi" ? parseInt(el.value, 10) : el.value);
+    const v = el.type === "checkbox" ? el.checked : (["adaySayisi", "toplu", "otoKaydet"].includes(k) ? parseInt(el.value, 10) : el.value);
     ayarSet(k, v);
   });
   akisCiz();
@@ -650,9 +650,16 @@ function akisCiz(){
     `<select class="akissel" data-ayar="ton">${opt(ayarlar.ton, [["sert", "sert ton"], ["dengeli", "dengeli ton"], ["mizahi", "mizahi ton"]])}</select>`,
     `<label class="akistgl"><input type="checkbox" data-ayar="web" ${ayarlar.web ? "checked" : ""}/>web</label>`
   ];
-  panel.innerHTML = AJAN_ADIMLARI.map((ad, i) =>
+  const akis = AJAN_ADIMLARI.map((ad, i) =>
     `<div class="akisdugum"><span class="akisik">${i + 1}</span><span class="akisad">${ad}</span>${dugumler[i]}</div>`
   ).join(`<span class="akiswire"></span>`);
+  // n8n ilhamı: otomasyon kuralları (toplu üretim + skor tetikli oto-kaydet)
+  const oto = `<div class="akisoto"><div class="akisotobas">Otomasyon · n8n</div>` +
+    `<div class="akisdugum"><span class="akisad">Toplu üretim</span>` +
+      `<select class="akissel" data-ayar="toplu">${opt(ayarlar.toplu, [[1, "1 fikir"], [3, "3 fikir"], [5, "5 fikir"]])}</select></div>` +
+    `<div class="akisdugum"><span class="akisad">Yüksek skoru oto-kaydet</span>` +
+      `<select class="akissel" data-ayar="otoKaydet">${opt(ayarlar.otoKaydet, [[0, "kapalı"], [70, "70+"], [80, "80+"], [90, "90+"]])}</select></div></div>`;
+  panel.innerHTML = akis + oto;
 }
 
 // ---- ragflow ilhamı: akıllı kaynak seçimi (anahtarsız RAG) ----
@@ -758,6 +765,8 @@ async function uret(){
     sonUretilen.unshift(fikir);                // birer birer: yenisi en üste
     if(fikir.isim) uretilmisIsimler.push(fikir.isim);
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
+    // n8n otomasyon: skoru eşik üstündeyse fikri otomatik kaydet (trigger → action)
+    if(ayarlar.otoKaydet && parseInt(fikir.skor, 10) >= ayarlar.otoKaydet && !favMi(fikir.isim)) favToggle(fikir);
     statusEl.textContent = "";
     onerilenAcik = true;                         // üretince kutuyu aç ki yeni fikir görünsün
     cizFikirler(sonUretilen);
@@ -774,7 +783,12 @@ async function uret(){
   }
 }
 
-$("#gen").addEventListener("click", uret);
+// n8n otomasyon: "Toplu üretim" ayarı kadar fikri arka arkaya üretir
+async function uretTetikle(){
+  const n = Math.max(1, parseInt(ayarlar.toplu, 10) || 1);
+  for(let i = 0; i < n; i++){ await uret(); }
+}
+$("#gen").addEventListener("click", uretTetikle);
 $("#temaKaydet").addEventListener("click", temaFormAc);
 $("#temaOnay").addEventListener("click", temaOnayla);
 $("#temaIptal").addEventListener("click", temaFormKapat);

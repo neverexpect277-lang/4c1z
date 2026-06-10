@@ -494,9 +494,9 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const host = w.document.querySelector("#akis");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
-  ok("4 düğüm hep DOM'da (panelde) çizili", w.document.querySelectorAll(".akisdugum").length === 4);
-  ok("her aşamada kontrol var (2 seçim + 2 onay kutusu)",
-     w.document.querySelectorAll("#akis .akissel").length === 2 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
+  ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
+  ok("kontroller var (4 seçim: aday/ton/toplu/oto + 2 onay: eleme/web)",
+     w.document.querySelectorAll("#akis .akissel").length === 4 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -707,6 +707,26 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   c2.querySelector('[data-act="pazar"]').click();
   await new Promise(r => setTimeout(r, 5));
   ok("sonuç yoksa niş mesajı (kırılmaz)", /Belirgin sonuç/.test(c2.querySelector(".pazarWrap").textContent));
+}).then(async () => {
+  // #9 n8n: otomasyon — skor tetikli oto-kaydet + toplu üretim ayarı
+  console.log("\n#9 — Otomasyon: oto-kaydet + toplu (n8n ilhamı)");
+  const w = yeniDom();
+  stubUret(w);
+  w.ayarSet("otoKaydet", 70);            // stub skor 84 → eşik üstü → oto kaydedilmeli
+  w.document.querySelector("#alan").value = "ev";
+  await w.uret();
+  ok("skoru eşik üstü fikir OTOMATİK kaydedildi (trigger→action)", w.favleriYukle().some(f => f.isim === "Final Fikir"));
+
+  const w2 = yeniDom();
+  stubUret(w2);
+  w2.ayarSet("otoKaydet", 90);           // 90 eşiği > 84 → kaydedilmemeli
+  w2.document.querySelector("#alan").value = "ev";
+  await w2.uret();
+  ok("eşik üstünde değilse oto-kaydet yapmaz", !w2.favleriYukle().some(f => f.isim === "Final Fikir"));
+
+  w2.ayarSet("toplu", 5);
+  ok("toplu üretim ayarı kalıcı", JSON.parse(w2.localStorage.getItem("mucit_ayarlar")).toplu === 5);
+  ok("toplu üretim tetikleyici fonksiyonu var", typeof w2.uretTetikle === "function");
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
