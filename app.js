@@ -180,11 +180,13 @@ function muhHTML(f){
 // Düğümler (Konu → Stil → Arka plan → Çıktı) tek görsel prompt'a zincirlenir.
 // Prompt İngilizce kurulur (görsel modelleri İngilizceyi sever); arayüz %100 Türkçe.
 const GORSEL_STIL = [
-  { v: "foto", ad: "Ürün fotoğrafı", p: "professional product photography, studio lighting, high detail" },
-  { v: "cizim", ad: "Teknik çizim", p: "technical line drawing, blueprint style, white background" },
-  { v: "3d", ad: "3B render", p: "3D render, realistic materials, soft shadows" },
-  { v: "izometrik", ad: "İzometrik", p: "isometric illustration, clean flat vector style" }
+  { v: "foto", ad: "Ürün fotoğrafı", p: "professional product photography, studio lighting, high detail, 50mm lens, shallow depth of field" },
+  { v: "cizim", ad: "Teknik çizim", p: "technical line drawing, blueprint style, white background, precise clean linework" },
+  { v: "3d", ad: "3B render", p: "3D render, realistic materials, soft shadows, physically based rendering, octane" },
+  { v: "izometrik", ad: "İzometrik", p: "isometric illustration, clean flat vector style, crisp edges" }
 ];
+// Her görsele eklenen evrensel kalite yükselticisi (model fark etmez)
+const GORSEL_KALITE = "ultra detailed, sharp focus, 8k, high dynamic range, commercial quality, well composed";
 const GORSEL_ARKA = [
   { v: "studyo", ad: "Stüdyo", p: "plain studio backdrop" },
   { v: "sade", ad: "Sade beyaz", p: "minimal pure white background" },
@@ -196,7 +198,7 @@ function gorselPrompt(f, sec){
   const konu = [(f && f.isim) || "", ne].filter(Boolean).join(", ");
   const stil = (GORSEL_STIL.find(x => x.v === sec.stil) || GORSEL_STIL[0]).p;
   const arka = (GORSEL_ARKA.find(x => x.v === sec.arka) || GORSEL_ARKA[0]).p;
-  return [konu, stil, arka].filter(Boolean).join(", ");
+  return [konu, stil, arka, GORSEL_KALITE].filter(Boolean).join(", ");
 }
 function gorselPanelHTML(f){
   const opt = (arr, name) => `<select class="nodesel" data-node="${name}">` +
@@ -221,7 +223,7 @@ function gorselUret(el, f){
   };
   const p = gorselPrompt(f, sec);
   const seed = Math.floor(Math.random() * 1e6);
-  const src = "/api/image?p=" + encodeURIComponent(p) + "&w=768&h=512&s=" + seed;
+  const src = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed;
   wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor…</div>`;
   const img = new Image();
   img.alt = (f && f.isim) || "ürün görseli";

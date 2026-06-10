@@ -48,7 +48,7 @@ async function geminiGorsel(prompt, log) {
 async function pollinationsGorsel(p, w, h, seed, log) {
   const key = process.env.POLL_KEY || "pk_9A76J8DMwl5fCL8X";
   const base = "https://image.pollinations.ai/prompt/" + encodeURIComponent(p)
-    + "?width=" + w + "&height=" + h + "&seed=" + seed + "&nologo=true&referrer=4c1z";
+    + "?width=" + w + "&height=" + h + "&seed=" + seed + "&nologo=true&enhance=true&nofeed=true&referrer=4c1z";
   for (const tok of ["", key]) {
     for (const model of ["flux", "turbo"]) {
       const etiket = model + (tok ? "+token" : "");

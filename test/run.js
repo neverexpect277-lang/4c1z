@@ -406,6 +406,7 @@ console.log("\n#7 — Düğüm tabanlı görsel (ComfyUI ilhamı)");
   ok("prompt'ta açıklamadan HTML etiketi sökülmüş", /sulayan/.test(p1) && !/<b>/.test(p1));
   ok("seçilen stil prompt'a girdi (3B render)", /3D render/.test(p1));
   ok("seçilen arka plan prompt'a girdi (sade)", /pure white background/.test(p1));
+  ok("kalite yükselticisi her prompt'a eklendi (8k/ultra detailed)", /ultra detailed/.test(p1) && /8k/.test(p1));
 
   const p2 = w.gorselPrompt(f, {});
   ok("seçim yoksa varsayılan stil (ürün fotoğrafı)", /product photography/.test(p2));
