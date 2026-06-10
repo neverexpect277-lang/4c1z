@@ -23,16 +23,6 @@ function oturumKaydet(){
   try{ localStorage.setItem(OTURUM_KEY, JSON.stringify({ ideas: sonUretilen.slice(0, 40), isimler: uretilmisIsimler.slice(-80) })); }catch(e){}
 }
 
-// ---- Görsel anahtarı (HuggingFace) — Vercel'e girmeden, uygulamadan; sadece bu cihazda ----
-const HF_KEY = "mucit_hf";
-function hfToken(){ try{ return (localStorage.getItem(HF_KEY) || "").trim(); }catch(e){ return ""; } }
-function hfKur(){
-  const inp = $("#hfToken");
-  if(!inp) return;
-  inp.value = hfToken();
-  inp.addEventListener("input", () => { try{ localStorage.setItem(HF_KEY, inp.value.trim()); }catch(e){} });
-}
-
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
 let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true };
@@ -186,94 +176,6 @@ function muhHTML(f){
     sec("İlk prototip adımı", f.prototip) +
     `</div>`;
 }
-// ---- ComfyUI ilhamı: düğüm tabanlı görsel üretimi ----
-// Düğümler (Konu → Stil → Arka plan → Çıktı) tek görsel prompt'a zincirlenir.
-// Prompt İngilizce kurulur (görsel modelleri İngilizceyi sever); arayüz %100 Türkçe.
-const GORSEL_STIL = [
-  { v: "foto", ad: "Ürün fotoğrafı", p: "professional product photography, studio lighting, high detail, 50mm lens, shallow depth of field" },
-  { v: "cizim", ad: "Teknik çizim", p: "technical line drawing, blueprint style, white background, precise clean linework" },
-  { v: "3d", ad: "3B render", p: "3D render, realistic materials, soft shadows, physically based rendering, octane" },
-  { v: "izometrik", ad: "İzometrik", p: "isometric illustration, clean flat vector style, crisp edges" }
-];
-// Her görsele eklenen evrensel kalite yükselticisi (model fark etmez)
-const GORSEL_KALITE = "ultra detailed, sharp focus, 8k, high dynamic range, commercial quality, well composed";
-const GORSEL_ARKA = [
-  { v: "studyo", ad: "Stüdyo", p: "plain studio backdrop" },
-  { v: "sade", ad: "Sade beyaz", p: "minimal pure white background" },
-  { v: "baglam", ad: "Bağlam içinde", p: "in a real-world lifestyle context" }
-];
-function gorselPrompt(f, sec){
-  sec = sec || {};
-  const ne = String((f && f.ne) || "").replace(/<[^>]*>/g, "").trim().slice(0, 90);
-  const konu = [(f && f.isim) || "", ne].filter(Boolean).join(", ");
-  const stil = (GORSEL_STIL.find(x => x.v === sec.stil) || GORSEL_STIL[0]).p;
-  const arka = (GORSEL_ARKA.find(x => x.v === sec.arka) || GORSEL_ARKA[0]).p;
-  return [konu, stil, arka, GORSEL_KALITE].filter(Boolean).join(", ");
-}
-function gorselPanelHTML(f){
-  const opt = (arr, name) => `<select class="nodesel" data-node="${name}">` +
-    arr.map(x => `<option value="${x.v}">${x.ad}</option>`).join("") + `</select>`;
-  return `<div class="nodes">
-    <div class="node"><span class="nodelbl">Konu</span><span class="nodeval">${metin((f && f.isim) || "")}</span></div>
-    <div class="nodewire"></div>
-    <div class="node"><span class="nodelbl">Stil</span>${opt(GORSEL_STIL, "stil")}</div>
-    <div class="nodewire"></div>
-    <div class="node"><span class="nodelbl">Arka plan</span>${opt(GORSEL_ARKA, "arka")}</div>
-    <div class="nodewire"></div>
-    <button class="node node-uret" data-act="uret">⚙ Üret</button>
-    <div class="gorselWrap"></div>
-  </div>`;
-}
-function gorselUret(el, f){
-  const wrap = el.querySelector(".gorselWrap");
-  if(!wrap) return;
-  const sec = {
-    stil: el.querySelector('[data-node="stil"]') && el.querySelector('[data-node="stil"]').value,
-    arka: el.querySelector('[data-node="arka"]') && el.querySelector('[data-node="arka"]').value
-  };
-  const p = gorselPrompt(f, sec);
-  const seed = Math.floor(Math.random() * 1e6);
-  const hf = hfToken();
-  const taban = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed
-    + (hf ? "&hf=" + encodeURIComponent(hf) : "");
-  // Pollinations 402 "kuyruk dolu" GEÇİCİ bir hatadır → flux/turbo + bekleyip tekrar dene (backoff).
-  const plan = [
-    { m: "flux", bekle: 0 }, { m: "turbo", bekle: 0 },
-    { m: "flux", bekle: 3000 }, { m: "turbo", bekle: 3000 }, { m: "flux", bekle: 5000 }
-  ];
-  const dene = (i) => {
-    const a = plan[i];
-    wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor… (${a.m}, ${i + 1}/${plan.length})</div>`;
-    const img = new Image();
-    img.alt = (f && f.isim) || "ürün görseli";
-    img.className = "uretilenGorsel";
-    img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
-    img.onerror = () => {
-      if(i + 1 < plan.length){
-        const s = plan[i + 1].bekle;
-        if(s){ wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Servis meşgul, ${s / 1000} sn sonra tekrar deniyorum…</div>`; setTimeout(() => dene(i + 1), s); }
-        else dene(i + 1);
-      } else gorselTani(wrap, taban);
-    };
-    img.src = taban + "&m=" + a.m + "&r=" + i;   // &r: her denemede taze istek (önbelleğe takılmasın)
-  };
-  dene(0);
-}
-// Tüm görsel modelleri patlayınca GERÇEK sebebi göster (debug=1: Gemini/Pollinations durumu).
-async function gorselTani(wrap, taban){
-  wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi — sorun çubuğu yükleniyor…</div>`;
-  try{
-    const r = await fetch(taban + "&debug=1");
-    const j = await r.json();
-    const ozet = (j.denemeler || []).map(d =>
-      `${d.src}/${d.model}: ${d.ok ? "✓ çalıştı" : ((d.status || "") + " " + (d.err || "")).trim()}`).join("\n");
-    wrap.innerHTML = `<div class="gorselHata"><b>Görsel servisleri şu an cevap vermiyor.</b><br>` +
-      `Gemini kotası dolu, Pollinations meşgulse birkaç sn sonra ⚙ ile tekrar dene.` +
-      (ozet ? `<pre class="gorseltani">${escapeHtml(ozet)}</pre>` : "") + `</div>`;
-  }catch(e){
-    wrap.innerHTML = `<div class="gorselHata">Görsel servisi şu an meşgul. Birkaç saniye sonra ⚙ Üret'e tekrar bas.</div>`;
-  }
-}
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
   return `
@@ -293,9 +195,7 @@ function kartHTML(f, kayitli){
       <button class="mini" data-act="kopya">Kopyala</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
       <button class="mini ig" data-act="ig">Instagram</button>
-      <button class="mini gorsel" data-act="gorsel">🎨 Görsel</button>
-    </div>
-    ${gorselPanelHTML(f)}`;
+    </div>`;
 }
 function fikirKart(f, kayitli){
   const el = document.createElement("div");
@@ -307,16 +207,6 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
-  const gorselBtn = el.querySelector('[data-act="gorsel"]');
-  if(gorselBtn){
-    const panel = el.querySelector(".nodes");
-    gorselBtn.addEventListener("click", () => {
-      if(panel) panel.classList.toggle("acik");
-      gorselBtn.classList.toggle("on");
-    });
-    const uretBtn = el.querySelector('[data-act="uret"]');
-    if(uretBtn) uretBtn.addEventListener("click", () => gorselUret(el, f));
-  }
   // Başlığa basınca kartı aç/kapa (yıldıza basınca değil)
   const h2 = el.querySelector("h2");
   if(h2) h2.addEventListener("click", ev => { if(ev.target.closest('[data-act="fav"]')) return; el.classList.toggle("kapali"); });
@@ -821,6 +711,5 @@ try{ favleriKaydet(favleriYukle()); }catch(e){}
 try{ oturumYukle(); }catch(e){}
 try{ ayarYukle(); }catch(e){}
 try{ akisKur(); }catch(e){}
-try{ hfKur(); }catch(e){}
 try{ cizTemalar(); }catch(e){}
 try{ cizFikirler(sonUretilen); }catch(e){}

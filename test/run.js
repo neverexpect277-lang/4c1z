@@ -394,51 +394,6 @@ function stubUret(w, opts = {}){
   return { cag, state };
 }
 
-// ---- #7 ComfyUI ilhamı: düğüm tabanlı görsel üretimi ----
-console.log("\n#7 — Düğüm tabanlı görsel (ComfyUI ilhamı)");
-(function(){
-  const w = yeniDom();
-
-  // Saf prompt kurucu: düğüm seçimleri tek İngilizce prompt'a zincirlenir
-  const f = { isim: "Akıllı Saksı", ne: "Toprağı kuruyunca <b>sulayan</b> saksı" };
-  const p1 = w.gorselPrompt(f, { stil: "3d", arka: "sade" });
-  ok("prompt'ta konu (isim) var", /Akıllı Saksı/.test(p1));
-  ok("prompt'ta açıklamadan HTML etiketi sökülmüş", /sulayan/.test(p1) && !/<b>/.test(p1));
-  ok("seçilen stil prompt'a girdi (3B render)", /3D render/.test(p1));
-  ok("seçilen arka plan prompt'a girdi (sade)", /pure white background/.test(p1));
-  ok("kalite yükselticisi her prompt'a eklendi (8k/ultra detailed)", /ultra detailed/.test(p1) && /8k/.test(p1));
-
-  const p2 = w.gorselPrompt(f, {});
-  ok("seçim yoksa varsayılan stil (ürün fotoğrafı)", /product photography/.test(p2));
-  ok("seçim yoksa varsayılan arka plan (stüdyo)", /studio backdrop/.test(p2));
-
-  ok("boş fikir kırılmaz", typeof w.gorselPrompt(null, {}) === "string");
-
-  // Kart üzerinde düğüm paneli ve buton akışı
-  w.cizFikirler([f]);
-  const card = w.document.querySelector("#out .card");
-  const btn = card.querySelector('[data-act="gorsel"]');
-  const panel = card.querySelector(".nodes");
-  ok("karta 🎨 Görsel butonu eklendi", !!btn);
-  ok("düğüm paneli karta basıldı", !!panel);
-  ok("panel başta kapalı", !panel.classList.contains("acik"));
-  ok("Konu düğümü fikir ismini gösteriyor", /Akıllı Saksı/.test(card.querySelector(".nodeval").textContent));
-  ok("Stil ve Arka plan düğüm seçicileri var", card.querySelectorAll(".nodesel").length === 2);
-  ok("Üret düğümü var", !!card.querySelector('[data-act="uret"]'));
-
-  btn.click();
-  ok("butona basınca panel açıldı", panel.classList.contains("acik"));
-  ok("buton işaretlendi (on)", btn.classList.contains("on"));
-  btn.click();
-  ok("tekrar basınca panel kapandı", !panel.classList.contains("acik"));
-
-  // Üret düğümü görsel <img>'ı /api/image'a yönlendiriyor (ağ yok; yükleme göstergesi yeter)
-  card.querySelector('[data-node="stil"]').value = "izometrik";
-  card.querySelector('[data-act="uret"]').click();
-  const wrap = card.querySelector(".gorselWrap");
-  ok("Üret'e basınca yükleme göstergesi çıktı", /üretiliyor/.test(wrap.textContent) || !!wrap.querySelector("img"));
-})();
-
 // ---- #8 mastra ilhamı: canlı ajan zinciri + öğrenen hafıza ----
 console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
 (function(){
