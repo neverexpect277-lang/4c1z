@@ -284,6 +284,8 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .akiswire{width:1.5px;height:10px;margin-left:10px;background:var(--line2);}
 .akisoto{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line2);display:flex;flex-direction:column;gap:8px;}
 .akisotobas{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);font-weight:600;}
+.field.benzernot{background:var(--cream);border:1px solid rgba(185,133,42,.26);border-radius:10px;padding:8px 11px;margin-top:9px;}
+.field.benzernot b{color:var(--accentDeep);}
 
 /* generative-ai-for-beginners ilhamı: uygulama içi öğren rehberi */
 .ogren{margin:0 0 18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);}

@@ -25,7 +25,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0 };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false };
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -224,6 +224,7 @@ function kartHTML(f, kayitli){
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
     ${skorHTML(f)}
+    ${f.benzerNot ? `<div class="field benzernot"><b>Anlamca benzer kaydın</b>${metin(f.benzerNot)}</div>` : ""}
     <p class="ne">${metin(f.ne || "")}</p>
     ${diyalogHTML(f.diyalog)}
     ${sec("Neyden", f.neyden)}
@@ -656,7 +657,9 @@ function akisCiz(){
   // n8n ilhamı: otomasyon kuralı (skor tetikli oto-kaydet). Toplu üretim artık 'Otomatik üret' butonu.
   const oto = `<div class="akisoto"><div class="akisotobas">Otomasyon · n8n</div>` +
     `<div class="akisdugum"><span class="akisad">Yüksek skoru oto-kaydet</span>` +
-      `<select class="akissel" data-ayar="otoKaydet">${opt(ayarlar.otoKaydet, [[0, "kapalı"], [70, "70+"], [80, "80+"], [90, "90+"]])}</select></div></div>`;
+      `<select class="akissel" data-ayar="otoKaydet">${opt(ayarlar.otoKaydet, [[0, "kapalı"], [70, "70+"], [80, "80+"], [90, "90+"]])}</select></div>` +
+    `<div class="akisdugum"><span class="akisad">Anlamsal mod (deneysel · ilk kullanımda model iner)</span>` +
+      `<label class="akistgl"><input type="checkbox" data-ayar="anlamsal" ${ayarlar.anlamsal ? "checked" : ""}/>aç</label></div></div>`;
   panel.innerHTML = akis + oto;
 }
 
@@ -684,6 +687,23 @@ function kaynakSec(kaynak, alan){
   for(const x of sirali){ if(uz + x.p.length > 700) continue; secili.push(x); uz += x.p.length; if(uz > 550) break; }
   secili.sort((a, b) => a.i - b.i);                                   // okuma akışı için orijinal sıra
   return secili.map(x => x.p).join(" ");
+}
+
+// transformers.js ilhamı: üretilen fikre ANLAMCA en yakın kayıtlı fikri bul (isim değil, anlam).
+// Model yoksa sessizce atlar. Eşik üstü benzerlikte fikir.benzerNot doldurulur.
+async function benzerKaydiBul(fikir){
+  try{
+    const vec = await embedet((fikir.isim || "") + " " + (fikir.ne || ""));
+    if(!vec) return;
+    const liste = [];
+    for(const f of favleriYukle()){
+      if(f.isim === fikir.isim) continue;
+      const v = await embedet((f.isim || "") + " " + (f.ne || ""));
+      if(v) liste.push({ vec: v, isim: f.isim });
+    }
+    const y = enYakin(vec, liste);
+    if(y.i >= 0 && y.skor >= 0.82) fikir.benzerNot = liste[y.i].isim + " (%" + Math.round(y.skor * 100) + " anlamca benzer)";
+  }catch(e){}
 }
 
 let calisiyor = false;
@@ -765,6 +785,8 @@ async function uret(){
     if(uretilmisIsimler.length > 80) uretilmisIsimler = uretilmisIsimler.slice(-80);
     // n8n otomasyon: skoru eşik üstündeyse fikri otomatik kaydet (trigger → action)
     if(ayarlar.otoKaydet && parseInt(fikir.skor, 10) >= ayarlar.otoKaydet && !favMi(fikir.isim)) favToggle(fikir);
+    // transformers.js: anlamsal mod açıksa, kayıtlılar arasında anlamca benzer var mı?
+    if(ayarlar.anlamsal) await benzerKaydiBul(fikir);
     statusEl.textContent = "";
     onerilenAcik = true;                         // üretince kutuyu aç ki yeni fikir görünsün
     cizFikirler(sonUretilen);

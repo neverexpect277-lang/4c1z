@@ -13,6 +13,7 @@ function yeniDom(){
   const dom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
   const w = dom.window;
   w.eval(fs.readFileSync(path.join(REPO, "prompt.js"), "utf8"));
+  w.eval(fs.readFileSync(path.join(REPO, "embed.js"), "utf8"));
   w.eval(fs.readFileSync(path.join(REPO, "app.js"), "utf8"));
   return w;
 }
@@ -495,8 +496,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (3 seçim: aday/ton/oto-kaydet + 2 onay: eleme/web)",
-     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
+  ok("kontroller var (3 seçim: aday/ton/oto-kaydet + 3 onay: eleme/web/anlamsal)",
+     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 3);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -743,6 +744,31 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("rehber 4 aşamayı anlatır", /4 aşamalı/.test(og.textContent));
   ok("rehber anahtarsız ajanları anlatır", /Anahtarsız ajanlar/.test(og.textContent));
   ok("rehber özellik ipuçları içerir (Pazarı tara, Motoru ayarla)", /Pazarı tara/.test(og.textContent) && /Motoru ayarla/.test(og.textContent));
+}).then(() => {
+  // ---- transformers.js: tarayıcıda anlamsal embedding (saf yardımcılar + UI) ----
+  console.log("\nALTYAPI — transformers.js (anlamsal embedding)");
+  const w = yeniDom();
+  // kosinus: aynı vektör → 1, dik → 0, ters → negatif/0 sınırı
+  ok("kosinus aynı vektörde 1", Math.abs(w.kosinus([1, 0, 1], [1, 0, 1]) - 1) < 1e-9);
+  ok("kosinus dik vektörde 0", Math.abs(w.kosinus([1, 0], [0, 1])) < 1e-9);
+  ok("kosinus boş/uyumsuzda 0 (kırılmaz)", w.kosinus(null, [1]) === 0 && w.kosinus([1, 2], [1]) === 0);
+  // enYakin: en yüksek benzerlikteki kaydı seçer
+  const y = w.enYakin([1, 0, 0], [{ vec: [0, 1, 0] }, { vec: [0.9, 0.1, 0] }, { vec: [0, 0, 1] }]);
+  ok("enYakin en benzer kaydı bulur (i=1)", y.i === 1 && y.skor > 0.9);
+  ok("enYakin boş listede -1 (kırılmaz)", w.enYakin([1], []).i === -1);
+
+  // Anlamsal mod onay kutusu (opt-in, varsayılan kapalı) + kalıcı
+  w.akisKur ? null : null;
+  const tgl = w.document.querySelector('[data-ayar="anlamsal"]');
+  ok("anlamsal mod onay kutusu var (Motoru ayarla)", !!tgl);
+  ok("anlamsal mod başta kapalı", tgl.checked === false);
+  tgl.checked = true; tgl.dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("anlamsal mod kalıcı kaydedildi", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).anlamsal === true);
+
+  // benzerNot alanı kartta render edilir
+  w.cizFikirler([{ isim: "Akıllı Saksı", ne: "sular", benzerNot: "Otomatik Sulayıcı (%88 anlamca benzer)" }]);
+  ok("anlamca benzer kayıt uyarısı kartta gösterilir",
+     /Anlamca benzer kaydın/.test(w.document.querySelector("#out .card").textContent) && /%88/.test(w.document.querySelector("#out .card").textContent));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
