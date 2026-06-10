@@ -280,6 +280,19 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .akisoto{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line2);display:flex;flex-direction:column;gap:8px;}
 .akisotobas{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);font-weight:600;}
 
+/* generative-ai-for-beginners ilhamı: uygulama içi öğren rehberi */
+.ogren{margin:0 0 18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);}
+.ogrenbas{list-style:none;cursor:pointer;user-select:none;padding:13px 16px;font-size:13.5px;font-weight:600;
+  color:var(--accentDeep);display:flex;align-items:center;gap:7px;}
+.ogrenbas::-webkit-details-marker{display:none;}
+.ogrenok::before{content:"▸";font-size:12px;}
+.ogren[open] .ogrenok::before{content:"▾";}
+.ogrenic{padding:0 16px 14px;font-size:13.5px;color:var(--soft);line-height:1.6;}
+.ogrenic p{margin:0 0 9px;}
+.ogrenic b{color:var(--txt);}
+.ogrenic ul{margin:4px 0 0;padding-left:18px;}
+.ogrenic li{margin:0 0 5px;}
+
 /* Boş ekran */
 .empty{text-align:center;color:var(--dim);font-size:14.5px;margin-top:44px;line-height:1.8;
   animation:rise .5s cubic-bezier(.2,.7,.2,1) both;}

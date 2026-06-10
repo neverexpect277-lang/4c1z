@@ -727,6 +727,16 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   w2.ayarSet("toplu", 5);
   ok("toplu üretim ayarı kalıcı", JSON.parse(w2.localStorage.getItem("mucit_ayarlar")).toplu === 5);
   ok("toplu üretim tetikleyici fonksiyonu var", typeof w2.uretTetikle === "function");
+
+  // #10 generative-ai-for-beginners: uygulama içi öğren rehberi
+  console.log("\n#10 — Öğren rehberi (generative-ai-for-beginners ilhamı)");
+  const wo = yeniDom();
+  const og = wo.document.querySelector("#ogren");
+  ok("öğren rehberi DOM'da", !!og && og.tagName.toLowerCase() === "details");
+  ok("rehber katlanır <summary> ile", !!og.querySelector("summary.ogrenbas"));
+  ok("rehber 4 aşamayı anlatır", /4 aşamalı/.test(og.textContent));
+  ok("rehber anahtarsız ajanları anlatır", /Anahtarsız ajanlar/.test(og.textContent));
+  ok("rehber özellik ipuçları içerir (Pazarı tara, Motoru ayarla)", /Pazarı tara/.test(og.textContent) && /Motoru ayarla/.test(og.textContent));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
