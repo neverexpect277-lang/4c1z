@@ -688,6 +688,25 @@ function kaynakSec(kaynak, alan){
   secili.sort((a, b) => a.i - b.i);                                   // okuma akışı için orijinal sıra
   return secili.map(x => x.p).join(" ");
 }
+// transformers.js Faz 2: kaynağı ANLAMCA (embedding) seç. Model yoksa keyword kaynakSec'e düşer.
+async function kaynakSecAnlamsal(kaynak, alan){
+  const ham = String(kaynak || "").trim();
+  if(ham.length <= 500) return ham;
+  const parcalar = ham.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 12);
+  if(parcalar.length <= 1) return ham.slice(0, 600);
+  const alanVec = await embedet(alan || "ürün fikri");
+  if(!alanVec) return kaynakSec(kaynak, alan);                        // model yok → keyword fallback
+  const dizi = [];
+  for(let i = 0; i < parcalar.length; i++){
+    const v = await embedet(parcalar[i]);
+    dizi.push({ p: parcalar[i], i, s: v ? kosinus(alanVec, v) : 0 });
+  }
+  const sirali = dizi.slice().sort((a, b) => b.s - a.s);             // anlamca en yakın önce
+  const secili = []; let uz = 0;
+  for(const x of sirali){ if(uz + x.p.length > 700) continue; secili.push(x); uz += x.p.length; if(uz > 550) break; }
+  secili.sort((a, b) => a.i - b.i);
+  return secili.map(x => x.p).join(" ");
+}
 
 // transformers.js ilhamı: üretilen fikre ANLAMCA en yakın kayıtlı fikri bul (isim değil, anlam).
 // Model yoksa sessizce atlar. Eşik üstü benzerlikte fikir.benzerNot doldurulur.
@@ -714,7 +733,7 @@ async function uret(){
   $("#gen").disabled = true;
   const alan = alanInput.value.trim();
   const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
-  const kaynak = kaynakSec(kaynakHam, alan);   // ragflow: uzun belgeden alanla alakalı kısmı seç
+  const kaynak = ayarlar.anlamsal ? await kaynakSecAnlamsal(kaynakHam, alan) : kaynakSec(kaynakHam, alan);   // ragflow: alakalı kısmı seç (anlamsal/keyword)
   const mesajlar = [
     "Çavuş ve Zeyneb istişare ediyor…",
     "Çavuş ürünleri tek tek tarıyor…",

@@ -769,6 +769,15 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   w.cizFikirler([{ isim: "Akıllı Saksı", ne: "sular", benzerNot: "Otomatik Sulayıcı (%88 anlamca benzer)" }]);
   ok("anlamca benzer kayıt uyarısı kartta gösterilir",
      /Anlamca benzer kaydın/.test(w.document.querySelector("#out .card").textContent) && /%88/.test(w.document.querySelector("#out .card").textContent));
+}).then(async () => {
+  // Faz 2: anlamsal ragflow — model yokken (jsdom) keyword kaynakSec'e DÜŞER (graceful)
+  const w = yeniDom();
+  const uzun = ("Mutfakta tezgah dağınık ve bıçaklar tehlikeli. " +
+    "Köpeğim parkta koşuyor. Tavalar dolapta yer kaplıyor mutfak düzeni zor. " +
+    "Hava güzel denize gittik. Bulaşık süngeri 3 günde mutfakta bakteri topluyor. ").repeat(3) + "z".repeat(300);
+  const sem = await w.kaynakSecAnlamsal(uzun, "mutfak");
+  ok("anlamsal kaynak model yokken keyword'e düşer (aynı sonuç)", sem === w.kaynakSec(uzun, "mutfak"));
+  ok("fallback yine de alakalı içerik döndürür", /tezgah|tava|bulaşık/i.test(sem));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
