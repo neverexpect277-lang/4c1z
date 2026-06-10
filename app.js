@@ -725,6 +725,22 @@ async function kaynakSecAnlamsal(kaynak, alan){
 
 // transformers.js ilhamı: üretilen fikre ANLAMCA en yakın kayıtlı fikri bul (isim değil, anlam).
 // Model yoksa sessizce atlar. Eşik üstü benzerlikte fikir.benzerNot doldurulur.
+// transformers.js: üretilen adayları geçmişle (kayıtlı+son üretilen) ve birbiriyle ANLAMCA
+// karşılaştırıp çift/benzer fikirleri eler. Model yoksa eleme yapmaz (adaylar aynen döner).
+async function tekrarEle(adaylar){
+  if(!Array.isArray(adaylar) || adaylar.length < 2) return adaylar;
+  const metin = a => ((a && a.isim || "") + " " + (a && a.ne || "")).trim();
+  const adayVecler = [];
+  for(const a of adaylar) adayVecler.push(await embedet(metin(a)));
+  if(adayVecler.every(v => !v)) return adaylar;                 // model yok → eleme yok
+  const gecmis = [], gor = new Set();
+  for(const f of favleriYukle().concat(sonUretilen.slice(0, 20))){
+    if(f && f.isim && !gor.has(f.isim)){ gor.add(f.isim); const v = await embedet(metin(f)); if(v) gecmis.push(v); }
+  }
+  const tut = benzerleriEle(adayVecler, gecmis, 0.86);
+  const elenmis = tut.map(i => adaylar[i]);
+  return elenmis.length ? elenmis : adaylar;                    // hepsi elenirse orijinali koru
+}
 async function benzerKaydiBul(fikir){
   try{
     const vec = await embedet((fikir.isim || "") + " " + (fikir.ne || ""));
@@ -781,6 +797,8 @@ async function uret(){
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
+  // anlamsal tekrar-eleme: geçmişe/birbirine ANLAMCA benzer adayları at (model varsa)
+  if(adaylar && ayarlar.anlamsal) adaylar = await tekrarEle(adaylar);
   if(adaylar){ asama = 1; ajanCiz(asama, mesajlar[mi]); }
   // tekrarı önlemek için aday isimlerini de hatırla
   if(adaylar) adaylar.forEach(a => { if(a.isim) uretilmisIsimler.push(a.isim); });

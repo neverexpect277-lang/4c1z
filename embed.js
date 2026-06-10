@@ -39,6 +39,22 @@ function kosinus(a, b){
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
+// Saf: aday vektörlerinden, GEÇMİŞE veya birbirine çok benzeyenleri ele → tutulacak index'ler.
+// (anlamsal tekrar-engelleme: isim değil ANLAM bazında çift fikirleri atar)
+function benzerleriEle(adayVecler, gecmisVecler, esik){
+  esik = typeof esik === "number" ? esik : 0.86;
+  const tut = [];
+  const ref = Array.isArray(gecmisVecler) ? gecmisVecler.slice() : [];   // batch içi tekrar da elenir
+  for(let i = 0; i < adayVecler.length; i++){
+    const v = adayVecler[i];
+    if(!v){ tut.push(i); continue; }
+    let enYuksek = 0;
+    for(const g of ref){ const s = kosinus(v, g); if(s > enYuksek) enYuksek = s; }
+    if(enYuksek < esik){ tut.push(i); ref.push(v); }
+  }
+  return tut;
+}
+
 // Saf: bir vektöre en yakın kaydı bul → {i, skor}. liste: [{vec}, ...]
 function enYakin(vec, liste){
   let best = { i: -1, skor: 0 };

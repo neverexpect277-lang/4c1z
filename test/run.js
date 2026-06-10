@@ -766,6 +766,13 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   tgl.checked = true; tgl.dispatchEvent(new w.Event("change", { bubbles: true }));
   ok("anlamsal mod kalıcı kaydedildi", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).anlamsal === true);
 
+  // benzerleriEle (saf): geçmişe/birbirine çok benzer adayları eler
+  const A = [1, 0, 0], Abenzer = [0.99, 0.01, 0], B = [0, 1, 0];
+  ok("aynı batch'te çift aday elenir", JSON.stringify(w.benzerleriEle([A, Abenzer, B], [], 0.86)) === JSON.stringify([0, 2]));
+  ok("geçmişe benzer aday elenir", JSON.stringify(w.benzerleriEle([Abenzer, B], [A], 0.86)) === JSON.stringify([1]));
+  ok("benzer yoksa hepsi tutulur", w.benzerleriEle([A, B], [], 0.86).length === 2);
+  ok("vektörü olmayan aday elenmez (kırılmaz)", w.benzerleriEle([null, A], [], 0.86).length === 2);
+
   // benzerNot alanı kartta render edilir
   w.cizFikirler([{ isim: "Akıllı Saksı", ne: "sular", benzerNot: "Otomatik Sulayıcı (%88 anlamca benzer)" }]);
   ok("anlamca benzer kayıt uyarısı kartta gösterilir",
@@ -779,6 +786,9 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const sem = await w.kaynakSecAnlamsal(uzun, "mutfak");
   ok("anlamsal kaynak model yokken keyword'e düşer (aynı sonuç)", sem === w.kaynakSec(uzun, "mutfak"));
   ok("fallback yine de alakalı içerik döndürür", /tezgah|tava|bulaşık/i.test(sem));
+  // tekrarEle: model yokken eleme yapmaz, adayları aynen döndürür (graceful)
+  const tr = await w.tekrarEle([{ isim: "X", ne: "a" }, { isim: "Y", ne: "b" }]);
+  ok("tekrarEle model yokken adayları aynen döndürür (fallback)", tr.length === 2);
 }).then(async () => {
   // ---- web-llm: yerel LLM (WebGPU yoksa buluta graceful fallback) ----
   console.log("\nALTYAPI — web-llm (yerel LLM)");
