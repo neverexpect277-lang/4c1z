@@ -224,16 +224,26 @@ function gorselUret(el, f){
   const p = gorselPrompt(f, sec);
   const seed = Math.floor(Math.random() * 1e6);
   const taban = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed;
-  // Birisi çalışmazsa diğeri: flux → turbo sırayla denenir (her biri tarayıcının kendi IP'sinden).
-  const modeller = ["flux", "turbo"];
+  // Pollinations 402 "kuyruk dolu" GEÇİCİ bir hatadır → flux/turbo + bekleyip tekrar dene (backoff).
+  const plan = [
+    { m: "flux", bekle: 0 }, { m: "turbo", bekle: 0 },
+    { m: "flux", bekle: 3000 }, { m: "turbo", bekle: 3000 }, { m: "flux", bekle: 5000 }
+  ];
   const dene = (i) => {
-    wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor… (${modeller[i]})</div>`;
+    const a = plan[i];
+    wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor… (${a.m}, ${i + 1}/${plan.length})</div>`;
     const img = new Image();
     img.alt = (f && f.isim) || "ürün görseli";
     img.className = "uretilenGorsel";
     img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
-    img.onerror = () => { if(i + 1 < modeller.length) dene(i + 1); else gorselTani(wrap, taban); };
-    img.src = taban + "&m=" + modeller[i];
+    img.onerror = () => {
+      if(i + 1 < plan.length){
+        const s = plan[i + 1].bekle;
+        if(s){ wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Servis meşgul, ${s / 1000} sn sonra tekrar deniyorum…</div>`; setTimeout(() => dene(i + 1), s); }
+        else dene(i + 1);
+      } else gorselTani(wrap, taban);
+    };
+    img.src = taban + "&m=" + a.m + "&r=" + i;   // &r: her denemede taze istek (önbelleğe takılmasın)
   };
   dene(0);
 }
