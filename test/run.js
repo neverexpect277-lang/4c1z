@@ -480,20 +480,15 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("üst akıl ton=mizahi → mizah yönergesi", /MİZAH/i.test(w.ustAkilPrompt("a", [{ isim: "x" }], "", "mizahi").sistem));
   ok("ton=dengeli → ekstra ton yönergesi yok (geriye uyumlu)", !/(SERT|MİZAH)/i.test(w.ustAkilPrompt("a", [{ isim: "x" }], "", "dengeli").sistem));
 
-  // Görsel akış editörü
+  // Görsel akış editörü — aç/kapa yerleşik <details> ile (JS toggle yok → bozulmaz)
   const host = w.document.querySelector("#akis");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
-  ok("panel başta kapalı", w.document.querySelector(".akispanel").hidden === true);
-  host.querySelector('[data-akis="tog"]').click();
-  ok("başlığa basınca panel açıldı", w.document.querySelector(".akispanel").hidden === false);
-  host.querySelector('[data-akis="tog"]').click();
-  ok("tekrar basınca panel kapandı (toggle)", w.document.querySelector(".akispanel").hidden === true);
-  host.querySelector('[data-akis="tog"]').click();
-  ok("4 düğüm çizildi (4 aşama motoru)", w.document.querySelectorAll(".akisdugum").length === 4);
+  ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
+  ok("4 düğüm hep DOM'da (panelde) çizili", w.document.querySelectorAll(".akisdugum").length === 4);
   ok("her aşamada kontrol var (2 seçim + 2 onay kutusu)",
      w.document.querySelectorAll("#akis .akissel").length === 2 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
 
-  // Kontrol değişince ayar kalıcı kaydedilir
+  // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
   sel.value = "9"; sel.dispatchEvent(new w.Event("change", { bubbles: true }));
   ok("ayar değişikliği localStorage'a kalıcı yazıldı", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).adaySayisi === 9);
@@ -502,7 +497,6 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const w2 = yeniDom();
   w2.localStorage.setItem("mucit_ayarlar", JSON.stringify({ adaySayisi: 9, eleme: false, ton: "mizahi", web: false }));
   w2.ayarYukle(); w2.akisCiz();
-  w2.document.querySelector('[data-akis="tog"]').click();
   ok("kalıcı ayar yeni oturumda yüklendi (adaySayisi=9)", w2.document.querySelector('[data-ayar="adaySayisi"]').value === "9");
   ok("eleme kapalı ayarı kontrole yansıdı", w2.document.querySelector('[data-ayar="eleme"]').checked === false);
 })();

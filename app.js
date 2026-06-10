@@ -643,16 +643,16 @@ function ajanCiz(aktif, alt){
     (alt ? `<div class="ajanalt">${alt}</div>` : "") + `</div>`;
 }
 
-// dify ilhamı: 4 aşamalı motoru düzenlenebilir görsel akış olarak çiz (her düğüm gerçek davranışa bağlı)
-let akisAcik = false;
-// Dinleyiciler #akis'e BİR KEZ delege edilir (her çizimde yeniden bağlanmaz → toggle güvenli)
+// dify ilhamı: 4 aşamalı düzenlenebilir motor. Aç/kapa TARAYICININ yerleşik <details>'i ile
+// yapılır (JS toggle yok → hiçbir hata bozamaz). akisCiz yalnız iç düğümleri çizer.
 function akisKur(){
   const host = $("#akis");
   if(!host || host.dataset.kuruldu) return;
   host.dataset.kuruldu = "1";
-  host.addEventListener("click", e => {
-    if(e.target.closest('[data-akis="tog"]')){ akisAcik = !akisAcik; akisCiz(); }
-  });
+  host.innerHTML =
+    `<details class="akisdetay"><summary class="akisbas">Motoru ayarla <span class="akisok"></span><span class="akisetiket">dify</span></summary>` +
+    `<div class="akispanel"></div></details>`;
+  // ayar değişimi (change tarayıcıda bubbles → delege güvenli)
   host.addEventListener("change", e => {
     const el = e.target.closest("[data-ayar]");
     if(!el) return;
@@ -663,8 +663,8 @@ function akisKur(){
   akisCiz();
 }
 function akisCiz(){
-  const host = $("#akis");
-  if(!host) return;
+  const panel = $("#akis .akispanel");
+  if(!panel) return;
   const opt = (deger, secenekler) => secenekler.map(([v, ad]) =>
     `<option value="${v}" ${String(deger) === String(v) ? "selected" : ""}>${ad}</option>`).join("");
   const dugumler = [
@@ -673,12 +673,9 @@ function akisCiz(){
     `<select class="akissel" data-ayar="ton">${opt(ayarlar.ton, [["sert", "sert ton"], ["dengeli", "dengeli ton"], ["mizahi", "mizahi ton"]])}</select>`,
     `<label class="akistgl"><input type="checkbox" data-ayar="web" ${ayarlar.web ? "checked" : ""}/>web</label>`
   ];
-  const satirlar = AJAN_ADIMLARI.map((ad, i) =>
+  panel.innerHTML = AJAN_ADIMLARI.map((ad, i) =>
     `<div class="akisdugum"><span class="akisik">${i + 1}</span><span class="akisad">${ad}</span>${dugumler[i]}</div>`
   ).join(`<span class="akiswire"></span>`);
-  host.innerHTML =
-    `<button type="button" class="akisbas" data-akis="tog">${akisAcik ? "▾" : "▸"} Motoru ayarla <span class="akisetiket">dify</span></button>` +
-    `<div class="akispanel" ${akisAcik ? "" : "hidden"}>${satirlar}</div>`;
 }
 
 let calisiyor = false;
@@ -797,10 +794,10 @@ if("serviceWorker" in navigator){
   window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
 }
 
-// init
-favleriKaydet(favleriYukle());
-oturumYukle();
-ayarYukle();
-akisKur();
-cizTemalar();
-cizFikirler(sonUretilen);
+// init — her adım izole; biri patlasa diğerleri (ve buton bağlamaları) çalışmaya devam etsin
+try{ favleriKaydet(favleriYukle()); }catch(e){}
+try{ oturumYukle(); }catch(e){}
+try{ ayarYukle(); }catch(e){}
+try{ akisKur(); }catch(e){}
+try{ cizTemalar(); }catch(e){}
+try{ cizFikirler(sonUretilen); }catch(e){}
