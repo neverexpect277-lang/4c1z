@@ -243,6 +243,9 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .gorselYukle{display:flex;align-items:center;gap:9px;justify-content:center;
   color:var(--dim);font-size:13.5px;padding:18px;}
 .gorselHata{text-align:center;color:#b5524a;font-size:13.5px;padding:14px;}
+.gorseltani{text-align:left;white-space:pre-wrap;word-break:break-word;font-size:11px;
+  color:var(--soft);background:var(--card2);border:1px solid var(--line);border-radius:8px;
+  padding:8px 10px;margin:8px 0 0;max-height:160px;overflow:auto;}
 .uretilenGorsel{width:100%;border-radius:12px;border:1px solid var(--line);display:block;}
 
 /* mastra ilhamı: canlı ajan zinciri */

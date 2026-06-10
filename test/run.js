@@ -486,13 +486,16 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("panel başta kapalı", w.document.querySelector(".akispanel").hidden === true);
   host.querySelector('[data-akis="tog"]').click();
   ok("başlığa basınca panel açıldı", w.document.querySelector(".akispanel").hidden === false);
+  host.querySelector('[data-akis="tog"]').click();
+  ok("tekrar basınca panel kapandı (toggle)", w.document.querySelector(".akispanel").hidden === true);
+  host.querySelector('[data-akis="tog"]').click();
   ok("4 düğüm çizildi (4 aşama motoru)", w.document.querySelectorAll(".akisdugum").length === 4);
   ok("her aşamada kontrol var (2 seçim + 2 onay kutusu)",
      w.document.querySelectorAll("#akis .akissel").length === 2 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 2);
 
   // Kontrol değişince ayar kalıcı kaydedilir
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
-  sel.value = "9"; sel.dispatchEvent(new w.Event("change"));
+  sel.value = "9"; sel.dispatchEvent(new w.Event("change", { bubbles: true }));
   ok("ayar değişikliği localStorage'a kalıcı yazıldı", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).adaySayisi === 9);
 
   // Yeni oturum: kalıcı ayar yüklenir ve kontrollere yansır

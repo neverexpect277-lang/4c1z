@@ -72,8 +72,9 @@ module.exports = async (req, res) => {
   }
 
   // Tarayıcı görseli kendi IP'sinden çeksin (per-user limit; Vercel IP'sinde 402 olur).
+  const model = (q.m === "turbo" || q.m === "flux") ? q.m : "flux";
   res.statusCode = 302;
-  res.setHeader("Location", pollUrl(p, w, h, seed, "flux"));
+  res.setHeader("Location", pollUrl(p, w, h, seed, model));
   res.setHeader("Cache-Control", "public, max-age=86400");
   res.end();
 };

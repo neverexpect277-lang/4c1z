@@ -223,14 +223,34 @@ function gorselUret(el, f){
   };
   const p = gorselPrompt(f, sec);
   const seed = Math.floor(Math.random() * 1e6);
-  const src = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed;
-  wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor…</div>`;
-  const img = new Image();
-  img.alt = (f && f.isim) || "ürün görseli";
-  img.className = "uretilenGorsel";
-  img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
-  img.onerror = () => { wrap.innerHTML = `<div class="gorselHata">Görsel servisi şu an meşgul (anonim limit). Birkaç saniye sonra ⚙ Üret'e tekrar bas.</div>`; };
-  img.src = src;
+  const taban = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed;
+  // Birisi çalışmazsa diğeri: flux → turbo sırayla denenir (her biri tarayıcının kendi IP'sinden).
+  const modeller = ["flux", "turbo"];
+  const dene = (i) => {
+    wrap.innerHTML = `<div class="gorselYukle"><span class="spin"></span>Görsel üretiliyor… (${modeller[i]})</div>`;
+    const img = new Image();
+    img.alt = (f && f.isim) || "ürün görseli";
+    img.className = "uretilenGorsel";
+    img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
+    img.onerror = () => { if(i + 1 < modeller.length) dene(i + 1); else gorselTani(wrap, taban); };
+    img.src = taban + "&m=" + modeller[i];
+  };
+  dene(0);
+}
+// Tüm görsel modelleri patlayınca GERÇEK sebebi göster (debug=1: Gemini/Pollinations durumu).
+async function gorselTani(wrap, taban){
+  wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi — sorun çubuğu yükleniyor…</div>`;
+  try{
+    const r = await fetch(taban + "&debug=1");
+    const j = await r.json();
+    const ozet = (j.denemeler || []).map(d =>
+      `${d.src}/${d.model}: ${d.ok ? "✓ çalıştı" : ((d.status || "") + " " + (d.err || "")).trim()}`).join("\n");
+    wrap.innerHTML = `<div class="gorselHata"><b>Görsel servisleri şu an cevap vermiyor.</b><br>` +
+      `Gemini kotası dolu, Pollinations meşgulse birkaç sn sonra ⚙ ile tekrar dene.` +
+      (ozet ? `<pre class="gorseltani">${escapeHtml(ozet)}</pre>` : "") + `</div>`;
+  }catch(e){
+    wrap.innerHTML = `<div class="gorselHata">Görsel servisi şu an meşgul. Birkaç saniye sonra ⚙ Üret'e tekrar bas.</div>`;
+  }
 }
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
@@ -625,6 +645,23 @@ function ajanCiz(aktif, alt){
 
 // dify ilhamı: 4 aşamalı motoru düzenlenebilir görsel akış olarak çiz (her düğüm gerçek davranışa bağlı)
 let akisAcik = false;
+// Dinleyiciler #akis'e BİR KEZ delege edilir (her çizimde yeniden bağlanmaz → toggle güvenli)
+function akisKur(){
+  const host = $("#akis");
+  if(!host || host.dataset.kuruldu) return;
+  host.dataset.kuruldu = "1";
+  host.addEventListener("click", e => {
+    if(e.target.closest('[data-akis="tog"]')){ akisAcik = !akisAcik; akisCiz(); }
+  });
+  host.addEventListener("change", e => {
+    const el = e.target.closest("[data-ayar]");
+    if(!el) return;
+    const k = el.dataset.ayar;
+    const v = el.type === "checkbox" ? el.checked : (k === "adaySayisi" ? parseInt(el.value, 10) : el.value);
+    ayarSet(k, v);
+  });
+  akisCiz();
+}
 function akisCiz(){
   const host = $("#akis");
   if(!host) return;
@@ -642,14 +679,6 @@ function akisCiz(){
   host.innerHTML =
     `<button type="button" class="akisbas" data-akis="tog">${akisAcik ? "▾" : "▸"} Motoru ayarla <span class="akisetiket">dify</span></button>` +
     `<div class="akispanel" ${akisAcik ? "" : "hidden"}>${satirlar}</div>`;
-  host.querySelector('[data-akis="tog"]').addEventListener("click", () => { akisAcik = !akisAcik; akisCiz(); });
-  host.querySelectorAll("[data-ayar]").forEach(el => {
-    el.addEventListener("change", () => {
-      const k = el.dataset.ayar;
-      const v = el.type === "checkbox" ? el.checked : (k === "adaySayisi" ? parseInt(el.value, 10) : el.value);
-      ayarSet(k, v);
-    });
-  });
 }
 
 let calisiyor = false;
@@ -772,6 +801,6 @@ if("serviceWorker" in navigator){
 favleriKaydet(favleriYukle());
 oturumYukle();
 ayarYukle();
-akisCiz();
+akisKur();
 cizTemalar();
 cizFikirler(sonUretilen);
