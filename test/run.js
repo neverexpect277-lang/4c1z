@@ -682,6 +682,31 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   global.fetch = async () => { throw new Error("ağ yok"); };
   let r3 = resMock(); await cek({ query: { url: "https://x.com" } }, r3);
   ok("ağ hatası yutulur (boş metin, kırılmaz)", r3._.metin === "");
+}).then(async () => {
+  // #8 browser-use: karttan canlı pazar taraması (/api/ara)
+  console.log("\n#8 — Pazar taraması butonu (browser-use ilhamı)");
+  const w = yeniDom();
+  w.fetch = async () => ({ ok: true, json: async () => ({ sonuclar: [
+    { baslik: "GitHub: user/akilli-tava (★99)", ozet: "benzer proje" },
+    { baslik: "Rakip Ürün Z", ozet: "piyasada var" }
+  ] }) });
+  w.cizFikirler([{ isim: "Akıllı Tava", ne: "yemek pişirir", aramaEN: "smart pan" }]);
+  const card = w.document.querySelector("#out .card");
+  const btn = card.querySelector('[data-act="pazar"]');
+  ok("karta 'Pazarı tara' butonu eklendi", !!btn);
+  btn.click();
+  await new Promise(r => setTimeout(r, 5));
+  const wrap = card.querySelector(".pazarWrap");
+  ok("pazar sonuçları kartta gösterildi", /Pazar taraması/.test(wrap.textContent) && /Rakip Ürün Z/.test(wrap.textContent));
+
+  // sonuç yoksa niş mesajı, kırılmaz
+  const w2 = yeniDom();
+  w2.fetch = async () => ({ ok: true, json: async () => ({ sonuclar: [] }) });
+  w2.cizFikirler([{ isim: "X", ne: "y" }]);
+  const c2 = w2.document.querySelector("#out .card");
+  c2.querySelector('[data-act="pazar"]').click();
+  await new Promise(r => setTimeout(r, 5));
+  ok("sonuç yoksa niş mesajı (kırılmaz)", /Belirgin sonuç/.test(c2.querySelector(".pazarWrap").textContent));
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);

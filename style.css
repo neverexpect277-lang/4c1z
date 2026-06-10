@@ -214,7 +214,17 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .not::placeholder{color:#b3a98f;}
 .not:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
 
-.cardfoot{display:flex;gap:8px;margin-top:15px;}
+.cardfoot{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;}
+/* browser-use: pazar taraması paneli */
+.pazarWrap:empty{display:none;}
+.pazarYukle{display:flex;align-items:center;gap:9px;justify-content:center;color:var(--dim);font-size:13.5px;padding:14px;}
+.pazarBos{text-align:center;color:var(--dim);font-size:13px;padding:12px;}
+.pazarListe{margin-top:12px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+.pazarBaslik{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accentDeep);font-weight:600;margin-bottom:8px;}
+.pazarItem{font-size:13px;color:var(--soft);padding:7px 0;border-top:1px solid var(--line);}
+.pazarItem:first-of-type{border-top:none;}
+.pazarItem b{display:block;color:var(--txt);font-weight:600;font-size:13.5px;}
+.pazarItem span{display:block;margin-top:2px;color:var(--dim);}
 .mini{flex:1;background:var(--card);border:1px solid var(--line2);color:var(--soft);
   border-radius:11px;padding:10px;font-size:13px;cursor:pointer;text-align:center;transition:.15s;}
 .mini:hover{border-color:var(--accentSoft);color:var(--accentDeep);}

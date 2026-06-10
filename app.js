@@ -194,6 +194,29 @@ function muhHTML(f){
     sec("Açık kaynak yapı taşları", f.yapiTaslari) +
     `</div>`;
 }
+// browser-use ilhamı: bir fikre özel CANLI pazar/rakip taraması (mevcut /api/ara ajan ordusu)
+async function pazarTara(el, f){
+  const wrap = el.querySelector(".pazarWrap");
+  if(!wrap) return;
+  wrap.innerHTML = `<div class="pazarYukle"><span class="spin"></span>Pazar taranıyor…</div>`;
+  const q = ((f.isim || "") + " " + (f.ne || "")).trim();
+  const en = (f.aramaEN || "").trim();
+  try{
+    const url = "/api/ara?q=" + encodeURIComponent(q) + (en ? "&en=" + encodeURIComponent(en) : "");
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 15000);
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(to);
+    const j = await r.json();
+    const liste = (j && Array.isArray(j.sonuclar) ? j.sonuclar : []).slice(0, 8);
+    if(!liste.length){ wrap.innerHTML = `<div class="pazarBos">Belirgin sonuç çıkmadı — niş olabilir.</div>`; return; }
+    wrap.innerHTML = `<div class="pazarListe"><div class="pazarBaslik">Pazar taraması (${liste.length})</div>` +
+      liste.map(s => `<div class="pazarItem"><b>${metin(s.baslik || "")}</b>${s.ozet ? `<span>${metin(s.ozet)}</span>` : ""}</div>`).join("") +
+      `</div>`;
+  }catch(e){
+    wrap.innerHTML = `<div class="pazarBos">Tarama yapılamadı, tekrar dene.</div>`;
+  }
+}
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
   return `
@@ -211,9 +234,11 @@ function kartHTML(f, kayitli){
     ${kayitli ? puanHTML(f) + durumHTML(f) + notHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
+      <button class="mini" data-act="pazar">Pazarı tara</button>
       <button class="mini wa" data-act="wa">WhatsApp</button>
       <button class="mini ig" data-act="ig">Instagram</button>
-    </div>`;
+    </div>
+    <div class="pazarWrap"></div>`;
 }
 function fikirKart(f, kayitli){
   const el = document.createElement("div");
@@ -225,6 +250,8 @@ function fikirKart(f, kayitli){
   el.querySelector('[data-act="kopya"]').addEventListener("click", () => kopyala(f));
   el.querySelector('[data-act="wa"]').addEventListener("click", () => gorselPaylas(f));
   el.querySelector('[data-act="ig"]').addEventListener("click", () => gorselPaylas(f));
+  const pazarBtn = el.querySelector('[data-act="pazar"]');
+  if(pazarBtn) pazarBtn.addEventListener("click", () => pazarTara(el, f));
   // Başlığa basınca kartı aç/kapa (yıldıza basınca değil)
   const h2 = el.querySelector("h2");
   if(h2) h2.addEventListener("click", ev => { if(ev.target.closest('[data-act="fav"]')) return; el.classList.toggle("kapali"); });
