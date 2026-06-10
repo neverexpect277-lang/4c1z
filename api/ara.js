@@ -189,6 +189,27 @@ async function openLibrary(q){
   }catch(e){ return []; }
 }
 
+// ConceptNet — kavramlar arası ilişkiler (X→kullanım/parça/ilişki). Fikir harmanı için yakıt. Anahtarsız.
+async function conceptnet(q){
+  try{
+    const term = String(q || "").trim().toLowerCase().split(/\s+/).filter(Boolean)[0];
+    if(!term) return [];
+    const r = await zamanli("https://api.conceptnet.io/c/en/" + encodeURIComponent(term) + "?limit=15", {
+      headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)" }
+    });
+    if(!r.ok) return [];
+    const j = await r.json();
+    const out = [], gor = new Set();
+    for(const e of (j.edges || [])){
+      const lbl = e && e.end && e.end.label, rel = e && e.rel && e.rel.label;
+      if(lbl && rel && lbl.toLowerCase() !== term && !gor.has(lbl) && out.length < 3){
+        gor.add(lbl); out.push({ baslik: "İlişkili: " + temizle(lbl), ozet: temizle(rel) });
+      }
+    }
+    return out;
+  }catch(e){ return []; }
+}
+
 // Datamuse — bir terime İLİŞKİLİ kelimeler (arama kapsamını genişletmek için). Anahtarsız.
 async function datamuse(q){
   try {
@@ -242,12 +263,12 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, rd, a, w, wd, np, ss, ol] = await Promise.all([
+      const [g, s, h, rd, a, w, wd, np, ss, ol, cn] = await Promise.all([
         cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz),
-        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz)
+        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz), conceptnet(enTemiz)
       ]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2),
-        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1));
+        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });

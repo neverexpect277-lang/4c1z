@@ -625,6 +625,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
       return { ok: true, json: async () => ({ data: [{ title: "Humidity Sensing in Cabinets", abstract: "nem ölçüm çalışması" }] }) };
     if(/openlibrary\.org/.test(url))
       return { ok: true, json: async () => ({ docs: [{ title: "Smart Home Design", author_name: ["A. Yazar"] }] }) };
+    if(/api\.conceptnet\.io/.test(url))
+      return { ok: true, json: async () => ({ edges: [{ end: { label: "drying clothes" }, rel: { label: "UsedFor" } }] }) };
     if(/export\.arxiv\.org/.test(url))
       return { ok: true, text: async () => "<feed><entry><title>Smart Cabinet Sensing</title><summary>nem ölçümü</summary></entry></feed>" };
     if(/api\.datamuse\.com/.test(url))
@@ -645,6 +647,7 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("npm eklendi (yazılım/teknoloji sinyali)", s1.sonuclar.some(s => /npm: cabinet-sensor/.test(s.baslik)));
   ok("Semantic Scholar eklendi (geniş bilimsel)", s1.sonuclar.some(s => /Makale: Humidity Sensing/.test(s.baslik)));
   ok("Open Library eklendi (kavram olgunluğu)", s1.sonuclar.some(s => /Kitap: Smart Home Design/.test(s.baslik)));
+  ok("ConceptNet eklendi (kavram ilişkisi → harman yakıtı)", s1.sonuclar.some(s => /İlişkili: drying clothes/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
