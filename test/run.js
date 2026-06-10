@@ -828,6 +828,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   w.document.querySelector("#alan").value = "ev";
   await w.uret();
   const ureticiCagri = cag.filter(t => !/KIRMIZI TAKIM|ÜST AKLI|UZMAN HEYET/i.test(t));
+  ok("persona ordusu havuzdan rotasyonlu seçilir (6 ajan)", w.personaSec().length === 6);
+  ok("seçilen personalar benzersiz", new Set(w.personaSec()).size === 6);
   ok("heyet modunda üretici ÇOK persona ile çalıştı (≥3 paralel)", ureticiCagri.length >= 3);
   ok("üretici çağrılarına persona (BAKIŞ AÇIN) enjekte edildi", ureticiCagri.some(t => /BAKIŞ AÇIN/.test(t)));
   ok("eleştirmen heyet merceğiyle çağrıldı (4 mercek)", cag.some(t => /HEYET MODU/.test(t)));

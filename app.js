@@ -26,13 +26,24 @@ function oturumKaydet(){
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
 let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false };
-// Çok-ajan heyet modu: üretici aşamasında paralel çalışan persona ajanları (çeşitlilik için)
+// Çok-ajan heyet modu: üretici aşamasında paralel çalışan persona AJAN ORDUSU.
+// Geniş havuz → her turda rotasyonla bir alt-küme sahaya iner (çeşitlilik max, kota bounded).
 const PERSONALAR = [
   "DIY/maker mucit — ucuz hazır parçalarla hafta sonu prototipi kurar.",
   "endüstriyel tasarımcı — ergonomi, estetik, kullanım kolaylığına odaklanır.",
   "girişimci — pazar boşluğu, talep ve ticari potansiyele odaklanır.",
-  "mühendis — mekanizma, malzeme ve fizik fizibilitesine odaklanır."
+  "mühendis — mekanizma, malzeme ve fizik fizibilitesine odaklanır.",
+  "sürdürülebilirlik uzmanı — atık azaltma, geri dönüşüm, enerji tasarrufu düşünür.",
+  "erişilebilirlik uzmanı — yaşlı, engelli ve çocukların kullanımını önceler.",
+  "ev ekonomisti — günlük ev/mutfak işlerini kolaylaştıran pratik çözümler arar.",
+  "oyun tasarımcısı — sıkıcı işleri eğlenceli, oyunlaştırılmış hale getirir.",
+  "sağlık & hijyen uzmanı — temizlik, güvenlik ve sağlıklı yaşam açısından bakar.",
+  "doğa/çiftçi gözü — bahçe, balkon, tarım ve açık hava ihtiyaçlarına odaklanır."
 ];
+const HEYET_AJAN = 6;   // her turda sahaya inen persona sayısı (rotasyonla farklı kombinasyon)
+function personaSec(){
+  return [...PERSONALAR].sort(() => Math.random() - 0.5).slice(0, Math.min(HEYET_AJAN, PERSONALAR.length));
+}
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
 function ayarSet(k, v){ ayarlar[k] = v; ayarKaydet(); akisCiz(); }
@@ -673,7 +684,7 @@ function akisCiz(){
       `<label class="akistgl"><input type="checkbox" data-ayar="anlamsal" ${ayarlar.anlamsal ? "checked" : ""}/>aç</label></div>` +
     `<div class="akisdugum"><span class="akisad">Yerel LLM (deneysel · WebGPU · büyük indirme)</span>` +
       `<label class="akistgl"><input type="checkbox" data-ayar="yerel" ${ayarlar.yerel ? "checked" : ""}/>aç</label></div>` +
-    `<div class="akisdugum"><span class="akisad">Heyet modu (çok ajan · ${PERSONALAR.length} persona · daha yavaş)</span>` +
+    `<div class="akisdugum"><span class="akisad">Heyet modu (çok ajan · ${PERSONALAR.length} persona havuzu, turda ${HEYET_AJAN} · daha yavaş)</span>` +
       `<label class="akistgl"><input type="checkbox" data-ayar="heyet" ${ayarlar.heyet ? "checked" : ""}/>aç</label></div></div>`;
   panel.innerHTML = akis + oto;
 }
@@ -784,7 +795,7 @@ async function uret(){
   let adaylar = null;
   if(ayarlar.heyet){
     // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
-    const dilimler = await Promise.all(PERSONALAR.map(persona => {
+    const dilimler = await Promise.all(personaSec().map(persona => {
       const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona);
       return zincir(p.sistem, p.kullanici);
     }));
