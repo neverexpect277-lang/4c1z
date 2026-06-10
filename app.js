@@ -227,8 +227,22 @@ function gorselUret(el, f){
   img.alt = (f && f.isim) || "ürün görseli";
   img.className = "uretilenGorsel";
   img.onload = () => { wrap.innerHTML = ""; wrap.appendChild(img); };
-  img.onerror = () => { wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi, tekrar dene.</div>`; };
+  img.onerror = () => gorselTani(wrap, src);
   img.src = src;
+}
+// Görsel patlayınca gerçek nedeni göster (debug=1 → her modelin durumu). Sen ekran görüntüsü atınca kesin teşhis.
+async function gorselTani(wrap, src){
+  wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi — neden bakılıyor…</div>`;
+  try{
+    const r = await fetch(src + "&debug=1");
+    const j = await r.json();
+    const ozet = (j.denemeler || []).map(d =>
+      `${d.src}/${d.model}: ${d.ok ? "✓" : ((d.status || "") + " " + (d.err || "")).trim()}`).join("\n");
+    wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi.<br><b>Sonuç: ${escapeHtml(j.sonuc || "yok")}</b>` +
+      (ozet ? `<pre class="gorseltani">${escapeHtml(ozet)}</pre>` : "") + `</div>`;
+  }catch(e){
+    wrap.innerHTML = `<div class="gorselHata">Görsel üretilemedi, tekrar dene.</div>`;
+  }
 }
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
