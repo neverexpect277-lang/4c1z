@@ -23,6 +23,16 @@ function oturumKaydet(){
   try{ localStorage.setItem(OTURUM_KEY, JSON.stringify({ ideas: sonUretilen.slice(0, 40), isimler: uretilmisIsimler.slice(-80) })); }catch(e){}
 }
 
+// ---- Görsel anahtarı (HuggingFace) — Vercel'e girmeden, uygulamadan; sadece bu cihazda ----
+const HF_KEY = "mucit_hf";
+function hfToken(){ try{ return (localStorage.getItem(HF_KEY) || "").trim(); }catch(e){ return ""; } }
+function hfKur(){
+  const inp = $("#hfToken");
+  if(!inp) return;
+  inp.value = hfToken();
+  inp.addEventListener("input", () => { try{ localStorage.setItem(HF_KEY, inp.value.trim()); }catch(e){} });
+}
+
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
 let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true };
@@ -223,7 +233,9 @@ function gorselUret(el, f){
   };
   const p = gorselPrompt(f, sec);
   const seed = Math.floor(Math.random() * 1e6);
-  const taban = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed;
+  const hf = hfToken();
+  const taban = "/api/image?p=" + encodeURIComponent(p) + "&w=1024&h=768&s=" + seed
+    + (hf ? "&hf=" + encodeURIComponent(hf) : "");
   // Pollinations 402 "kuyruk dolu" GEÇİCİ bir hatadır → flux/turbo + bekleyip tekrar dene (backoff).
   const plan = [
     { m: "flux", bekle: 0 }, { m: "turbo", bekle: 0 },
@@ -809,5 +821,6 @@ try{ favleriKaydet(favleriYukle()); }catch(e){}
 try{ oturumYukle(); }catch(e){}
 try{ ayarYukle(); }catch(e){}
 try{ akisKur(); }catch(e){}
+try{ hfKur(); }catch(e){}
 try{ cizTemalar(); }catch(e){}
 try{ cizFikirler(sonUretilen); }catch(e){}

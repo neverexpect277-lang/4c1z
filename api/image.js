@@ -20,10 +20,10 @@ function pollUrl(p, w, h, seed, model) {
     + "&nologo=true&enhance=true&model=" + model + "&referrer=4c1z";
 }
 
-// Hugging Face Inference — kimlikli (token), IP-bağımsız → güvenilir. HF_TOKEN yoksa atlanır.
-async function hfGorsel(prompt, w, h, log) {
-  const tok = process.env.HF_TOKEN;
-  if (!tok) { if (log) log.push({ src: "huggingface", model: "-", err: "HF_TOKEN yok (Vercel env ekle)" }); return null; }
+// Hugging Face Inference — kimlikli (token), IP-bağımsız → güvenilir.
+// Token: Vercel env HF_TOKEN ya da uygulamadan gelen ?hf= (kullanıcının kendi cihazından).
+async function hfGorsel(prompt, w, h, tok, log) {
+  if (!tok) { if (log) log.push({ src: "huggingface", model: "-", err: "token yok (uygulamadaki 🔑 kutusuna hf_ token yapıştır)" }); return null; }
   const model = process.env.HF_MODEL || "black-forest-labs/FLUX.1-schnell";
   try {
     const r = await fetch("https://api-inference.huggingface.co/models/" + model, {
@@ -79,10 +79,11 @@ module.exports = async (req, res) => {
   const w = Math.min(parseInt(q.w, 10) || 1024, 1024);
   const h = Math.min(parseInt(q.h, 10) || 768, 1024);
   const seed = parseInt(q.s, 10) || Math.floor(Math.random() * 1e6);
+  const tok = process.env.HF_TOKEN || (q.hf ? String(q.hf) : "");
 
   if (q.debug == "1" || q.debug === "true") {
     const log = [];
-    let ok = await hfGorsel(p, w, h, log) ? "huggingface" : null;
+    let ok = await hfGorsel(p, w, h, tok, log) ? "huggingface" : null;
     if (!ok) ok = await geminiProbe(p, log) ? "gemini" : null;
     if (!ok) ok = await pollProbe(p, w, h, seed, log) ? "pollinations" : null;
     res.statusCode = 200;
@@ -92,7 +93,7 @@ module.exports = async (req, res) => {
   }
 
   // 1) HF token varsa kimlikli, güvenilir yol:
-  const hf = await hfGorsel(p, w, h, null);
+  const hf = await hfGorsel(p, w, h, tok, null);
   if (hf) {
     res.statusCode = 200;
     res.setHeader("Content-Type", hf.mime);
