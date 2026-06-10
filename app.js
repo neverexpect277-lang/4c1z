@@ -419,6 +419,26 @@ async function gorselPaylas(f){
 }
 function flash(msg){ statusEl.textContent = msg; setTimeout(() => { if(mod==="yeni") statusEl.textContent=""; }, 1500); }
 
+// firecrawl ilhamı: Kaynak'taki URL'i sunucudan çekip temiz metne çevir, kutuyu doldur.
+async function urldenCek(){
+  const ta = $("#kaynak"), btn = $("#cekUrl");
+  if(!ta || !btn) return;
+  const url = ta.value.trim();
+  if(!/^https?:\/\//i.test(url)){ flash("Önce kaynak kutusuna bir https:// linki yapıştır"); return; }
+  const eski = btn.textContent;
+  btn.disabled = true; btn.textContent = "Çekiliyor…";
+  try{
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 16000);
+    const r = await fetch("/api/cek?url=" + encodeURIComponent(url), { signal: ctrl.signal });
+    clearTimeout(to);
+    const j = await r.json();
+    if(j && j.metin){ ta.value = (j.baslik ? j.baslik + "\n\n" : "") + j.metin; flash("Link metni çekildi — şimdi Fikir Üret'e bas"); }
+    else flash("Link çekilemedi: " + ((j && j.hata) || "boş içerik"));
+  }catch(e){ flash("Link çekilemedi (ağ/zaman aşımı)"); }
+  finally{ btn.disabled = false; btn.textContent = eski; }
+}
+
 // Üretim bitince hafif haptik + yumuşak iki notalı ding
 let _ac;
 function bildir(){
@@ -713,6 +733,8 @@ $("#gen").addEventListener("click", uret);
 $("#temaKaydet").addEventListener("click", temaFormAc);
 $("#temaOnay").addEventListener("click", temaOnayla);
 $("#temaIptal").addEventListener("click", temaFormKapat);
+const _cekBtn = $("#cekUrl");
+if(_cekBtn) _cekBtn.addEventListener("click", urldenCek);
 $("#temaAd").addEventListener("keydown", e => {
   if(e.key === "Enter"){ e.preventDefault(); temaOnayla(); }
   else if(e.key === "Escape"){ temaFormKapat(); }

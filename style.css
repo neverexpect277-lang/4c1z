@@ -53,6 +53,10 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
   min-height:64px;line-height:1.5;transition:border-color .2s, box-shadow .2s;}
 .kaynak::placeholder{color:#b3a98f;}
 .kaynak:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(185,133,42,.14);}
+.cekurl{margin-top:8px;background:var(--card);border:1px solid var(--line2);color:var(--soft);
+  border-radius:9px;padding:8px 12px;font-size:12.5px;cursor:pointer;transition:.15s;}
+.cekurl:hover{border-color:var(--accentSoft);color:var(--accentDeep);background:var(--card2);}
+.cekurl:disabled{opacity:.6;cursor:default;}
 
 /* Temalar (kayıtlı alan+kaynak ayarları) */
 .temalar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}

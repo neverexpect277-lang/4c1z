@@ -624,6 +624,35 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   // hepsi patlasa boş döner (kırılmaz)
   const s4 = await cagir("hata testi", async () => { throw new Error("ağ yok"); });
   ok("tüm kaynaklar patlasa boş sonuç (kırılmaz)", Array.isArray(s4.sonuclar) && s4.sonuclar.length === 0);
+}).then(async () => {
+  // #5 firecrawl: api/cek.js — URL → temiz metin
+  console.log("\n#5 — api/cek.js URL → temiz metin (firecrawl)");
+  const cek = require("../api/cek.js");
+  // saf temizleyici: script/style/etiket sökülür, başlık/paragraf metni kalır
+  const html = `<html><head><title>Test Başlık</title><style>.x{color:red}</style></head>
+    <body><script>var a=1;</script><nav>menü çöp</nav>
+    <h1>Ürün</h1><p>Bu ürün&nbsp;çok güzel.</p><p>İkinci paragraf &amp; devamı.</p></body></html>`;
+  const t = cek.temizMetin(html);
+  ok("script içeriği sökülür", !/var a=1/.test(t));
+  ok("style içeriği sökülür", !/color:red/.test(t));
+  ok("HTML etiketleri sökülür", !/<p>|<h1>/.test(t));
+  ok("entity çözülür (&nbsp; &amp;)", /çok güzel/.test(t) && /& devamı/.test(t));
+
+  // handler: fetch stub → baslik + metin döner
+  const resMock = () => { let o; const r = { status(){ return r; }, json(b){ o = b; return r; }, get _(){ return o; } }; return r; };
+  global.fetch = async () => ({ ok: true, text: async () => html });
+  let r1 = resMock(); await cek({ query: { url: "https://ornek.com" } }, r1);
+  ok("handler başlığı <title>'dan alır", r1._.baslik === "Test Başlık");
+  ok("handler temiz metni döndürür", /Bu ürün çok güzel/.test(r1._.metin));
+
+  // geçersiz url → hata
+  let r2 = resMock(); await cek({ query: { url: "deneme" } }, r2);
+  ok("geçersiz url reddedilir", r2._.metin === "" && /link/.test(r2._.hata));
+
+  // ağ hatası → kırılmaz, boş metin
+  global.fetch = async () => { throw new Error("ağ yok"); };
+  let r3 = resMock(); await cek({ query: { url: "https://x.com" } }, r3);
+  ok("ağ hatası yutulur (boş metin, kırılmaz)", r3._.metin === "");
 }).then(() => {
   console.log(`\nSONUÇ: ${pass} geçti, ${fail} kaldı`);
   process.exit(fail ? 1 : 0);
