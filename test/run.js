@@ -547,11 +547,18 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   ok("üst seviye: yatırım analizi + rakam zorunluluğu (geri ödeme, satış fiyatı)", /ÜST SEVİYE YATIRIM ANALİZİ/.test(uz.sistem) && /geri ödeme/i.test(uz.sistem) && /satış fiyatı/i.test(uz.sistem));
   ok("üst seviye: çıktı şemasında 'yatirim' alanı var", /"yatirim"/.test(uz.sistem));
 
-  // Üst seviye: tesis kartı 'Yatırım özeti'ni gösterir, ürün kartı göstermez
+  // Üst seviye + PREMIUM: tesis kartı yatırım özetini stat çipleriyle gösterir
   const yKart = w.kartHTML({ isim: "Mantar Tesisi", ne: "x", yatirim: "kurulum ≈3M₺ · geri ödeme ≈2 yıl · marj %45", tesis: true }, false);
-  ok("üst seviye: tesis kartında 'Yatırım özeti' görünür", /Yatırım özeti/.test(yKart) && /geri ödeme/.test(yKart));
+  ok("üst seviye: tesis kartında Yatırım Özeti + geri ödeme görünür", /Yatırım Özeti/i.test(yKart) && /geri ödeme/.test(yKart));
+  ok("premium: yatırım özeti stat çiplerine bölünür", /yatirimstats/.test(yKart) && (yKart.match(/ystat/g) || []).length === 3);
+  ok("premium: tesis kartında 'Yatırım Dosyası' rozeti", /tesisrozet/.test(yKart) && /Yatırım Dosyası/.test(yKart));
   const yUrun = w.kartHTML({ isim: "Ürün", ne: "x", yatirim: "olmamalı" }, false);
-  ok("üst seviye: ürün kartında 'Yatırım özeti' GÖSTERİLMEZ", !/Yatırım özeti/.test(yUrun));
+  ok("üst seviye: ürün kartında yatırım özeti GÖSTERİLMEZ", !/Yatırım/i.test(yUrun) && !/tesisrozet/.test(yUrun));
+  // Tek parçalı özet (· yoksa) düz metne düşer (kırılmaz)
+  ok("premium: tek parçalı özet düz metne düşer", /Yatırım özeti/.test(w.yatirimBlok("sadece kurulum 2M")) && !/yatirimstats/.test(w.yatirimBlok("sadece kurulum 2M")));
+  // fikirKart tesis kartına 'tesis' sınıfı ekler (premium çerçeve)
+  ok("premium: tesis kartı 'tesis' sınıfı alır", w.fikirKart({ isim: "T", ne: "x", tesis: true }).className.includes("tesis"));
+  ok("premium: ürün kartı 'tesis' sınıfı almaz", !w.fikirKart({ isim: "P", ne: "x" }).className.includes("tesis"));
 
   // 2) Tesis ajan ordusu ayrı havuzdan seçilir (ürün personaları sahaya inmez)
   w.ayarSet("tesis", true);

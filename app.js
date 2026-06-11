@@ -250,12 +250,20 @@ function skorHTML(f){
   const renk = n >= 75 ? "yuksek" : n >= 50 ? "orta" : "dusuk";
   return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${metin(f.hukum || "")}</span></div>`;
 }
+// Premium yatırım özeti: "kurulum ≈₺ · geri ödeme ≈yıl · marj %" → stat çipleri
+function yatirimBlok(v){
+  if(!v) return "";
+  const stats = String(v).split(/[·|]/).map(s => s.trim()).filter(Boolean);
+  if(stats.length < 2) return `<div class="field yatirim"><b>★ Yatırım özeti</b>${metin(v)}</div>`;
+  return `<div class="yatirimkutu"><div class="yatirimbas">★ Yatırım Özeti</div>` +
+    `<div class="yatirimstats">${stats.map(s => `<span class="ystat">${metin(s)}</span>`).join("")}</div></div>`;
+}
 function muhHTML(f){
   if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham || f.yatirim)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   const T = !!f.tesis;
   return `<div class="muhendislik"><div class="muhbaslik">${T ? "Mühendislik & Yatırım" : "Mühendislik"}</div>` +
-    (T && f.yatirim ? `<div class="field yatirim"><b>★ Yatırım özeti</b>${metin(f.yatirim)}</div>` : "") +
+    (T ? yatirimBlok(f.yatirim) : "") +
     sec(T ? "Nasıl kurulur" : "Nasıl yapılır", f.nasil) +
     sec(T ? "Kurulum + birim maliyet" : "Tahmini maliyet", f.maliyet) +
     sec((T ? "Benzer tesisler" : "Benzer ürünler") + (f.benzerWeb ? " · web" : ""), f.benzer) +
@@ -297,6 +305,7 @@ function kartHTML(f, kayitli){
     ? { neyden: "Ne üretir / girdi", derde: "Pazar / alıcı", nedenYok: "Neden herkes kurmuyor", vayBe: "Kâr / değer noktası" }
     : { neyden: "Neyden", derde: "Hangi derde", nedenYok: "Neden hâlâ yok", vayBe: "Vay be sebebi" };
   return `
+    ${f.tesis ? `<div class="tesisrozet">🏭 Yatırım Dosyası</div>` : ""}
     <h2>${metin(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
     </h2>
@@ -320,7 +329,7 @@ function kartHTML(f, kayitli){
 }
 function fikirKart(f, kayitli){
   const el = document.createElement("div");
-  el.className = "card";
+  el.className = "card" + (f.tesis ? " tesis" : "");
   el.innerHTML = kartHTML(f, kayitli);
   el.querySelector('[data-act="fav"]').addEventListener("click", ev => {
     favToggle(f); ev.currentTarget.classList.toggle("on");

@@ -194,6 +194,23 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
   border:1px solid rgba(91,158,116,.4);border-radius:12px;padding:12px 14px;margin:2px 0 4px;
   color:var(--txt);font-weight:600;}
 .field.yatirim b{color:var(--good);}
+/* Premium tesis kartı — yatırım dosyası havası */
+.card.tesis{border-color:rgba(185,133,42,.5);
+  box-shadow:0 12px 32px rgba(120,95,40,.16);
+  background:linear-gradient(180deg,#fffdf6 0%,var(--card) 60%);
+  border-top:3px solid var(--accent);}
+.tesisrozet{display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-d);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accentDeep);background:var(--cream);border:1px solid var(--accentSoft);
+  border-radius:999px;padding:5px 11px;margin-bottom:10px;}
+.yatirimkutu{margin:4px 0 6px;padding:12px 13px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(91,158,116,.14),var(--cream));
+  border:1px solid rgba(91,158,116,.42);}
+.yatirimbas{font-family:var(--font-d);font-size:11px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--good);margin-bottom:8px;}
+.yatirimstats{display:flex;flex-wrap:wrap;gap:7px;}
+.ystat{background:var(--card);border:1px solid rgba(91,158,116,.35);color:var(--txt);
+  border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:600;font-family:var(--font-d);}
 /* Kayıtlarda arama (Kayıtlılar) */
 .kayitarasatir{display:flex;gap:8px;margin-top:14px;align-items:stretch;}
 .kayitarasatir .kayitara{flex:1;margin-top:0;}
