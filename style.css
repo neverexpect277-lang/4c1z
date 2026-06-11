@@ -190,6 +190,10 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .field.vaybe{background:var(--cream);border:1px solid rgba(185,133,42,.26);
   border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--txt);}
 .field.vaybe b{color:var(--accentDeep);}
+.field.yatirim{background:linear-gradient(135deg,rgba(91,158,116,.12),var(--cream));
+  border:1px solid rgba(91,158,116,.4);border-radius:12px;padding:12px 14px;margin:2px 0 4px;
+  color:var(--txt);font-weight:600;}
+.field.yatirim b{color:var(--good);}
 /* Kayıtlarda arama (Kayıtlılar) */
 .kayitarasatir{display:flex;gap:8px;margin-top:14px;align-items:stretch;}
 .kayitarasatir .kayitara{flex:1;margin-top:0;}

@@ -542,6 +542,14 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   ok("üst akılda Çavuş↔Zeyneb diyaloğu korunur", /ÇAVUŞ↔ZEYNEB/.test(ua.sistem) && /ZEYNEB/.test(ua.sistem));
   const uz = w.uzmanHeyetiPrompt("", { isim: "x" }, "", "", "", 34, false, true);
   ok("uzman heyeti tesiste Ziraat+Teşvik heyetine döner", /Ziraat\/Su Ürünleri/.test(uz.sistem) && /Teşvik Danışmanı/.test(uz.sistem));
+  ok("üst seviye: yatırım analizi + rakam zorunluluğu (geri ödeme, satış fiyatı)", /ÜST SEVİYE YATIRIM ANALİZİ/.test(uz.sistem) && /geri ödeme/i.test(uz.sistem) && /satış fiyatı/i.test(uz.sistem));
+  ok("üst seviye: çıktı şemasında 'yatirim' alanı var", /"yatirim"/.test(uz.sistem));
+
+  // Üst seviye: tesis kartı 'Yatırım özeti'ni gösterir, ürün kartı göstermez
+  const yKart = w.kartHTML({ isim: "Mantar Tesisi", ne: "x", yatirim: "kurulum ≈3M₺ · geri ödeme ≈2 yıl · marj %45", tesis: true }, false);
+  ok("üst seviye: tesis kartında 'Yatırım özeti' görünür", /Yatırım özeti/.test(yKart) && /geri ödeme/.test(yKart));
+  const yUrun = w.kartHTML({ isim: "Ürün", ne: "x", yatirim: "olmamalı" }, false);
+  ok("üst seviye: ürün kartında 'Yatırım özeti' GÖSTERİLMEZ", !/Yatırım özeti/.test(yUrun));
 
   // 2) Tesis ajan ordusu ayrı havuzdan seçilir (ürün personaları sahaya inmez)
   w.ayarSet("tesis", true);

@@ -249,10 +249,11 @@ function skorHTML(f){
   return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${metin(f.hukum || "")}</span></div>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham || f.yatirim)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   const T = !!f.tesis;
   return `<div class="muhendislik"><div class="muhbaslik">${T ? "Mühendislik & Yatırım" : "Mühendislik"}</div>` +
+    (T && f.yatirim ? `<div class="field yatirim"><b>★ Yatırım özeti</b>${metin(f.yatirim)}</div>` : "") +
     sec(T ? "Nasıl kurulur" : "Nasıl yapılır", f.nasil) +
     sec(T ? "Kurulum + birim maliyet" : "Tahmini maliyet", f.maliyet) +
     sec((T ? "Benzer tesisler" : "Benzer ürünler") + (f.benzerWeb ? " · web" : ""), f.benzer) +
@@ -706,7 +707,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
     const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet, ayarlar.tesis);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["skor", "hukum", "yatirim", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
       if(patentArama) fikir.patentWeb = true;
     }
