@@ -655,6 +655,42 @@ console.log("\n#AYRIM — Tesis ve ürün ayrı dünya");
   ok("Yeni Fikirler tesis modunda sadece tesis fikri", /TesisFikir/.test(o) && !/ÜrünFikir/.test(o));
 })();
 
+// ---- PREMIUM tesis altyapısı: ordu + geniş heyet OTOMATİK (Dengeli'de, elle açmadan) ----
+console.log("\n#PREMIUM — Tesis altyapısı (ordu + geniş heyet otomatik)");
+function icerikStub(w, cag){
+  w.fetch = async (url, o) => {
+    if(String(url).startsWith("/api/ara")) return { ok: true, status: 200, json: async () => ({ sonuclar: [] }) };
+    if(/frankfurter/.test(url)) return { ok: true, status: 200, json: async () => ({ rates: { TRY: 34 } }) };
+    const text = JSON.parse(o.body).text; cag.push(text);
+    let resp;
+    if(/ÜST AKLI/.test(text)) resp = [{ isim: "Fikir", ne: "x", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "h" }, { kim: "Zeyneb", soz: "ikna" }] }];
+    else if(/UZMAN HEYET/i.test(text)) resp = [{ isim: "Fikir", skor: "80", hukum: "h", yatirim: "kurulum ≈2M₺ · geri ödeme ≈2 yıl · marj %40" }];
+    else if(/KIRMIZI TAKIM|YATIRIM DENETÇİSİ/.test(text)) resp = [{ isim: "Süz", ne: "s", neyden: "p+q" }];
+    else resp = [{ isim: "Aday" + cag.length, ne: "a", neyden: "x+y" }];
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(resp) }] } }] }) };
+  };
+}
+(async function(){
+  const w = yeniDom();
+  const cag = []; icerikStub(w, cag);
+  w.ayarSet("tesis", true);            // hiz = dengeli (varsayılan), heyet ELLE açılmadı
+  w.document.querySelector("#alan").value = "mantar";
+  await w.uret();
+  const uretici = cag.filter(t => /ÜRETİM TESİSİ yatırım uzmanı/.test(t));
+  ok("premium: tesiste ajan ORDUSU otomatik (heyet açılmadan ≥3 paralel)", uretici.length >= 3);
+  ok("premium: tesis üreticisine persona (BAKIŞ AÇIN) enjekte edildi", uretici.some(t => /BAKIŞ AÇIN/.test(t)));
+  ok("premium: tesis eleştirmeni 4 mercekle (HEYET MODU)", cag.some(t => /HEYET MODU/.test(t)));
+  ok("premium: tesis uzman heyeti geniş (EK UZMANLAR)", cag.some(t => /EK UZMANLAR/.test(t)));
+
+  // Ürün modu (Dengeli, heyet kapalı) ORDU çalıştırmaz — premium yalnız tesise özel
+  const w2 = yeniDom();
+  const cag2 = []; icerikStub(w2, cag2);
+  w2.document.querySelector("#alan").value = "mutfak";   // tesis kapalı, heyet kapalı
+  await w2.uret();
+  const uretici2 = cag2.filter(t => /ürün mucitisin/.test(t));
+  ok("ürün modunda ordu OTOMATİK açılmaz (tek üretici, persona yok)", uretici2.length === 1 && !cag2.some(t => /BAKIŞ AÇIN/.test(t)));
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);

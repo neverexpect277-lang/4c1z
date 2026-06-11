@@ -715,7 +715,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet, ayarlar.tesis);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet || ayarlar.tesis, ayarlar.tesis);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["skor", "hukum", "yatirim", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
@@ -915,7 +915,14 @@ async function uret(){
   const alan = alanInput.value.trim();
   const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
   const kaynak = ayarlar.anlamsal ? await kaynakSecAnlamsal(kaynakHam, alan) : kaynakSec(kaynakHam, alan);   // ragflow: alakalı kısmı seç (anlamsal/keyword)
-  const mesajlar = [
+  const mesajlar = ayarlar.tesis ? [
+    "Yatırım heyeti toplanıyor…",
+    "Ziraat & su ürünleri uzmanları sahada…",
+    "Maliyet ve geri ödeme hesaplanıyor…",
+    "İhracat pazarları taranıyor…",
+    "Teşvik ve ruhsatlar çıkarılıyor…",
+    "En kârlı tesis dosyası hazırlanıyor…"
+  ] : [
     "Çavuş ve Zeyneb istişare ediyor…",
     "Çavuş ürünleri tek tek tarıyor…",
     "Çavuş sıradan fikirleri eliyor…",
@@ -935,9 +942,10 @@ async function uret(){
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   const yonerge = istekYorumla(alan).yonerge;          // "X+Y birleştir" gibi niyeti güçlü yönergeye çevir
   const ilham = hizli ? "" : await ureticiIlham(alan); // Hızlı: web araştırması atla; değilse araştırma ordusu → üreticiye sinyaller
+  const premium = ayarlar.heyet || ayarlar.tesis;   // tesis = premium altyapı: ordu + geniş heyet otomatik
   let adaylar = null;
-  if(ayarlar.heyet && !hizli){
-    // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
+  if(premium && !hizli){
+    // çok-ajan: persona ORDUSU paralel üretir → adaylar havuzda birleşir (tesiste otomatik)
     const dilimler = await Promise.all(personaSec().map(persona => {
       const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
       return zincir(p.sistem, p.kullanici);
@@ -961,7 +969,7 @@ async function uret(){
   let suzulmus = null;
   if(adaylar && ayarlar.eleme && !hizli){
     for(let d = 1; d <= 2 && !suzulmus; d++){
-      const p = elestirmenPrompt(alan, adaylar, kaynak, ayarlar.heyet, ayarlar.tesis);
+      const p = elestirmenPrompt(alan, adaylar, kaynak, premium, ayarlar.tesis);
       suzulmus = await zincir(p.sistem, p.kullanici);
       if(!suzulmus && d < 2) await bekle(3000);
     }
