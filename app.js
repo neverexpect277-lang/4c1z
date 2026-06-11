@@ -820,7 +820,8 @@ const ILHAM_SEED = ["mutfak", "banyo", "ev", "araba", "çocuk", "bahçe", "ofis"
 async function ureticiIlham(alan){
   if(!ayarlar.web) return "";
   const konu = alan || ILHAM_SEED[Math.floor(Math.random() * ILHAM_SEED.length)];
-  const sonuc = await araGetir(konu, konu);
+  let sonuc = [];
+  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 6000))]); }catch(e){ sonuc = []; }
   if(!sonuc.length) return "";
   const al = (re, n) => sonuc.filter(s => re.test(s.baslik)).slice(0, n).map(s => s.baslik.replace(/^[^:]+:\s*/, "").trim()).filter(Boolean);
   const iliski = al(/^İlişkili:/, 5);
