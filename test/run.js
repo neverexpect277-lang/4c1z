@@ -850,6 +850,12 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("ureticiIlham alakasız (GitHub) sinyali ilhama katmaz", !/user\/x/.test(ilh));
   wi.ayarSet("web", false);
   ok("web kapalıyken üreticiye besleme yapılmaz", (await wi.ureticiIlham("mutfak")) === "");
+
+  // üst akıl da sahadan sinyalle beslenir + ilham kartta görünür
+  ok("üst akıl promptu sahadan sinyali içerir", /SAHADAN GERÇEK SİNYALLER/.test(wp.ustAkilPrompt("ev", [{ isim: "x" }], "", "dengeli", "ilişkili: mıknatıs").kullanici));
+  ok("ilham yokken üst akıl promptu temiz", !/SAHADAN GERÇEK/.test(wp.ustAkilPrompt("ev", [{ isim: "x" }], "", "dengeli").kullanici));
+  wp.cizFikirler([{ isim: "Test", ne: "x", ilham: "gerçek dertler: dolap küfü | ilişkili: mıknatıs" }]);
+  ok("sahadan ilham kartta görünür (görünür kanıt)", /Sahadan ilham/.test(wp.document.querySelector("#out .card").textContent) && /dolap küfü/.test(wp.document.querySelector("#out .card").textContent));
 }).then(async () => {
   // ---- web-llm: yerel LLM (WebGPU yoksa buluta graceful fallback) ----
   console.log("\nALTYAPI — web-llm (yerel LLM)");

@@ -200,7 +200,7 @@ function skorHTML(f){
   return `<div class="skor ${renk}"><span class="skorNo">${n}</span><span class="skorHukum">${metin(f.hukum || "")}</span></div>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
     sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
@@ -211,6 +211,7 @@ function muhHTML(f){
     sec("Teknik gerçeklik", f.teknik) +
     sec("İlk prototip adımı", f.prototip) +
     sec("Açık kaynak yapı taşları", f.yapiTaslari) +
+    sec("Sahadan ilham (üreticiyi besleyen gerçek sinyaller)", f.ilham) +
     `</div>`;
 }
 // browser-use ilhamı: bir fikre özel CANLI pazar/rakip taraması (mevcut /api/ara ajan ordusu)
@@ -897,7 +898,7 @@ async function uret(){
   let fikirler = null;
   if(suzulmus){
     for(let d = 1; d <= 2 && !fikirler; d++){
-      const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton);
+      const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton, ilham);
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }
@@ -908,6 +909,7 @@ async function uret(){
   // 4. AŞAMA: UZMAN HEYETİ — fikri web destekli mühendislik gözüyle zenginleştir (diyalog korunur)
   if(fikirler && fikirler.length){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
+    if(ilham) fikirler[0].ilham = ilham;       // sahadan beslenen sinyaller (kartta gösterilir)
     await uzmanlastir(alan, fikirler[0], kaynak, ayarlar.web);
     asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
   }
