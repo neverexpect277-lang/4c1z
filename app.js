@@ -133,7 +133,10 @@ function cizTemalar(){
 }
 
 function favleriYukle(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }catch(e){ return []; } }
-function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); $("#kayitSay").textContent = a.length; }
+// Tesis ve ürün AYRI dünyalar: bir öğe aktif moda (ayarlar.tesis) ait mi?
+function modUyar(f){ return !!(f && f.tesis) === !!ayarlar.tesis; }
+function kayitSayiGuncelle(){ const el = $("#kayitSay"); if(el) el.textContent = favleriYukle().filter(modUyar).length; }
+function favleriKaydet(a){ localStorage.setItem(FAV_KEY, JSON.stringify(a)); kayitSayiGuncelle(); }
 function favMi(isim){ return favleriYukle().some(f => f.isim === isim); }
 
 function favToggle(fikir){
@@ -189,6 +192,7 @@ function tesisGuncelle(){
   if(alanInput) alanInput.placeholder = on
     ? "tesis alanı yaz (örn. 'mantar', 'akrep zehri'), boş bırak ya da serbest iste"
     : "alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste";
+  kayitSayiGuncelle();   // kayıt sayacı aktif moda göre
 }
 $("#chips").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if(!c) return;
@@ -196,6 +200,8 @@ $("#chips").addEventListener("click", e => {
 });
 $("#tesisKutu") && $("#tesisKutu").addEventListener("click", () => {
   ayarlar.tesis = !ayarlar.tesis; ayarKaydet(); tesisGuncelle();
+  // mod dünyası değişti: görünen listeyi (üretilenler/kayıtlar) tazele
+  if(mod === "kayit") cizKayitlilar(); else cizFikirler(sonUretilen);
 });
 $("#clear").addEventListener("click", () => { alanInput.value = ""; alanInput.focus(); });
 
@@ -346,12 +352,13 @@ function basligiGuncelle(){
 }
 function cizFikirler(list){
   out.innerHTML = "";
-  if(!list || !list.length){
-    out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>Fikir Üret</b>'e bas.</div>`;
+  const gosterilecek = (list || []).filter(modUyar);   // sadece aktif moda (ürün/tesis) ait olanlar
+  if(!gosterilecek.length){
+    out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">✦</span></div>Yukarıdan bir alan seç (ya da boş bırak)<br/>ve <b>${ayarlar.tesis ? "Tesis Üret" : "Fikir Üret"}</b>'e bas.</div>`;
     basligiGuncelle();
     return;
   }
-  list.forEach((f, i) => { const el = fikirKart(f); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
+  gosterilecek.forEach((f, i) => { const el = fikirKart(f); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
   basligiGuncelle();
 }
 // transformers.js: kayıtlı fikirlerde ANLAMSAL arama — kelime birebir geçmese de anlamca bulur.
@@ -370,9 +377,9 @@ async function anlamsalAra(){
 }
 function cizKayitlilar(){
   statusEl.textContent = "";
-  const hepsi = favleriYukle();
+  const hepsi = favleriYukle().filter(modUyar);   // aktif moda (ürün/tesis) ait kayıtlar
   out.innerHTML = "";
-  if(!hepsi.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
+  if(!hepsi.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>${ayarlar.tesis ? "Henüz kayıtlı tesis fikrin yok." : "Henüz kaydın yok."}<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
   // Arama kutusu (yeniden çizimde focus + imleç geri yüklenir)
   const araSatir = document.createElement("div");
   araSatir.className = "kayitarasatir";

@@ -605,6 +605,39 @@ console.log("\n#HIZ — Hızlı kısa yol + motor takılmaz");
   ok("beklenmedik hatada 'Tekrar dene' sunulur", !!w.document.querySelector("#status .retry"));
 })();
 
+// ---- Tesis/ürün AYRI dünya: üretilenler ve kayıtlar karışmaz ----
+console.log("\n#AYRIM — Tesis ve ürün ayrı dünya");
+(function(){
+  const w = yeniDom();
+  w.favToggle({ isim: "Ürün Kayıt", ne: "x", neyden: "a+b" });               // ürün (tesis yok)
+  w.favToggle({ isim: "Tesis Kayıt", ne: "y", neyden: "c+d", tesis: true }); // tesis
+
+  // Kayıtlılar — ürün modunda sadece ürün kaydı görünür
+  w.ayarSet("tesis", false); w.setMod("kayit");
+  let html = w.document.querySelector("#out").innerHTML;
+  ok("ürün modunda kayıtlarda ürün görünür", /Ürün Kayıt/.test(html));
+  ok("ürün modunda tesis kaydı GİZLİ (karışmaz)", !/Tesis Kayıt/.test(html));
+  ok("kayıt sayacı ürün modunda 1", w.document.querySelector("#kayitSay").textContent === "1");
+
+  // Tesis moduna geç — sadece tesis kaydı görünür
+  w.ayarSet("tesis", true); w.cizKayitlilar();
+  html = w.document.querySelector("#out").innerHTML;
+  ok("tesis modunda kayıtlarda tesis görünür", /Tesis Kayıt/.test(html));
+  ok("tesis modunda ürün kaydı GİZLİ (karışmaz)", !/Ürün Kayıt/.test(html));
+  w.kayitSayiGuncelle();
+  ok("kayıt sayacı tesis modunda 1", w.document.querySelector("#kayitSay").textContent === "1");
+
+  // Üretilen (Yeni Fikirler) listesi de aktif moda göre filtrelenir
+  const karisik = [{ isim: "ÜrünFikir", ne: "x" }, { isim: "TesisFikir", ne: "y", tesis: true }];
+  w.setMod("yeni");
+  w.ayarSet("tesis", false); w.cizFikirler(karisik);
+  let o = w.document.querySelector("#out").innerHTML;
+  ok("Yeni Fikirler ürün modunda sadece ürün fikri", /ÜrünFikir/.test(o) && !/TesisFikir/.test(o));
+  w.ayarSet("tesis", true); w.cizFikirler(karisik);
+  o = w.document.querySelector("#out").innerHTML;
+  ok("Yeni Fikirler tesis modunda sadece tesis fikri", /TesisFikir/.test(o) && !/ÜrünFikir/.test(o));
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);
