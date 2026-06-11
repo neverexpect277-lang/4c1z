@@ -525,6 +525,48 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("eleme kapalı ayarı kontrole yansıdı", w2.document.querySelector('[data-ayar="eleme"]').checked === false);
 })();
 
+// ---- Üretim Tesisi modu (ayrı ajan ordusu + ayrı çerçeve) ----
+console.log("\n#TESİS — Üretim Tesisleri modu");
+(function(){
+  const w = yeniDom();
+
+  // 1) Prompt çerçevesi tesise döner (4 aşama)
+  const u = w.ureticiPrompt("mantar", [], "", [], 6, "", null, "", "", true);
+  ok("üretici tesis çerçevesine geçer", /ÜRETİM TESİSİ yatırım/.test(u.sistem) && /3,5M/.test(u.sistem));
+  const uUrun = w.ureticiPrompt("mutfak", [], "", [], 6, "", null, "", "", false);
+  ok("tesis kapalıyken ürün çerçevesi korunur (regresyon)", /ürün mucitisin/.test(uUrun.sistem));
+  const e = w.elestirmenPrompt("", [{ isim: "x" }], "", false, true);
+  ok("kırmızı takım tesiste YATIRIM DENETÇİSİ olur", /YATIRIM DENETÇİSİ/.test(e.sistem));
+  const ua = w.ustAkilPrompt("", [{ isim: "x" }], "", "dengeli", "", true);
+  ok("üst akıl tesis bağlamına geçer", /üretim tesisi fikirleri/.test(ua.sistem));
+  ok("üst akılda Çavuş↔Zeyneb diyaloğu korunur", /ÇAVUŞ↔ZEYNEB/.test(ua.sistem) && /ZEYNEB/.test(ua.sistem));
+  const uz = w.uzmanHeyetiPrompt("", { isim: "x" }, "", "", "", 34, false, true);
+  ok("uzman heyeti tesiste Ziraat+Teşvik heyetine döner", /Ziraat\/Su Ürünleri/.test(uz.sistem) && /Teşvik Danışmanı/.test(uz.sistem));
+
+  // 2) Tesis ajan ordusu ayrı havuzdan seçilir (ürün personaları sahaya inmez)
+  w.ayarSet("tesis", true);
+  const tp = w.personaSec();
+  ok("tesis modunda ajanlar tesis havuzundan gelir", tp.every(p => /ziraat|su ürünleri|biyoteknoloji|gıda|hayvancılık|ihracat|teşvik|maliyetçi|pazar|sürdürülebilir/i.test(p)));
+  ok("ürün personaları (DIY/maker) tesiste sahaya İNMEZ", !tp.some(p => /DIY\/maker|oyun tasarımcısı/.test(p)));
+  w.ayarSet("tesis", false);
+
+  // 3) Kutu chip'leri ve buton etiketini değiştirir
+  w.ayarSet("tesis", true); w.tesisGuncelle();
+  const tChips = [...w.document.querySelectorAll("#chips .chip")].map(c => c.textContent);
+  ok("tesis açıkken chip'ler tesis alanlarına döner", tChips.includes("Mantar") && tChips.includes("Biyoteknoloji"));
+  ok("üret butonu 'Tesis Üret' olur", w.document.querySelector("#gen").textContent === "Tesis Üret");
+  w.ayarSet("tesis", false); w.tesisGuncelle();
+  const pChips = [...w.document.querySelectorAll("#chips .chip")].map(c => c.textContent);
+  ok("tesis kapalıyken ürün chip'leri geri gelir", pChips.includes("Mutfak") && !pChips.includes("Mantar"));
+
+  // 4) Kart etiketleri tesiste uyarlanır (şema aynı)
+  const tKart = w.kartHTML({ isim: "Mantar Tesisi", ne: "istiridye mantarı", neyden: "miselyum+iklim odası", derde: "organik pazar", maliyet: "≈2M₺", patent: "IPARD desteği", tesis: true }, false);
+  ok("tesis kartında 'Ne üretir / girdi' etiketi", /Ne üretir \/ girdi/.test(tKart) && /Pazar \/ alıcı/.test(tKart));
+  ok("tesis kartında 'Ruhsat / teşvik' etiketi", /Ruhsat \/ teşvik/.test(tKart) && /Kurulum \+ birim maliyet/.test(tKart));
+  const pKart = w.kartHTML({ isim: "Ürün", ne: "x", neyden: "a+b", derde: "dert", patent: "yok" }, false);
+  ok("ürün kartında klasik 'Neyden' etiketi korunur", /Neyden/.test(pKart) && /Patent durumu/.test(pKart) && !/Ne üretir/.test(pKart));
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);

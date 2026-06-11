@@ -63,20 +63,10 @@
       <input id="alan" placeholder="alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste" autocomplete="off" />
       <button class="clearx" id="clear" title="Temizle">✕</button>
     </div>
-    <div class="chips" id="chips">
-      <span class="chip sinirsiz" data-v="">Sınırsız</span>
-      <span class="chip" data-v="mutfak">Mutfak</span>
-      <span class="chip" data-v="banyo">Banyo</span>
-      <span class="chip" data-v="çanta / cep">Çanta</span>
-      <span class="chip" data-v="araba">Araba</span>
-      <span class="chip" data-v="çocuk">Çocuk</span>
-      <span class="chip" data-v="yaşlılar">Yaşlı</span>
-      <span class="chip" data-v="sokak / dışarı">Sokak</span>
-      <span class="chip" data-v="ev">Ev</span>
-      <span class="chip" data-v="ofis / okul">Ofis</span>
-      <span class="chip" data-v="bahçe / balkon">Bahçe</span>
-      <span class="chip" data-v="evcil hayvan">Evcil</span>
-    </div>
+    <button type="button" class="tesiskutu" id="tesisKutu" aria-pressed="false">
+      🏭 Üretim Tesisleri <span class="tesisalt">— 3,5M'a kurulabilir niş tesis fikirleri arama motoru</span>
+    </button>
+    <div class="chips" id="chips"></div>
     <label class="tt kt">Mod (kalıp) — fikirleri bir tarza yönlendir</label>
     <div class="chips" id="kaliplar"></div>
     <label class="tt kt" for="kaynak">Kaynak (isteğe bağlı) — not / belge / ürün açıklaması yapıştır, fikirler buna dayansın</label>

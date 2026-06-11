@@ -26,7 +26,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false, hiz: "dengeli" };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false, hiz: "dengeli", tesis: false };
 // Hız profilleri (süreleri KULLANICI seçer): Hızlı ↔ Derin (iyi araştırma). Hepsi ms.
 const HIZ = {
   hizli:   { ilham: 5000,  ara: 12000, gemini: 14000, poll: 22000 },
@@ -48,9 +48,23 @@ const PERSONALAR = [
   "sağlık & hijyen uzmanı — temizlik, güvenlik ve sağlıklı yaşam açısından bakar.",
   "doğa/çiftçi gözü — bahçe, balkon, tarım ve açık hava ihtiyaçlarına odaklanır."
 ];
+// Üretim tesisi modunun KENDİ ajan ordusu — ürün personaları (maker, oyun tasarımcısı…) burada SAHAYA İNMEZ.
+const TESIS_PERSONALAR = [
+  "ziraat mühendisi — tarla/sera yetiştiriciliği, verim ve iklim uygunluğuna odaklanır.",
+  "su ürünleri mühendisi — balık/kabuklu/yosun çiftlikleri (kapalı devre/RAS) kurar.",
+  "biyoteknoloji uzmanı — zehir, enzim, mikroalg, doku kültürü gibi yüksek katma değerli biyo-madde üretir.",
+  "gıda mühendisi — kurutma/distilasyon/paketleme ile katma değerli işleme tesisi düşünür.",
+  "niş hayvancılık/veteriner — sülük, salyangoz, ipek böceği, arı ürünleri gibi az bilinen üretimlere bakar.",
+  "ihracat & dış ticaret uzmanı — hangi ürün hangi ülkeye, talep ve fiyat avantajına odaklanır.",
+  "tarım teşvik danışmanı — IPARD/TKDK/KOSGEB hibe ve desteklerini önceler.",
+  "yatırım maliyetçisi — kurulum (CAPEX), işletme gideri ve geri ödeme süresini hesaplar.",
+  "pazar/talep analisti — kilogram/gram fiyatı yüksek, niş pazar boşluklarını arar.",
+  "sürdürülebilir tarım uzmanı — atığı gelire çeviren döngüsel üretim kurar."
+];
 const HEYET_AJAN = 6;   // her turda sahaya inen persona sayısı (rotasyonla farklı kombinasyon)
 function personaSec(){
-  return [...PERSONALAR].sort(() => Math.random() - 0.5).slice(0, Math.min(HEYET_AJAN, PERSONALAR.length));
+  const havuz = ayarlar.tesis ? TESIS_PERSONALAR : PERSONALAR;
+  return [...havuz].sort(() => Math.random() - 0.5).slice(0, Math.min(HEYET_AJAN, havuz.length));
 }
 function ayarYukle(){ try{ const o = JSON.parse(localStorage.getItem(AYAR_KEY)); if(o) Object.assign(ayarlar, o); }catch(e){} }
 function ayarKaydet(){ try{ localStorage.setItem(AYAR_KEY, JSON.stringify(ayarlar)); }catch(e){} }
@@ -157,9 +171,31 @@ function favNotSet(isim, not){
 }
 
 // ---- chips & input ----
+// Ürün modu chip'leri (varsayılan) vs. Üretim Tesisi modu chip'leri
+const URUN_CHIPLER = [["","Sınırsız"],["mutfak","Mutfak"],["banyo","Banyo"],["çanta / cep","Çanta"],["araba","Araba"],["çocuk","Çocuk"],["yaşlılar","Yaşlı"],["sokak / dışarı","Sokak"],["ev","Ev"],["ofis / okul","Ofis"],["bahçe / balkon","Bahçe"],["evcil hayvan","Evcil"]];
+const TESIS_CHIPLER = [["","Sınırsız"],["mantar üretim tesisi","Mantar"],["su ürünleri / balık çiftliği","Su ürünleri"],["tıbbi ve aromatik bitki","Tıbbi bitki"],["biyoteknoloji / zehir / enzim","Biyoteknoloji"],["niş hayvancılık (sülük, salyangoz, ipek böceği)","Niş hayvancılık"],["böcek proteini üretimi","Böcek proteini"],["mikroalg (spirulina, klorella)","Mikroalg"],["esansiyel yağ distilasyon tesisi","Esans yağ"],["arıcılık / arı ürünleri (zehir, propolis)","Arı ürünleri"],["seracılık / dikey tarım","Sera / Dikey"]];
+function chipleriCiz(){
+  const host = $("#chips"); if(!host) return;
+  const set = ayarlar.tesis ? TESIS_CHIPLER : URUN_CHIPLER;
+  host.innerHTML = set.map(([v, ad]) =>
+    `<span class="chip${v === "" ? " sinirsiz" : ""}" data-v="${escapeHtml(v)}">${escapeHtml(ad)}</span>`).join("");
+}
+function tesisGuncelle(){
+  const on = !!ayarlar.tesis;
+  const k = $("#tesisKutu");
+  if(k){ k.classList.toggle("on", on); k.setAttribute("aria-pressed", on ? "true" : "false"); }
+  chipleriCiz();
+  const gen = $("#gen"); if(gen) gen.textContent = on ? "Tesis Üret" : "Fikir Üret";
+  if(alanInput) alanInput.placeholder = on
+    ? "tesis alanı yaz (örn. 'mantar', 'akrep zehri'), boş bırak ya da serbest iste"
+    : "alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste";
+}
 $("#chips").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if(!c) return;
   alanInput.value = c.dataset.v;
+});
+$("#tesisKutu") && $("#tesisKutu").addEventListener("click", () => {
+  ayarlar.tesis = !ayarlar.tesis; ayarKaydet(); tesisGuncelle();
 });
 $("#clear").addEventListener("click", () => { alanInput.value = ""; alanInput.focus(); });
 
@@ -209,15 +245,17 @@ function skorHTML(f){
 function muhHTML(f){
   if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
-  return `<div class="muhendislik"><div class="muhbaslik">Mühendislik</div>` +
-    sec("Nasıl yapılır", f.nasil) + sec("Tahmini maliyet", f.maliyet) +
-    sec("Benzer ürünler" + (f.benzerWeb ? " · web" : ""), f.benzer) +
+  const T = !!f.tesis;
+  return `<div class="muhendislik"><div class="muhbaslik">${T ? "Mühendislik & Yatırım" : "Mühendislik"}</div>` +
+    sec(T ? "Nasıl kurulur" : "Nasıl yapılır", f.nasil) +
+    sec(T ? "Kurulum + birim maliyet" : "Tahmini maliyet", f.maliyet) +
+    sec((T ? "Benzer tesisler" : "Benzer ürünler") + (f.benzerWeb ? " · web" : ""), f.benzer) +
     sec("Farklılaş", f.farklilas) +
-    sec("Talep / ilgi" + (f.benzerWeb ? " · web" : ""), f.talep) +
-    sec("Patent durumu" + (f.patentWeb ? " · web" : ""), f.patent) +
-    sec("Teknik gerçeklik", f.teknik) +
-    sec("İlk prototip adımı", f.prototip) +
-    sec("Açık kaynak yapı taşları", f.yapiTaslari) +
+    sec((T ? "İhracat / iç talep" : "Talep / ilgi") + (f.benzerWeb ? " · web" : ""), f.talep) +
+    sec((T ? "Ruhsat / teşvik" : "Patent durumu") + (f.patentWeb ? " · web" : ""), f.patent) +
+    sec(T ? "Teknik / biyolojik darboğaz" : "Teknik gerçeklik", f.teknik) +
+    sec(T ? "İlk pilot adımı" : "İlk prototip adımı", f.prototip) +
+    sec(T ? "Teşvik / kaynaklar" : "Açık kaynak yapı taşları", f.yapiTaslari) +
     sec("Sahadan ilham (üreticiyi besleyen gerçek sinyaller)", f.ilham) +
     `</div>`;
 }
@@ -246,6 +284,9 @@ async function pazarTara(el, f){
 }
 function kartHTML(f, kayitli){
   const sec = (b, v) => v ? `<div class="field"><b>${b}</b>${metin(v)}</div>` : "";
+  const L = f.tesis
+    ? { neyden: "Ne üretir / girdi", derde: "Pazar / alıcı", nedenYok: "Neden herkes kurmuyor", vayBe: "Kâr / değer noktası" }
+    : { neyden: "Neyden", derde: "Hangi derde", nedenYok: "Neden hâlâ yok", vayBe: "Vay be sebebi" };
   return `
     <h2>${metin(f.isim || "İsimsiz")}
       <button class="star ${favMi(f.isim) ? "on" : ""}" data-act="fav" aria-label="Kaydet"></button>
@@ -254,11 +295,11 @@ function kartHTML(f, kayitli){
     ${f.benzerNot ? `<div class="field benzernot"><b>Anlamca benzer kaydın</b>${metin(f.benzerNot)}</div>` : ""}
     <p class="ne">${metin(f.ne || "")}</p>
     ${diyalogHTML(f.diyalog)}
-    ${sec("Neyden", f.neyden)}
-    ${sec("Hangi derde", f.derde)}
-    ${sec("Neden hâlâ yok", f.nedenYok)}
+    ${sec(L.neyden, f.neyden)}
+    ${sec(L.derde, f.derde)}
+    ${sec(L.nedenYok, f.nedenYok)}
     ${muhHTML(f)}
-    ${f.vayBe ? `<div class="field vaybe"><b>Vay be sebebi</b>${metin(f.vayBe)}</div>` : ""}
+    ${f.vayBe ? `<div class="field vaybe"><b>${L.vayBe}</b>${metin(f.vayBe)}</div>` : ""}
     ${kayitli ? puanHTML(f) + durumHTML(f) + notHTML(f) : ""}
     <div class="cardfoot">
       <button class="mini" data-act="kopya">Kopyala</button>
@@ -655,7 +696,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
   const arama = genel.length ? fmt(genel) : "";
   const patentArama = patent.length ? fmt(patent) : "";
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet, ayarlar.tesis);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["skor", "hukum", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
@@ -877,7 +918,7 @@ async function uret(){
   if(ayarlar.heyet){
     // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
     const dilimler = await Promise.all(personaSec().map(persona => {
-      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge);
+      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
       return zincir(p.sistem, p.kullanici);
     }));
     const havuz = [];
@@ -885,7 +926,7 @@ async function uret(){
     if(havuz.length) adaylar = havuz;
   }
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham, yonerge);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham, yonerge, ayarlar.tesis);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
@@ -899,7 +940,7 @@ async function uret(){
   let suzulmus = null;
   if(adaylar && ayarlar.eleme){
     for(let d = 1; d <= 2 && !suzulmus; d++){
-      const p = elestirmenPrompt(alan, adaylar, kaynak, ayarlar.heyet);
+      const p = elestirmenPrompt(alan, adaylar, kaynak, ayarlar.heyet, ayarlar.tesis);
       suzulmus = await zincir(p.sistem, p.kullanici);
       if(!suzulmus && d < 2) await bekle(3000);
     }
@@ -913,7 +954,7 @@ async function uret(){
   let fikirler = null;
   if(suzulmus){
     for(let d = 1; d <= 2 && !fikirler; d++){
-      const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton, ilham);
+      const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton, ilham, ayarlar.tesis);
       fikirler = await zincir(p.sistem, p.kullanici);
       if(!fikirler && d < 2) await bekle(3000);
     }
@@ -924,6 +965,7 @@ async function uret(){
   // 4. AŞAMA: UZMAN HEYETİ — fikri web destekli mühendislik gözüyle zenginleştir (diyalog korunur)
   if(fikirler && fikirler.length){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
+    if(ayarlar.tesis) fikirler[0].tesis = true; // tesis kartı → etiketler tesise uyarlanır
     if(ilham) fikirler[0].ilham = ilham;       // sahadan beslenen sinyaller (kartta gösterilir)
     await uzmanlastir(alan, fikirler[0], kaynak, ayarlar.web);
     asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
@@ -998,6 +1040,7 @@ if("serviceWorker" in navigator){
 try{ favleriKaydet(favleriYukle()); }catch(e){}
 try{ oturumYukle(); }catch(e){}
 try{ ayarYukle(); }catch(e){}
+try{ tesisGuncelle(); }catch(e){}
 try{ kaliplarCiz(); }catch(e){}
 try{ akisKur(); }catch(e){}
 try{ cizTemalar(); }catch(e){}
