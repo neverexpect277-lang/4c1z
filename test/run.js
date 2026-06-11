@@ -691,6 +691,48 @@ function icerikStub(w, cag){
   ok("ürün modunda ordu OTOMATİK açılmaz (tek üretici, persona yok)", uretici2.length === 1 && !cag2.some(t => /BAKIŞ AÇIN/.test(t)));
 })();
 
+// ---- ALTYAPI: serverless zincir sağlamlığı (api/gen.js, api/poll.js) ----
+console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
+(async function(){
+  const realFetch = global.fetch;
+  const mockRes = () => ({ code: 0, payload: null, status(c){ this.code = c; return this; }, json(p){ this.payload = p; return this; } });
+  try{
+    // api/gen.js: ilk model takılır/patlar → zincir sıradakine geçer, signal'lı çağırır
+    const genHandler = require(path.join(REPO, "api/gen.js"));
+    let n = 0, signalVar = false;
+    global.fetch = async (url, opts) => {
+      n++; if(opts && opts.signal) signalVar = true;
+      if(n === 1) throw new Error("ilk model takıldı");        // abort/ağ hatası
+      return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: "ok" }] } }] }) };
+    };
+    let res = mockRes();
+    await genHandler({ method: "POST", body: { text: "merhaba" } }, res);
+    ok("gen: takılan modeli atlayıp sıradakinden cevap döner", res.code === 200 && Array.isArray(res.payload.candidates));
+    ok("gen: çağrılar timeout'lu (AbortController signal'i var)", signalVar === true);
+
+    // api/gen.js: tüm modeller kota dolu (429) → son hata kodu döner (sonsuz beklemez)
+    global.fetch = async () => ({ ok: false, status: 429, json: async () => ({ error: "kota" }) });
+    res = mockRes();
+    await genHandler({ method: "POST", body: { text: "x" } }, res);
+    ok("gen: tüm modeller 429 → 429 döner (kilitlenmez)", res.code === 429);
+
+    // api/poll.js: ilk model takılır → sıradaki modelden metin döner, signal'lı
+    const pollHandler = require(path.join(REPO, "api/poll.js"));
+    let m = 0, pollSignal = false;
+    global.fetch = async (url, opts) => {
+      m++; if(opts && opts.signal) pollSignal = true;
+      if(m === 1) throw new Error("poll ilk model takıldı");
+      return { ok: true, status: 200, text: async () => "merhaba dünya" };
+    };
+    res = mockRes();
+    await pollHandler({ method: "POST", body: { messages: [{ role: "user", content: "hi" }] } }, res);
+    ok("poll: takılan modeli atlayıp sıradakinden metin döner", res.code === 200 && res.payload.text === "merhaba dünya");
+    ok("poll: çağrılar timeout'lu (AbortController signal'i var)", pollSignal === true);
+  } finally {
+    global.fetch = realFetch;
+  }
+})();
+
 (async function(){
   const w = yeniDom();
   const { cag, state } = stubUret(w);
