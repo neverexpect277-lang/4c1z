@@ -239,6 +239,33 @@ async function arxiv(q){
   } catch (e) { return []; }
 }
 
+// Jenerik basit-ajan: tek URL → JSON → {baslik,ozet}. Alakasız sorguda boş döner (kendi-kendine kapanır).
+async function basitAjan(k, q){
+  try{
+    const r = await zamanli(k.url(q), { headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)", "Accept": "application/json" } }, 6000);
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (k.pick(j) || []).filter(x => x && x.baslik && x.baslik.length > 7).slice(0, 2);
+  }catch(e){ return []; }
+}
+// Her alandan, anahtarsız, kendi-kendine kapanan ajan ordusu (yalnız konuyla ilgiliyse sonuç verir)
+const EK_KAYNAKLAR = [
+  { url: q => "https://itunes.apple.com/search?limit=3&term=" + encodeURIComponent(q), pick: j => (j.results || []).map(x => ({ baslik: "Uygulama: " + temizle(x.trackName || ""), ozet: temizle(x.primaryGenreName || "") })) },
+  { url: q => "https://world.openfoodfacts.org/cgi/search.pl?json=1&page_size=3&search_terms=" + encodeURIComponent(q), pick: j => (j.products || []).map(x => ({ baslik: "Gıda: " + temizle(x.product_name || ""), ozet: temizle(x.brands || "") })) },
+  { url: q => "https://www.themealdb.com/api/json/v1/1/search.php?s=" + encodeURIComponent(q), pick: j => (j.meals || []).map(x => ({ baslik: "Yemek: " + temizle(x.strMeal || ""), ozet: temizle(x.strArea || "") })) },
+  { url: q => "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + encodeURIComponent(q), pick: j => (j.drinks || []).map(x => ({ baslik: "İçecek: " + temizle(x.strDrink || ""), ozet: temizle(x.strCategory || "") })) },
+  { url: q => "https://crates.io/api/v1/crates?per_page=3&q=" + encodeURIComponent(q), pick: j => (j.crates || []).map(x => ({ baslik: "crate: " + temizle(x.name || ""), ozet: temizle(x.description || "") })) },
+  { url: q => "https://gitlab.com/api/v4/projects?per_page=3&order_by=star_count&search=" + encodeURIComponent(q), pick: j => (Array.isArray(j) ? j : []).map(x => ({ baslik: "GitLab: " + temizle(x.path_with_namespace || ""), ozet: temizle(x.description || "") })) },
+  { url: q => "https://api.crossref.org/works?rows=3&query=" + encodeURIComponent(q), pick: j => ((j.message && j.message.items) || []).map(x => ({ baslik: "Yayın: " + temizle((x.title && x.title[0]) || ""), ozet: temizle(x.publisher || "") })) },
+  { url: q => "https://lookup.dbpedia.org/api/search?format=json&maxResults=3&query=" + encodeURIComponent(q), pick: j => (j.docs || []).map(x => ({ baslik: "DBpedia: " + temizle((Array.isArray(x.label) ? x.label[0] : x.label) || ""), ozet: temizle((x.comment && x.comment[0]) || "") })) },
+  { url: q => "https://gutendex.com/books?search=" + encodeURIComponent(q), pick: j => (j.results || []).map(x => ({ baslik: "Kitap(G): " + temizle(x.title || ""), ozet: temizle((x.authors && x.authors[0] && x.authors[0].name) || "") })) },
+  { url: q => "https://archive.org/advancedsearch.php?output=json&rows=3&fl[]=title&q=" + encodeURIComponent(q), pick: j => ((j.response && j.response.docs) || []).map(x => ({ baslik: "Arşiv: " + temizle(x.title || "") })) },
+  { url: q => "https://musicbrainz.org/ws/2/recording?fmt=json&limit=3&query=" + encodeURIComponent(q), pick: j => (j.recordings || []).map(x => ({ baslik: "Müzik: " + temizle(x.title || ""), ozet: temizle((x["artist-credit"] && x["artist-credit"][0] && x["artist-credit"][0].name) || "") })) },
+  { url: q => "https://api.gdeltproject.org/api/v2/doc/doc?format=json&maxrecords=3&query=" + encodeURIComponent(q), pick: j => (j.articles || []).map(x => ({ baslik: "Haber: " + temizle(x.title || ""), ozet: temizle(x.domain || "") })) },
+  { url: q => "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&pagesize=3&site=diy&q=" + encodeURIComponent(q), pick: j => (j.items || []).map(x => ({ baslik: "DIY: " + temizle(x.title || ""), ozet: "skor " + (x.score || 0) })) },
+  { url: q => "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&pagesize=3&site=electronics&q=" + encodeURIComponent(q), pick: j => (j.items || []).map(x => ({ baslik: "Elektronik: " + temizle(x.title || ""), ozet: "skor " + (x.score || 0) })) }
+];
+
 module.exports = async (req, res) => {
   const q = String((req.query && req.query.q) || "").slice(0, 200).trim();         // Türkçe (web)
   const en = String((req.query && req.query.en) || "").slice(0, 200).trim();        // İngilizce (tech kaynakları)
@@ -269,6 +296,9 @@ module.exports = async (req, res) => {
       ]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2),
         wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3));
+      // her alandan kendi-kendine kapanan ek ajan ordusu (alakasızsa susar)
+      const ekDilimler = await Promise.all(EK_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
+      for(const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 1));
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });

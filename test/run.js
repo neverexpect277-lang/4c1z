@@ -611,7 +611,7 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
       return { ok: true, json: async () => ["uv dolap", ["UV Cabinet"], ["Bir dolap türü"], ["http://x"]] };
     if(/api\.github\.com/.test(url))
       return { ok: true, json: async () => ({ items: [{ full_name: "user/akilli-dolap", description: "akıllı dolap projesi", stargazers_count: 42, forks_count: 7, pushed_at: "2024-05-01T00:00:00Z", topics: ["iot", "tarim"] }] }) };
-    if(/api\.stackexchange\.com/.test(url))
+    if(/api\.stackexchange\.com/.test(url) && /site=stackoverflow/.test(url))
       return { ok: true, json: async () => ({ items: [{ title: "dolap nem sorunu", score: 5, answer_count: 2 }] }) };
     if(/hn\.algolia\.com/.test(url))
       return { ok: true, json: async () => ({ hits: [{ title: "Show HN: Akıllı Dolap", points: 120, num_comments: 33, url: "http://x.co" }] }) };
@@ -627,6 +627,12 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
       return { ok: true, json: async () => ({ docs: [{ title: "Smart Home Design", author_name: ["A. Yazar"] }] }) };
     if(/api\.conceptnet\.io/.test(url))
       return { ok: true, json: async () => ({ edges: [{ end: { label: "drying clothes" }, rel: { label: "UsedFor" } }] }) };
+    if(/itunes\.apple\.com/.test(url))
+      return { ok: true, json: async () => ({ results: [{ trackName: "Cabinet App", primaryGenreName: "Utilities" }] }) };
+    if(/crates\.io/.test(url))
+      return { ok: true, json: async () => ({ crates: [{ name: "cabinet-rs", description: "rust dolap kütüphanesi" }] }) };
+    if(/site=diy/.test(url))
+      return { ok: true, json: async () => ({ items: [{ title: "DIY cabinet dehumidifier", score: 12 }] }) };
     if(/export\.arxiv\.org/.test(url))
       return { ok: true, text: async () => "<feed><entry><title>Smart Cabinet Sensing</title><summary>nem ölçümü</summary></entry></feed>" };
     if(/api\.datamuse\.com/.test(url))
@@ -648,6 +654,9 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("Semantic Scholar eklendi (geniş bilimsel)", s1.sonuclar.some(s => /Makale: Humidity Sensing/.test(s.baslik)));
   ok("Open Library eklendi (kavram olgunluğu)", s1.sonuclar.some(s => /Kitap: Smart Home Design/.test(s.baslik)));
   ok("ConceptNet eklendi (kavram ilişkisi → harman yakıtı)", s1.sonuclar.some(s => /İlişkili: drying clothes/.test(s.baslik)));
+  ok("iTunes ajanı eklendi (uygulama/medya domeni)", s1.sonuclar.some(s => /Uygulama: Cabinet App/.test(s.baslik)));
+  ok("crates.io ajanı eklendi (yazılım domeni)", s1.sonuclar.some(s => /crate: cabinet-rs/.test(s.baslik)));
+  ok("DIY StackExchange ajanı eklendi (prototip/maker domeni)", s1.sonuclar.some(s => /DIY: DIY cabinet/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
