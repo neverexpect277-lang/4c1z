@@ -621,7 +621,7 @@ async function kurGetir(){
 async function araGetir(q, en){
   try{
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 12000);
+    const to = setTimeout(() => ctrl.abort(), 45000);
     let url = "/api/ara?q=" + encodeURIComponent(q);
     if(en) url += "&en=" + encodeURIComponent(en);
     const r = await fetch(url, { signal: ctrl.signal });
@@ -821,7 +821,7 @@ async function ureticiIlham(alan){
   if(!ayarlar.web) return "";
   const konu = alan || ILHAM_SEED[Math.floor(Math.random() * ILHAM_SEED.length)];
   let sonuc = [];
-  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 6000))]); }catch(e){ sonuc = []; }
+  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 40000))]); }catch(e){ sonuc = []; }
   if(!sonuc.length) return "";
   const al = (re, n) => sonuc.filter(s => re.test(s.baslik)).slice(0, n).map(s => s.baslik.replace(/^[^:]+:\s*/, "").trim()).filter(Boolean);
   const iliski = al(/^İlişkili:/, 5);

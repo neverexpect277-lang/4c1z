@@ -189,6 +189,37 @@ async function openLibrary(q){
   }catch(e){ return []; }
 }
 
+// YouTube — videoyu bulur ve İÇİNDEKİ bilgiyi (altyazı) süzer. Anahtarsız (resmi API yok).
+// YouTube botları engelleyebilir; her adım hata olursa boş döner (kırılmaz).
+async function youtubeAltyazi(id){
+  try{
+    const r = await zamanli("https://www.youtube.com/watch?v=" + id + "&hl=en", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)", "Accept-Language": "en" }
+    }, 8000);
+    const html = await r.text();
+    const m = html.match(/"captionTracks":\[\{"baseUrl":"(.*?)"/);
+    if(!m) return "";
+    const url = JSON.parse('"' + m[1] + '"');                 // & vb. çöz
+    const t = await zamanli(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)" } }, 6000);
+    const xml = await t.text();
+    return temizle([...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)].map(x => x[1]).join(" ")).slice(0, 200);
+  }catch(e){ return ""; }
+}
+async function youtube(q){
+  try{
+    const r = await zamanli("https://www.youtube.com/results?hl=tr&search_query=" + encodeURIComponent(q), {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)", "Accept-Language": "tr,en" }
+    }, 9000);
+    if(!r.ok) return [];
+    const html = await r.text();
+    const re = /"videoRenderer":\{"videoId":"([\w-]{11})"[\s\S]*?"title":\{"runs":\[\{"text":"([^"]+)"/g;
+    const out = []; const idler = []; let m;
+    while((m = re.exec(html)) && out.length < 3){ idler.push(m[1]); out.push({ baslik: "YouTube: " + temizle(m[2]), ozet: "" }); }
+    if(idler[0]){ const alt = await youtubeAltyazi(idler[0]); if(alt) out[0].ozet = "video içeriği: " + alt; }
+    return out.filter(x => x.baslik.length > 10);
+  }catch(e){ return []; }
+}
+
 // ConceptNet — kavramlar arası ilişkiler (X→kullanım/parça/ilişki). Fikir harmanı için yakıt. Anahtarsız.
 async function conceptnet(q){
   try{
@@ -290,12 +321,12 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, rd, a, w, wd, np, ss, ol, cn] = await Promise.all([
+      const [g, s, h, rd, a, w, wd, np, ss, ol, cn, yt] = await Promise.all([
         cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz),
-        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz), conceptnet(enTemiz)
+        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz), conceptnet(enTemiz), youtube(temiz)
       ]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2),
-        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3));
+        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3), yt.slice(0, 2));
       // her alandan kendi-kendine kapanan ek ajan ordusu (alakasızsa susar)
       const ekDilimler = await Promise.all(EK_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
       for(const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 1));

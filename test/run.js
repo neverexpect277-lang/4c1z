@@ -629,6 +629,12 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
       return { ok: true, json: async () => ({ docs: [{ title: "Smart Home Design", author_name: ["A. Yazar"] }] }) };
     if(/api\.conceptnet\.io/.test(url))
       return { ok: true, json: async () => ({ edges: [{ end: { label: "drying clothes" }, rel: { label: "UsedFor" } }] }) };
+    if(/youtube\.com\/results/.test(url))
+      return { ok: true, text: async () => '"videoRenderer":{"videoId":"abcdef12345","x":1,"title":{"runs":[{"text":"Akıllı dolap yapımı"}]}}' };
+    if(/youtube\.com\/watch/.test(url))
+      return { ok: true, text: async () => '"captionTracks":[{"baseUrl":"https://yt.test/timedtext?v=abcdef12345"}]' };
+    if(/timedtext/.test(url))
+      return { ok: true, text: async () => '<transcript><text start="0">dolap nem sorunu çözümü mıknatıslı conta</text></transcript>' };
     if(/itunes\.apple\.com/.test(url))
       return { ok: true, json: async () => ({ results: [{ trackName: "Cabinet App", primaryGenreName: "Utilities" }] }) };
     if(/crates\.io/.test(url))
@@ -659,6 +665,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("iTunes ajanı eklendi (uygulama/medya domeni)", s1.sonuclar.some(s => /Uygulama: Cabinet App/.test(s.baslik)));
   ok("crates.io ajanı eklendi (yazılım domeni)", s1.sonuclar.some(s => /crate: cabinet-rs/.test(s.baslik)));
   ok("DIY StackExchange ajanı eklendi (prototip/maker domeni)", s1.sonuclar.some(s => /DIY: DIY cabinet/.test(s.baslik)));
+  ok("YouTube ajanı videoyu buldu", s1.sonuclar.some(s => /YouTube: Akıllı dolap yapımı/.test(s.baslik)));
+  ok("YouTube ajanı video İÇİNDEKİ bilgiyi (altyazı) süzdü", s1.sonuclar.some(s => /video içeriği: dolap nem sorunu/.test(s.ozet || "")));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
