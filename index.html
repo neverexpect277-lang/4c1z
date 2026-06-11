@@ -26,17 +26,34 @@
   <details class="ogren" id="ogren">
     <summary class="ogrenbas">Nasıl çalışır? <span class="ogrenok"></span></summary>
     <div class="ogrenic">
-      <p><b>4 aşamalı üst akıl:</b> Üretici 6 aday çıkarır → Eleştirmen zayıfları eler → Üst akıl en iyi 1'i seçip Çavuş↔Zeyneb diyaloğuyla sunar → Uzman heyeti web destekli mühendislikle zenginleştirir.</p>
-      <p><b>Anahtarsız ajanlar:</b> Web arama, GitHub, Reddit, Hacker News, Stack Exchange, Google Patents, arXiv, güncel kur — hepsi API anahtarı gerektirmez, çıktı %100 Türkçe.</p>
-      <p><b>İpuçları:</b></p>
+      <p><b>4 aşamalı motor:</b> Önce araştırma ordusu o alanı tarar ve gerçek sinyaller toplar (aşağıda); sonra <b>Üretici</b> bu sinyallerden adaylar çıkarır → <b>Eleştirmen</b> 4 mercekten (teknik/pazar/maliyet/özgünlük) zayıfları eler → <b>Üst akıl</b> en iyi 1'i seçip Çavuş↔Zeyneb diyaloğuyla sunar → <b>Uzman heyeti</b> web destekli mühendislikle (maliyet, patent, teknik gerçeklik, prototip) zenginleştirir.</p>
+
+      <p><b>Anahtarsız ajanlar (30+):</b> Hiçbir API anahtarı gerektirmez, çıktı %100 Türkçe. Web arama (SearXNG/DuckDuckGo/Wikipedia), GitHub, Reddit, Hacker News, Stack Exchange, Google Patents, arXiv, Wikidata, Semantic Scholar, npm, Open Library, ConceptNet (kavram ilişkileri), Crossref, GitLab, iTunes, gıda/kitap/müzik/haber ajanları, güncel kur ve daha fazlası. Her ajan alakasız sorguda sessizce susar.</p>
+
+      <p><b>Çalışma prensibi — araştırma üretime besleniyor:</b> Üretmeden önce ordu o alanı tarar; <b>ConceptNet ilişkileri</b> (harman için) + <b>gerçek dertler/sorular</b> (Reddit, DIY, forumlar) toplanıp üreticiye ve üst akla verilir. Bu sinyaller her kartta <b>"Sahadan ilham"</b> alanında görünür — yani fikir havadan değil, sahadan doğar.</p>
+
+      <p><b>Akıllı niyet:</b> "Hangi alan?" kutusuna serbest yazabilirsin:</p>
       <ul>
-        <li><b>Hangi alan?</b> — boş bırak (sınırsız) ya da örn. "mutfak" yaz.</li>
-        <li><b>Mod (kalıp)</b> — ucuz prototip / yüksek teknoloji / sosyal fayda gibi bir tarza yönlendir.</li>
-        <li><b>Kaynak</b> — bir not yapıştır ya da bir link koyup "Linki çek"e bas; fikirler ona dayanır.</li>
-        <li><b>Motoru ayarla</b> — aday sayısı, ton, eleme/web; ayrıca otomasyon (toplu üretim, yüksek skoru oto-kaydet).</li>
-        <li><b>Pazarı tara</b> — bir fikrin rakip/ilgi durumunu canlı web'den görür.</li>
-        <li><b>★ Kaydet</b> — beğendiğin fikri sakla; puan/durum/not ekle. Beğenilerin sonraki üretimleri besler.</li>
+        <li>Boş bırak → her alandan sınırsız.</li>
+        <li>Bir alan/tema yaz (örn. "mutfak", "arıcılık") → listede olmasa da o alanda üretir.</li>
+        <li><b>"buzdolabı ve drone'u birleştir"</b> / "askı + mıknatıs" → o ürünleri zekice harmanlar (basit/saçma değil).</li>
       </ul>
+
+      <p><b>Motoru ayarla (akış + otomasyon):</b> 4 aşamayı düzenleyebilirsin —</p>
+      <ul>
+        <li>Aday sayısı (3/6/9), eleme aç/kapa, diyalog tonu (sert/dengeli/mizahi), web araması aç/kapa.</li>
+        <li><b>Otomasyon:</b> yüksek skoru oto-kaydet; ayrıca "Fikir Üret" yanındaki <b>"Otomatik üret"</b> butonu arka arkaya birden çok fikir üretir.</li>
+        <li><b>Anlamsal mod</b> (tarayıcıda yapay zekâ, anahtarsız): aynı/benzer ürünü tekrar vermez, üretilene anlamca benzer kaydı uyarır, kaynağı anlamca seçer, kayıtlarda anlamsal arama yapar. İlk açışta küçük bir model iner.</li>
+        <li><b>Yerel LLM</b> (deneysel): güçlü cihazda fikirleri tamamen tarayıcıda üretir; yoksa buluta düşer.</li>
+        <li><b>Heyet modu (çok ajan):</b> üretici 10 personalık ekipten (mucit, tasarımcı, girişimci, mühendis, sürdürülebilirlik, erişilebilirlik…) her turda birkaçını paralel çalıştırır → daha çeşitli. Daha yavaştır.</li>
+        <li><b>Sosyal medya ekibi:</b> YouTube (videoyu bulur + <b>altyazıdan</b> bilgi süzer), Bluesky, Lemmy, Instagram/TikTok (en iyi çaba). Daha yavaştır.</li>
+      </ul>
+
+      <p><b>Kaynak (NotebookLM gibi):</b> Bir not/belge yapıştır ya da bir <b>https:// linki</b> koyup "Linki çek"e bas — sayfa temiz metne çevrilir. Uzun kaynaktan yalnızca alanla en alakalı kısımlar süzülüp fikre dayanak yapılır.</p>
+
+      <p><b>Mod (kalıp):</b> Ucuz prototip / yüksek teknoloji / sosyal fayda / çevre / eğlence — tek tıkla üretimi o tarza yönlendir.</p>
+
+      <p><b>Her kartta:</b> skor (0-100) + hüküm, nasıl yapılır, maliyet (₺/$), benzer ürünler, talep, patent, teknik gerçeklik, ilk prototip, açık kaynak yapı taşları, sahadan ilham. <b>"Pazarı tara"</b> butonu o fikrin canlı rakip/ilgi durumunu web'den getirir. <b>★ Kaydet</b> ile saklayıp puan/durum/not eklersin; beğenilerin sonraki üretimleri besler. Temalar, filtre, metin + anlamsal arama, PWA (telefona kurulur) ve kalıcı oturum da var.</p>
     </div>
   </details>
 
