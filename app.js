@@ -6,6 +6,7 @@ const alanInput = $("#alan");
 let mod = "yeni";              // "yeni" | "kayit"
 let kayitFiltre = "";          // Kayıtlılar alan filtresi ("" = tümü)
 let kayitArama = "";           // Kayıtlılar metin araması
+let anlamsalSira = null;       // anlamsal arama skorları {isim: skor} ya da null (metin modu)
 let onerilenAcik = false;      // "Önerilen Fikirler" kutusu açık mı (fikirler kutu içinde gizli)
 let sonUretilen = [];          // ekrandaki son üretim
 let uretilmisIsimler = [];     // tekrar engelleme (oturum)
@@ -304,22 +305,45 @@ function cizFikirler(list){
   list.forEach((f, i) => { const el = fikirKart(f); if(i > 0) el.classList.add("kapali"); out.appendChild(el); });
   basligiGuncelle();
 }
+// transformers.js: kayıtlı fikirlerde ANLAMSAL arama — kelime birebir geçmese de anlamca bulur.
+async function anlamsalAra(){
+  const q = kayitArama.trim();
+  if(!q) return;
+  const qv = await embedet(q);
+  if(!qv){ flash("Anlamsal arama için Motoru ayarla → Anlamsal mod'u aç (model iner)"); return; }
+  const harita = {};
+  for(const f of favleriYukle()){
+    const v = await embedet(((f.isim || "") + " " + (f.ne || "")).trim());
+    if(v) harita[f.isim] = kosinus(qv, v);
+  }
+  anlamsalSira = harita;
+  cizKayitlilar();
+}
 function cizKayitlilar(){
   statusEl.textContent = "";
   const hepsi = favleriYukle();
   out.innerHTML = "";
   if(!hepsi.length){ out.innerHTML = `<div class="empty"><div class="emblem"><span class="spark">★</span></div>Henüz kaydın yok.<br/>Beğendiğin fikrin yıldızına bas.</div>`; return; }
   // Arama kutusu (yeniden çizimde focus + imleç geri yüklenir)
+  const araSatir = document.createElement("div");
+  araSatir.className = "kayitarasatir";
   const ara = document.createElement("input");
   ara.className = "kayitara"; ara.type = "text"; ara.placeholder = "Kayıtlarda ara…"; ara.value = kayitArama;
   ara.addEventListener("input", () => {
     kayitArama = ara.value;
+    anlamsalSira = null;                 // yazınca metin moduna dön (anlamsal sıralama eskir)
     const c = ara.selectionStart;
     cizKayitlilar();
     const y = out.querySelector(".kayitara");
     if(y){ y.focus(); try{ y.setSelectionRange(c, c); }catch(e){} }
   });
-  out.appendChild(ara);
+  araSatir.appendChild(ara);
+  const semBtn = document.createElement("button");
+  semBtn.className = "kayitsem" + (anlamsalSira ? " on" : ""); semBtn.type = "button"; semBtn.textContent = "anlamsal";
+  semBtn.title = "Anlamca arama (kelime birebir geçmese de bulur)";
+  semBtn.addEventListener("click", anlamsalAra);
+  araSatir.appendChild(semBtn);
+  out.appendChild(araSatir);
   // Alan filtresi çubuğu (1'den fazla alan varsa)
   const alanlar = [...new Set(hepsi.map(f => f.alan || "Sınırsız"))];
   if(kayitFiltre && !alanlar.includes(kayitFiltre)) kayitFiltre = "";  // silinmiş alan seçiliyse sıfırla
@@ -334,9 +358,15 @@ function cizKayitlilar(){
   // Alan filtresi + metin araması + puana göre sırala (eşitlikte yeni→eski korunur)
   const q = kayitArama.trim().toLocaleLowerCase("tr");
   let list = kayitFiltre ? hepsi.filter(f => (f.alan || "Sınırsız") === kayitFiltre) : hepsi;
-  if(q) list = list.filter(f => [f.isim, f.ne, f.neyden, f.derde, f.nedenYok, f.vayBe, f.not, f.alan]
-    .filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q));
-  list = list.slice().sort((x, y) => (y.puan || 0) - (x.puan || 0));
+  if(q && anlamsalSira){
+    // anlamsal mod: benzerliğe göre süz + sırala (kelime birebir geçmese de bulur)
+    list = list.filter(f => (anlamsalSira[f.isim] || 0) >= 0.3)
+               .sort((x, y) => (anlamsalSira[y.isim] || 0) - (anlamsalSira[x.isim] || 0));
+  }else{
+    if(q) list = list.filter(f => [f.isim, f.ne, f.neyden, f.derde, f.nedenYok, f.vayBe, f.not, f.alan]
+      .filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q));
+    list = list.slice().sort((x, y) => (y.puan || 0) - (x.puan || 0));
+  }
   if(!list.length){
     const d = document.createElement("div"); d.className = "bossonuc"; d.textContent = "Eşleşen fikir yok.";
     out.appendChild(d); return;

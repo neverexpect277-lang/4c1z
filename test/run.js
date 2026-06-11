@@ -223,6 +223,8 @@ console.log("\n#5 — Metin arama");
 
   const ara = w.document.querySelector("#out .kayitara");
   ok("arama kutusu var", !!ara);
+  ok("arama çubuğunda 'anlamsal' butonu var (transformers.js)", !!w.document.querySelector("#out .kayitsem"));
+  ok("anlamsalAra fonksiyonu var", typeof w.anlamsalAra === "function");
   const kartSay = () => w.document.querySelectorAll("#out .card").length;
   ok("başta 3 kart", kartSay() === 3);
 
