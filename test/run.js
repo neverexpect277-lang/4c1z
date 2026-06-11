@@ -728,6 +728,27 @@ console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
     await pollHandler({ method: "POST", body: { messages: [{ role: "user", content: "hi" }] } }, res);
     ok("poll: takılan modeli atlayıp sıradakinden metin döner", res.code === 200 && res.payload.text === "merhaba dünya");
     ok("poll: çağrılar timeout'lu (AbortController signal'i var)", pollSignal === true);
+
+    // PARALEL yarış: ilk model asılı kalsa bile hızlı olan beklemeden kazanır (sıralı olsa CAGRI_TIMEOUT beklerdi)
+    let k = 0;
+    global.fetch = async (url, opts) => {
+      k++;
+      if(k === 1) return new Promise((_, rej) => { if(opts && opts.signal) opts.signal.addEventListener("abort", () => rej(new Error("iptal"))); });
+      return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: "hızlı" }] } }] }) };
+    };
+    let t0 = Date.now(); res = mockRes();
+    await genHandler({ method: "POST", body: { text: "x" } }, res);
+    ok("gen: PARALEL — asılı modeli beklemeden hızlı olan kazanır", res.code === 200 && (Date.now() - t0) < 2000);
+
+    k = 0;
+    global.fetch = async (url, opts) => {
+      k++;
+      if(k === 1) return new Promise((_, rej) => { if(opts && opts.signal) opts.signal.addEventListener("abort", () => rej(new Error("iptal"))); });
+      return { ok: true, status: 200, text: async () => "hızlı metin" };
+    };
+    t0 = Date.now(); res = mockRes();
+    await pollHandler({ method: "POST", body: { text: "hi" } }, res);
+    ok("poll: PARALEL — asılı modeli beklemeden hızlı olan kazanır", res.code === 200 && res.payload.text === "hızlı metin" && (Date.now() - t0) < 2000);
   } finally {
     global.fetch = realFetch;
   }
