@@ -344,10 +344,29 @@ const EK_KAYNAKLAR = [
   { url: q => "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&pagesize=3&site=electronics&q=" + encodeURIComponent(q), pick: j => (j.items || []).map(x => ({ baslik: "Elektronik: " + temizle(x.title || ""), ozet: "skor " + (x.score || 0) })) }
 ];
 
+// ALTYAPI önbellek: aynı sorgu sıcak instance'ta TTL boyunca AĞA ÇIKMADAN anında döner.
+const ONBELLEK = new Map();
+const ONBELLEK_TTL = 10 * 60 * 1000;   // 10 dakika
+const ONBELLEK_MAX = 200;              // bellek şişmesin
+function onbellekAl(anahtar){
+  const k = ONBELLEK.get(anahtar);
+  if (k && Date.now() - k.t < ONBELLEK_TTL) return k.v;
+  if (k) ONBELLEK.delete(anahtar);     // süresi geçti
+  return null;
+}
+function onbellekKoy(anahtar, v){
+  ONBELLEK.set(anahtar, { t: Date.now(), v });
+  if (ONBELLEK.size > ONBELLEK_MAX){ const ilk = ONBELLEK.keys().next().value; ONBELLEK.delete(ilk); } // en eskiyi at
+}
+
 module.exports = async (req, res) => {
   const q = String((req.query && req.query.q) || "").slice(0, 200).trim();         // Türkçe (web)
   const en = String((req.query && req.query.en) || "").slice(0, 200).trim();        // İngilizce (tech kaynakları)
   if (!q) { res.status(200).json({ sonuclar: [] }); return; }
+  const sosyal = !!(req.query && (req.query.sosyal == "1" || req.query.sosyal === "true"));
+  const anahtar = q + "|" + en + "|" + (sosyal ? "s" : "");
+  const onb = onbellekAl(anahtar);
+  if (onb) { res.status(200).json(Object.assign({ onbellek: true }, onb)); return; }   // tekrar eden çağrı → anında
   const patentSorgu = /patents\.google\.com/i.test(q);
   try {
     let web = await searxng(q);
@@ -378,12 +397,13 @@ module.exports = async (req, res) => {
       const ekDilimler = await Promise.all(EK_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
       for(const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 1));
       // SOSYAL MEDYA EKİBİ (opt-in: ?sosyal=1) — YouTube(altyazı)+Bluesky+Lemmy+Instagram+TikTok
-      if(req.query && (req.query.sosyal == "1" || req.query.sosyal === "true")){
+      if(sosyal){
         const sos = await sosyalEkip(temiz, enTemiz);
         sonuclar = sonuclar.concat(sos.slice(0, 8));
       }
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
+    if (sonuclar.length) onbellekKoy(anahtar, { sonuclar, kaynak });   // sadece dolu sonucu önbelleğe al
     res.status(200).json({ sonuclar, kaynak });
   } catch (e) {
     res.status(200).json({ sonuclar: [], hata: String(e) });

@@ -685,16 +685,21 @@ async function kurGetir(){
 }
 
 // Tek arama çağrısı (en: İngilizce kelimeler, sadece tech kaynakları için; web Türkçe kalır)
+// ALTYAPI önbellek: aynı arama oturum içinde AĞA ÇIKMADAN anında döner.
+const ARA_ONBELLEK = new Map();
+const ARA_ONBELLEK_TTL = 10 * 60 * 1000;   // 10 dakika
 async function araGetir(q, en){
+  let url = "/api/ara?q=" + encodeURIComponent(q);
+  if(en) url += "&en=" + encodeURIComponent(en);
+  if(ayarlar.sosyal) url += "&sosyal=1";
+  const onb = ARA_ONBELLEK.get(url);
+  if(onb && Date.now() - onb.t < ARA_ONBELLEK_TTL) return onb.v;   // tekrar eden çağrı → anında (ağ yok)
   try{
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), sureler().ara);
-    let url = "/api/ara?q=" + encodeURIComponent(q);
-    if(en) url += "&en=" + encodeURIComponent(en);
-    if(ayarlar.sosyal) url += "&sosyal=1";
     const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(to);
-    if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)) return j.sonuclar; }
+    if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)){ if(j.sonuclar.length) ARA_ONBELLEK.set(url, { t: Date.now(), v: j.sonuclar }); return j.sonuclar; } }
   }catch(e){}
   return [];
 }

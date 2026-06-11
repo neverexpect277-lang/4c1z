@@ -749,9 +749,34 @@ console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
     t0 = Date.now(); res = mockRes();
     await pollHandler({ method: "POST", body: { text: "hi" } }, res);
     ok("poll: PARALEL — asılı modeli beklemeden hızlı olan kazanır", res.code === 200 && res.payload.text === "hızlı metin" && (Date.now() - t0) < 2000);
+
+    // ÖNBELLEK (ara.js): aynı sorgu ikinci kez AĞA ÇIKMADAN anında döner
+    const araHandler = require(path.join(REPO, "api/ara.js"));
+    let araFetch = 0;
+    global.fetch = async () => { araFetch++; return { ok: true, status: 200, json: async () => ({ results: [{ title: "Sonuç", content: "özet" }] }), text: async () => "" }; };
+    res = mockRes();
+    await araHandler({ query: { q: "benzersizSorgu_" + Date.now() } }, res);
+    const sorgu = "sabitSorgu_" + Date.now();
+    res = mockRes(); await araHandler({ query: { q: sorgu } }, res);
+    ok("ara: ilk çağrı dolu sonuç döndürür", res.code === 200 && res.payload.sonuclar.length > 0);
+    const ilkSayi = araFetch;
+    res = mockRes(); await araHandler({ query: { q: sorgu } }, res);
+    ok("ara: tekrar eden sorgu ÖNBELLEKTEN döner (ağa çıkmaz)", res.payload.onbellek === true && araFetch === ilkSayi);
   } finally {
     global.fetch = realFetch;
   }
+})();
+
+// ÖNBELLEK (client araGetir): aynı arama oturum içinde ağa 1 kez çıkar
+(async function(){
+  const w = yeniDom();
+  let c = 0;
+  w.fetch = async () => { c++; return { ok: true, json: async () => ({ sonuclar: [{ baslik: "X", ozet: "y" }] }) }; };
+  const a1 = await w.araGetir("mantar", "mushroom");
+  const a2 = await w.araGetir("mantar", "mushroom");
+  ok("araGetir: tekrar eden arama önbellekten döner (ağ 1 kez)", c === 1 && a1.length === 1 && a2.length === 1);
+  await w.araGetir("baska", "other");
+  ok("araGetir: farklı arama ağa yeniden çıkar", c === 2);
 })();
 
 (async function(){
