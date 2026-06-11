@@ -26,7 +26,7 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false };
 // Çok-ajan heyet modu: üretici aşamasında paralel çalışan persona AJAN ORDUSU.
 // Geniş havuz → her turda rotasyonla bir alt-küme sahaya iner (çeşitlilik max, kota bounded).
 const PERSONALAR = [
@@ -624,6 +624,7 @@ async function araGetir(q, en){
     const to = setTimeout(() => ctrl.abort(), 45000);
     let url = "/api/ara?q=" + encodeURIComponent(q);
     if(en) url += "&en=" + encodeURIComponent(en);
+    if(ayarlar.sosyal) url += "&sosyal=1";
     const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(to);
     if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)) return j.sonuclar; }
@@ -716,7 +717,9 @@ function akisCiz(){
     `<div class="akisdugum"><span class="akisad">Yerel LLM (deneysel · WebGPU · büyük indirme)</span>` +
       `<label class="akistgl"><input type="checkbox" data-ayar="yerel" ${ayarlar.yerel ? "checked" : ""}/>aç</label></div>` +
     `<div class="akisdugum"><span class="akisad">Heyet modu (çok ajan · ${PERSONALAR.length} persona havuzu, turda ${HEYET_AJAN} · daha yavaş)</span>` +
-      `<label class="akistgl"><input type="checkbox" data-ayar="heyet" ${ayarlar.heyet ? "checked" : ""}/>aç</label></div></div>`;
+      `<label class="akistgl"><input type="checkbox" data-ayar="heyet" ${ayarlar.heyet ? "checked" : ""}/>aç</label></div>` +
+    `<div class="akisdugum"><span class="akisad">Sosyal medya ekibi (YouTube altyazı + Bluesky + Lemmy + Instagram/TikTok · yavaş)</span>` +
+      `<label class="akistgl"><input type="checkbox" data-ayar="sosyal" ${ayarlar.sosyal ? "checked" : ""}/>aç</label></div></div>`;
   panel.innerHTML = akis + oto;
 }
 

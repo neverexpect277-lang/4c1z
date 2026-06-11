@@ -220,6 +220,53 @@ async function youtube(q){
   }catch(e){ return []; }
 }
 
+// Bluesky — herkese açık API (anahtarsız), gerçek sosyal sinyal.
+async function bluesky(q){
+  try{
+    const r = await zamanli("https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?limit=5&q=" + encodeURIComponent(q), { headers: { "User-Agent": "4c1z/1.0" } }, 7000);
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.posts || []).slice(0, 2).map(p => ({ baslik: "Bluesky: @" + temizle((p.author && p.author.handle) || ""), ozet: temizle((p.record && p.record.text) || "").slice(0, 120) })).filter(x => x.baslik.length > 11);
+  }catch(e){ return []; }
+}
+// Lemmy — açık federe sosyal ağ, anahtarsız arama.
+async function lemmy(q){
+  try{
+    const r = await zamanli("https://lemmy.world/api/v3/search?type_=Posts&limit=5&q=" + encodeURIComponent(q), { headers: { "User-Agent": "4c1z/1.0" } }, 7000);
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.posts || []).slice(0, 2).map(p => ({ baslik: "Lemmy: " + temizle((p.post && p.post.name) || ""), ozet: temizle((p.post && p.post.body) || "").slice(0, 110) })).filter(x => x.baslik.length > 8);
+  }catch(e){ return []; }
+}
+// Instagram / TikTok — en iyi çaba (bot duvarı sık engeller; engellenince sessizce boş döner).
+async function instagram(q){
+  try{
+    const tag = String(q || "").toLowerCase().replace(/[^a-z0-9çğıöşü]/g, "");
+    if(!tag) return [];
+    const r = await zamanli("https://www.instagram.com/explore/tags/" + encodeURIComponent(tag) + "/?__a=1&__d=dis", { headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)" } }, 6000);
+    if(!r.ok) return [];
+    const j = await r.json().catch(() => null);
+    const med = j && (j.graphql || j.data) ? "var" : null;     // shape değişken; içerik yakalanabildiyse kısa not
+    return med ? [{ baslik: "Instagram: #" + tag, ozet: "etiketten görseller" }] : [];
+  }catch(e){ return []; }
+}
+async function tiktok(q){
+  try{
+    const r = await zamanli("https://www.tiktok.com/api/search/general/full/?keyword=" + encodeURIComponent(q), { headers: { "User-Agent": "Mozilla/5.0 (compatible; 4c1z/1.0)" } }, 6000);
+    if(!r.ok) return [];
+    const j = await r.json().catch(() => null);
+    const list = j && (j.data || j.item_list) || [];
+    return (Array.isArray(list) ? list : []).slice(0, 2).map(x => ({ baslik: "TikTok: " + temizle((x.item && x.item.desc) || x.desc || "").slice(0, 60), ozet: "" })).filter(x => x.baslik.length > 9);
+  }catch(e){ return []; }
+}
+// Sosyal medya ekibi: YouTube(altyazı) + Bluesky + Lemmy + Instagram + TikTok (opt-in).
+async function sosyalEkip(q, en){
+  const dilim = await Promise.all([youtube(q), bluesky(en || q), lemmy(en || q), instagram(q), tiktok(q)]);
+  let out = [];
+  for(const d of dilim) out = out.concat((d || []).slice(0, 2));
+  return out;
+}
+
 // ConceptNet — kavramlar arası ilişkiler (X→kullanım/parça/ilişki). Fikir harmanı için yakıt. Anahtarsız.
 async function conceptnet(q){
   try{
@@ -321,15 +368,20 @@ module.exports = async (req, res) => {
         for (const it of [].concat.apply([], dilim)) { if (!gor.has(it.baslik)) { gor.add(it.baslik); out.push(it); } }
         return out;
       };
-      const [g, s, h, rd, a, w, wd, np, ss, ol, cn, yt] = await Promise.all([
+      const [g, s, h, rd, a, w, wd, np, ss, ol, cn] = await Promise.all([
         cokDil(github), cokDil(stack), cokDil(hackernews), cokDil(reddit), arxiv(enTemiz), wiki(temiz, enTemiz),
-        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz), conceptnet(enTemiz), youtube(temiz)
+        wikidata(temiz), npmAra(enTemiz), semanticScholar(enTemiz), openLibrary(enTemiz), conceptnet(enTemiz)
       ]);
       sonuclar = sonuclar.concat(g.slice(0, 6), s.slice(0, 2), h.slice(0, 2), rd.slice(0, 2), a.slice(0, 2), w.slice(0, 2),
-        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3), yt.slice(0, 2));
+        wd.slice(0, 2), np.slice(0, 1), ss.slice(0, 2), ol.slice(0, 1), cn.slice(0, 3));
       // her alandan kendi-kendine kapanan ek ajan ordusu (alakasızsa susar)
       const ekDilimler = await Promise.all(EK_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
       for(const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 1));
+      // SOSYAL MEDYA EKİBİ (opt-in: ?sosyal=1) — YouTube(altyazı)+Bluesky+Lemmy+Instagram+TikTok
+      if(req.query && (req.query.sosyal == "1" || req.query.sosyal === "true")){
+        const sos = await sosyalEkip(temiz, enTemiz);
+        sonuclar = sonuclar.concat(sos.slice(0, 8));
+      }
       if (!web.length && sonuclar.length) kaynak = "ek";
     }
     res.status(200).json({ sonuclar, kaynak });

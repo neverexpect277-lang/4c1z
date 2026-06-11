@@ -499,8 +499,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (3 seçim + 5 onay: eleme/web/anlamsal/yerel/heyet)",
-     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 5);
+  ok("kontroller var (3 seçim + 6 onay: eleme/web/anlamsal/yerel/heyet/sosyal)",
+     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 6);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
@@ -587,9 +587,9 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   // api/ara.js çok kaynaklı arama mantığı (SearXNG -> DDG -> Wikipedia), global.fetch stub
   console.log("\napi/ara.js — çok kaynaklı arama (fetch stub)");
   const handler = require("../api/ara.js");
-  const cagir = (q, fetchStub, en) => new Promise(resolve => {
+  const cagir = (q, fetchStub, en, sosyal) => new Promise(resolve => {
     global.fetch = fetchStub;
-    handler({ query: { q, en } }, { status(){ return this; }, json(o){ resolve(o); } });
+    handler({ query: { q, en, sosyal: sosyal ? "1" : undefined } }, { status(){ return this; }, json(o){ resolve(o); } });
   });
 
   // İngilizce 'en' parametresi: web Türkçe (q) ile, GitHub/HN/Stack İngilizce (en) ile aranır
@@ -606,7 +606,13 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("Hacker News İngilizce ile arandı", urller.some(u => /hn\.algolia\.com/.test(u) && /smart cabinet/.test(decodeURIComponent(u))));
 
   // SearXNG sonuç verir → DDG'ye düşmez; genel sorguda Wikipedia eklenir
-  const s1 = await cagir("uv dolap", async (url) => {
+  const araStub = async (url) => {
+    if(/bsky\.app/.test(url))
+      return { ok: true, json: async () => ({ posts: [{ author: { handle: "maker.bsky" }, record: { text: "dolap nem çözümü paylaşımı" } }] }) };
+    if(/lemmy\./.test(url))
+      return { ok: true, json: async () => ({ posts: [{ post: { name: "DIY dehumidifier cabinet", body: "lemmy tartışması" } }] }) };
+    if(/instagram\.com|tiktok\.com|mastodon/.test(url))
+      return { ok: true, json: async () => ({}), text: async () => "" };
     if(/format=json/.test(url) && /\/search\?q=/.test(url))
       return { ok: true, json: async () => ({ results: [{ title: "SearX Hit", content: "içerik" }] }) };
     if(/wikipedia\.org/.test(url))
@@ -646,7 +652,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
     if(/api\.datamuse\.com/.test(url))
       return { ok: true, json: async () => [{ word: "cupboard" }, { word: "wardrobe" }] };
     return { ok: true, text: async () => "" };
-  });
+  };
+  const s1 = await cagir("uv dolap", araStub);
   ok("SearXNG sonucu parse edildi", s1.sonuclar.some(s => /SearX Hit/.test(s.baslik)));
   ok("kaynak searxng", s1.kaynak === "searxng");
   ok("genel sorguda Wikipedia (tr/en) eklendi", s1.sonuclar.some(s => /Wikipedia\((tr|en)\): UV Cabinet/.test(s.baslik)));
@@ -665,8 +672,14 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("iTunes ajanı eklendi (uygulama/medya domeni)", s1.sonuclar.some(s => /Uygulama: Cabinet App/.test(s.baslik)));
   ok("crates.io ajanı eklendi (yazılım domeni)", s1.sonuclar.some(s => /crate: cabinet-rs/.test(s.baslik)));
   ok("DIY StackExchange ajanı eklendi (prototip/maker domeni)", s1.sonuclar.some(s => /DIY: DIY cabinet/.test(s.baslik)));
-  ok("YouTube ajanı videoyu buldu", s1.sonuclar.some(s => /YouTube: Akıllı dolap yapımı/.test(s.baslik)));
-  ok("YouTube ajanı video İÇİNDEKİ bilgiyi (altyazı) süzdü", s1.sonuclar.some(s => /video içeriği: dolap nem sorunu/.test(s.ozet || "")));
+  ok("sosyal medya ekibi KAPALIYKEN YouTube/Bluesky yok", !s1.sonuclar.some(s => /YouTube:|Bluesky:|Lemmy:/.test(s.baslik)));
+
+  // Sosyal medya ekibi AÇIKKEN: YouTube (altyazı) + Bluesky + Lemmy
+  const sos = await cagir("uv dolap", araStub, undefined, true);
+  ok("sosyal ekip: YouTube videoyu buldu", sos.sonuclar.some(s => /YouTube: Akıllı dolap yapımı/.test(s.baslik)));
+  ok("sosyal ekip: YouTube video İÇİNDEKİ altyazıyı süzdü", sos.sonuclar.some(s => /video içeriği: dolap nem sorunu/.test(s.ozet || "")));
+  ok("sosyal ekip: Bluesky gezildi", sos.sonuclar.some(s => /Bluesky: @maker\.bsky/.test(s.baslik)));
+  ok("sosyal ekip: Lemmy gezildi", sos.sonuclar.some(s => /Lemmy: DIY dehumidifier/.test(s.baslik)));
 
   // SearXNG boş → DuckDuckGo'ya düşer
   const s2 = await cagir("xyz urun", async (url) => {
