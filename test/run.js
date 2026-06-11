@@ -814,6 +814,31 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const tr = await w.tekrarEle([{ isim: "X", ne: "a" }, { isim: "Y", ne: "b" }]);
   ok("tekrarEle model yokken adayları aynen döndürür (fallback)", tr.length === 2);
 }).then(async () => {
+  // ÜST SEVİYE: araştırma ordusu üreticiye besleniyor (ConceptNet ilişkileri + gerçek dertler)
+  console.log("\nÜRETİCİYE BESLEME — sahadan gerçek sinyaller");
+  // ureticiPrompt ilham parametresini enjekte eder
+  const wp = yeniDom();
+  const pi = wp.ureticiPrompt("mutfak", [], "", null, 6, "", null, "ilişkili kavramlar: bıçak, mıknatıs");
+  ok("üretici promptu sahadan sinyali içerir", /SAHADAN GERÇEK SİNYALLER/.test(pi.kullanici) && /mıknatıs/.test(pi.kullanici));
+  ok("ilham yokken üretici promptu temiz (geriye uyumlu)", !/SAHADAN GERÇEK/.test(wp.ureticiPrompt("mutfak", [], "").kullanici));
+
+  // ureticiIlham: /api/ara sonuçlarından ilişki + dert çıkarır
+  const wi = yeniDom();
+  wi.fetch = async (url) => {
+    if(String(url).startsWith("/api/ara")) return { ok: true, json: async () => ({ sonuclar: [
+      { baslik: "İlişkili: knife sharpening", ozet: "UsedFor" },
+      { baslik: "DIY: mutfak tezgahı nasıl temiz tutulur", ozet: "skor 9" },
+      { baslik: "GitHub: user/x", ozet: "alakasız" }
+    ] }) };
+    return { ok: true, json: async () => ({ sonuclar: [] }) };
+  };
+  const ilh = await wi.ureticiIlham("mutfak");
+  ok("ureticiIlham ConceptNet ilişkisini toplar", /knife sharpening/.test(ilh));
+  ok("ureticiIlham gerçek dert/soruyu toplar", /tezgahı nasıl temiz/.test(ilh));
+  ok("ureticiIlham alakasız (GitHub) sinyali ilhama katmaz", !/user\/x/.test(ilh));
+  wi.ayarSet("web", false);
+  ok("web kapalıyken üreticiye besleme yapılmaz", (await wi.ureticiIlham("mutfak")) === "");
+}).then(async () => {
   // ---- web-llm: yerel LLM (WebGPU yoksa buluta graceful fallback) ----
   console.log("\nALTYAPI — web-llm (yerel LLM)");
   const w = yeniDom();

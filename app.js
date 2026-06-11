@@ -767,6 +767,23 @@ async function benzerKaydiBul(fikir){
   }catch(e){}
 }
 
+// ÜST SEVİYE: araştırma ordusunu ÜRETİCİ aşamasına besle — alan için gerçek sinyaller
+// (ConceptNet ilişkileri + Reddit/DIY/Soru dertleri) toplanıp üreticiye ilham olur.
+const ILHAM_SEED = ["mutfak", "banyo", "ev", "araba", "çocuk", "bahçe", "ofis", "sokak", "yaşlılar", "evcil hayvan"];
+async function ureticiIlham(alan){
+  if(!ayarlar.web) return "";
+  const konu = alan || ILHAM_SEED[Math.floor(Math.random() * ILHAM_SEED.length)];
+  const sonuc = await araGetir(konu, konu);
+  if(!sonuc.length) return "";
+  const al = (re, n) => sonuc.filter(s => re.test(s.baslik)).slice(0, n).map(s => s.baslik.replace(/^[^:]+:\s*/, "").trim()).filter(Boolean);
+  const iliski = al(/^İlişkili:/, 5);
+  const dert = al(/^(Soru:|DIY:|Elektronik:|Reddit:)/, 5);
+  const parca = [];
+  if(iliski.length) parca.push("ilişkili kavramlar (harman için): " + iliski.join(", "));
+  if(dert.length) parca.push("gerçek dertler/sorular: " + dert.join(" | "));
+  return parca.join(". ");
+}
+
 let calisiyor = false;
 async function uret(){
   if(calisiyor) return;
@@ -792,11 +809,12 @@ async function uret(){
 
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
+  const ilham = await ureticiIlham(alan);              // araştırma ordusu → üreticiye gerçek sinyaller
   let adaylar = null;
   if(ayarlar.heyet){
     // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
     const dilimler = await Promise.all(personaSec().map(persona => {
-      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona);
+      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham);
       return zincir(p.sistem, p.kullanici);
     }));
     const havuz = [];
@@ -804,7 +822,7 @@ async function uret(){
     if(havuz.length) adaylar = havuz;
   }
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu());
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }
