@@ -500,8 +500,17 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("akış editörü çizildi (dify etiketi)", /Motoru ayarla/.test(host.textContent) && /dify/.test(host.textContent));
   ok("aç/kapa yerleşik <details>/<summary> ile (garanti)", !!host.querySelector("details.akisdetay > summary.akisbas"));
   ok("4 motor düğümü hep DOM'da çizili", w.document.querySelectorAll("#akis .akisik").length === 4);
-  ok("kontroller var (3 seçim + 6 onay: eleme/web/anlamsal/yerel/heyet/sosyal)",
-     w.document.querySelectorAll("#akis .akissel").length === 3 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 6);
+  ok("kontroller var (4 seçim: aday/ton/oto/hız + 6 onay)",
+     w.document.querySelectorAll("#akis .akissel").length === 4 && w.document.querySelectorAll('#akis [type="checkbox"]').length === 6);
+  // Hızlandırma: süreyi kullanıcı seçer (hiz profili kalıcı + süreleri belirler)
+  const selHiz = w.document.querySelector('[data-ayar="hiz"]');
+  ok("Hızlandırma 'Sonuç hızı' seçicisi var", !!selHiz);
+  selHiz.value = "derin"; selHiz.dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("hız profili kalıcı (derin)", JSON.parse(w.localStorage.getItem("mucit_ayarlar")).hiz === "derin");
+  ok("derin profili uzun süre verir, hızlı kısa", w.sureler().ara > 30000);
+  const selHiz2 = w.document.querySelector('[data-ayar="hiz"]');   // panel yeniden çizildi, taze al
+  selHiz2.value = "hizli"; selHiz2.dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("hızlı profili kısa süre verir", w.sureler().ara < 15000);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');

@@ -26,7 +26,14 @@ function oturumKaydet(){
 
 // ---- dify ilhamı: ayarlanabilir üretim hattı (görsel akış editörü) ----
 const AYAR_KEY = "mucit_ayarlar";
-let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false };
+let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false, hiz: "dengeli" };
+// Hız profilleri (süreleri KULLANICI seçer): Hızlı ↔ Derin (iyi araştırma). Hepsi ms.
+const HIZ = {
+  hizli:   { ilham: 5000,  ara: 12000, gemini: 14000, poll: 22000 },
+  dengeli: { ilham: 12000, ara: 25000, gemini: 22000, poll: 40000 },
+  derin:   { ilham: 40000, ara: 45000, gemini: 35000, poll: 55000 }
+};
+function sureler(){ return HIZ[ayarlar.hiz] || HIZ.dengeli; }
 // Çok-ajan heyet modu: üretici aşamasında paralel çalışan persona AJAN ORDUSU.
 // Geniş havuz → her turda rotasyonla bir alt-küme sahaya iner (çeşitlilik max, kota bounded).
 const PERSONALAR = [
@@ -564,7 +571,7 @@ function metin(s){ return escapeHtml(String(s || "").replace(/<[^>]*>/g, "")); }
 
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 20000);
+  const to = setTimeout(() => ctrl.abort(), sureler().gemini);
   try{
     const r = await fetch("/api/gen", {
       method: "POST",
@@ -580,7 +587,7 @@ async function geminiCagir(sistem, kullanici){
 
 async function pollCagir(sistem, kullanici){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 35000);
+  const to = setTimeout(() => ctrl.abort(), sureler().poll);
   try{
     const r = await fetch("/api/poll", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -621,7 +628,7 @@ async function kurGetir(){
 async function araGetir(q, en){
   try{
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 22000);
+    const to = setTimeout(() => ctrl.abort(), sureler().ara);
     let url = "/api/ara?q=" + encodeURIComponent(q);
     if(en) url += "&en=" + encodeURIComponent(en);
     if(ayarlar.sosyal) url += "&sosyal=1";
@@ -720,7 +727,11 @@ function akisCiz(){
       `<label class="akistgl"><input type="checkbox" data-ayar="heyet" ${ayarlar.heyet ? "checked" : ""}/>aç</label></div>` +
     `<div class="akisdugum"><span class="akisad">Sosyal medya ekibi (YouTube altyazı + Bluesky + Lemmy + Instagram/TikTok · yavaş)</span>` +
       `<label class="akistgl"><input type="checkbox" data-ayar="sosyal" ${ayarlar.sosyal ? "checked" : ""}/>aç</label></div></div>`;
-  panel.innerHTML = akis + oto;
+  // Hızlandırma: sonuç süresini KULLANICI seçer (kaç dakikada sonuç istiyorsan)
+  const hizBlok = `<div class="akisoto"><div class="akisotobas">Hızlandırma</div>` +
+    `<div class="akisdugum"><span class="akisad">Sonuç hızı (süreleri sen ayarla)</span>` +
+      `<select class="akissel" data-ayar="hiz">${opt(ayarlar.hiz, [["hizli", "Hızlı"], ["dengeli", "Dengeli"], ["derin", "Derin (iyi araştırma)"]])}</select></div></div>`;
+  panel.innerHTML = akis + hizBlok + oto;
 }
 
 // ---- ragflow ilhamı: akıllı kaynak seçimi (anahtarsız RAG) ----
@@ -824,7 +835,7 @@ async function ureticiIlham(alan){
   if(!ayarlar.web) return "";
   const konu = alan || ILHAM_SEED[Math.floor(Math.random() * ILHAM_SEED.length)];
   let sonuc = [];
-  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 9000))]); }catch(e){ sonuc = []; }   // üretici ilhamı: hızlı (gelen sinyalle üret, gecikeni bekleme)
+  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), sureler().ilham))]); }catch(e){ sonuc = []; }   // üretici ilhamı: hız profiline göre
   if(!sonuc.length) return "";
   const al = (re, n) => sonuc.filter(s => re.test(s.baslik)).slice(0, n).map(s => s.baslik.replace(/^[^:]+:\s*/, "").trim()).filter(Boolean);
   const iliski = al(/^İlişkili:/, 5);
