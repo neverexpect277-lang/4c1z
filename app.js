@@ -1089,9 +1089,18 @@ $("#temaAd").addEventListener("keydown", e => {
   m.addEventListener("click", e => { if(e.target === m) kapat(); });
 })();
 
-// PWA service worker
+// PWA service worker — yeni sürüm yayınlanınca sayfayı BİR KEZ otomatik tazeler
 if("serviceWorker" in navigator){
-  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  window.addEventListener("load", () => {
+    const ilkKontrol = navigator.serviceWorker.controller;   // zaten kontrol eden SW var mıydı?
+    navigator.serviceWorker.register("/sw.js").then(reg => { try{ reg.update(); }catch(e){} }).catch(() => {});
+    let yenilendi = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if(yenilendi || !ilkKontrol) return;   // ilk kurulumda DEĞİL, sadece güncellemede tazele
+      yenilendi = true;
+      try{ window.location.reload(); }catch(e){}
+    });
+  });
 }
 
 // init — her adım izole; biri patlasa diğerleri (ve buton bağlamaları) çalışmaya devam etsin

@@ -4,5 +4,13 @@
     "api/poll.js": { "maxDuration": 60 },
     "api/ara.js": { "maxDuration": 60 },
     "api/cek.js": { "maxDuration": 20 }
-  }
+  },
+  "headers": [
+    {
+      "source": "/((?:index\\.html|app\\.js|prompt\\.js|embed\\.js|wllm\\.js|style\\.css|manifest\\.json|sw\\.js)?)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    }
+  ]
 }

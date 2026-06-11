@@ -1,5 +1,5 @@
 // Ağ-öncelikli service worker: her zaman taze içerik, çevrimdışında önbellekten.
-const CACHE = "4c1z-v2";
+const CACHE = "4c1z-v3";
 const SHELL = ["/", "/index.html", "/app.js", "/prompt.js", "/embed.js", "/wllm.js", "/style.css", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", e => {
