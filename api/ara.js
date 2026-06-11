@@ -22,7 +22,7 @@ const SEARX = [
 
 async function zamanli(url, opts, ms){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), ms || 9000);
+  const to = setTimeout(() => ctrl.abort(), ms || 6000);
   try { return await fetch(url, Object.assign({ signal: ctrl.signal }, opts || {})); }
   finally { clearTimeout(to); }
 }
@@ -320,7 +320,7 @@ async function arxiv(q){
 // Jenerik basit-ajan: tek URL → JSON → {baslik,ozet}. Alakasız sorguda boş döner (kendi-kendine kapanır).
 async function basitAjan(k, q){
   try{
-    const r = await zamanli(k.url(q), { headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)", "Accept": "application/json" } }, 6000);
+    const r = await zamanli(k.url(q), { headers: { "User-Agent": "4c1z/1.0 (https://4c1z.vercel.app)", "Accept": "application/json" } }, 4500);
     if(!r.ok) return [];
     const j = await r.json();
     return (k.pick(j) || []).filter(x => x && x.baslik && x.baslik.length > 7).slice(0, 2);

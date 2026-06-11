@@ -469,6 +469,7 @@ console.log("\n#8 — Canlı ajan zinciri + hafıza (mastra ilhamı)");
   ok("adım isimleri doğru sırada (4 aşama motoru)",
      [...adimlar].map(a => a.querySelector(".ajanad").textContent).join(",") === "Üretici,Eleştirmen,Üst akıl,Uzman heyeti");
   ok("Osmanlıca atışma alt mesajı korundu", /hayretim arttı/.test(st.textContent));
+  ok("üretim başlığı 'Dünya taranıyor'", /Dünya taranıyor/.test(st.textContent));
 
   // Öğrenen hafıza: beğenilen kayıtlar üreticiye pozitif sinyal olur
   const pB = w.ureticiPrompt("mutfak", [], "", ["Akıllı Tava", "Oto Şemsiye"]);

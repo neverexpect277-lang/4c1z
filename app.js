@@ -564,7 +564,7 @@ function metin(s){ return escapeHtml(String(s || "").replace(/<[^>]*>/g, "")); }
 
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 35000);
+  const to = setTimeout(() => ctrl.abort(), 20000);
   try{
     const r = await fetch("/api/gen", {
       method: "POST",
@@ -580,7 +580,7 @@ async function geminiCagir(sistem, kullanici){
 
 async function pollCagir(sistem, kullanici){
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 55000);
+  const to = setTimeout(() => ctrl.abort(), 35000);
   try{
     const r = await fetch("/api/poll", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -621,7 +621,7 @@ async function kurGetir(){
 async function araGetir(q, en){
   try{
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 45000);
+    const to = setTimeout(() => ctrl.abort(), 22000);
     let url = "/api/ara?q=" + encodeURIComponent(q);
     if(en) url += "&en=" + encodeURIComponent(en);
     if(ayarlar.sosyal) url += "&sosyal=1";
@@ -670,7 +670,7 @@ function ajanCiz(aktif, alt){
   const hafiza = uretilmisIsimler.length
     ? `<span class="ajanhafiza" title="Daha önce üretilen fikirler hatırlanır, tekrarlanmaz">hafıza: ${uretilmisIsimler.length}</span>` : "";
   statusEl.innerHTML =
-    `<div class="ajan"><div class="ajanbaslik"><span>Ajan zinciri</span>${hafiza}</div>` +
+    `<div class="ajan"><div class="ajanbaslik"><span>Dünya taranıyor</span>${hafiza}</div>` +
     `<div class="ajanlar">${adimlar}</div>` +
     (alt ? `<div class="ajanalt">${alt}</div>` : "") + `</div>`;
 }
@@ -824,7 +824,7 @@ async function ureticiIlham(alan){
   if(!ayarlar.web) return "";
   const konu = alan || ILHAM_SEED[Math.floor(Math.random() * ILHAM_SEED.length)];
   let sonuc = [];
-  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 40000))]); }catch(e){ sonuc = []; }
+  try{ sonuc = await Promise.race([araGetir(konu, konu), new Promise(r => setTimeout(() => r([]), 9000))]); }catch(e){ sonuc = []; }   // üretici ilhamı: hızlı (gelen sinyalle üret, gecikeni bekleme)
   if(!sonuc.length) return "";
   const al = (re, n) => sonuc.filter(s => re.test(s.baslik)).slice(0, n).map(s => s.baslik.replace(/^[^:]+:\s*/, "").trim()).filter(Boolean);
   const iliski = al(/^İlişkili:/, 5);
