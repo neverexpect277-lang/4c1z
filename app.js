@@ -767,6 +767,22 @@ async function benzerKaydiBul(fikir){
   }catch(e){}
 }
 
+// Akıllı niyet yorumlayıcı: "X ve Y'yi birleştir" / serbest alan isteğini ayırt eder.
+// Birleştirme niyetinde üreticiye GÜÇLÜ yönerge verir → zekice harman, basit/saçma değil.
+function istekYorumla(girdi){
+  const g = String(girdi || "").trim();
+  if(!g) return { tip: "bos", yonerge: "" };
+  const birlesme = /birleştir|harmanla|kombin|birleşim|mezc|\bartı\b|\+|melez/i.test(g);
+  const parcalar = g.split(/\s*(?:\+|,|\bve\b|\bile\b|\bartı\b)\s*/i)
+    .map(s => s.replace(/birleştir\w*|harmanla\w*|kombin\w*|melez\w*|üret\w*|yap\w*|bir ürün|ürün(ü|ler)?|fikir|tasarla\w*/gi, "").trim())
+    .filter(s => s.length >= 2);
+  if(birlesme && parcalar.length >= 2){
+    return { tip: "birlestir", parcalar,
+      yonerge: `Kullanıcı ŞU nesneleri/ürünleri BİRLEŞTİREN tek bir ürün istiyor: ${parcalar.join(" + ")}. Bu öğeleri ZEKİCE ve beklenmedik ama GERÇEKTEN işe yarar şekilde harmanla; her aday bu birleşimi somut biçimde içersin. Zorlama, bariz, oyuncak gibi ya da saçma birleşim YASAK — gerçek bir derde çözüm olsun.` };
+  }
+  return { tip: "alan", yonerge: "" };
+}
+
 // ÜST SEVİYE: araştırma ordusunu ÜRETİCİ aşamasına besle — alan için gerçek sinyaller
 // (ConceptNet ilişkileri + Reddit/DIY/Soru dertleri) toplanıp üreticiye ilham olur.
 const ILHAM_SEED = ["mutfak", "banyo", "ev", "araba", "çocuk", "bahçe", "ofis", "sokak", "yaşlılar", "evcil hayvan"];
@@ -809,12 +825,13 @@ async function uret(){
 
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
+  const yonerge = istekYorumla(alan).yonerge;          // "X+Y birleştir" gibi niyeti güçlü yönergeye çevir
   const ilham = await ureticiIlham(alan);              // araştırma ordusu → üreticiye gerçek sinyaller
   let adaylar = null;
   if(ayarlar.heyet){
     // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
     const dilimler = await Promise.all(personaSec().map(persona => {
-      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham);
+      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge);
       return zincir(p.sistem, p.kullanici);
     }));
     const havuz = [];
@@ -822,7 +839,7 @@ async function uret(){
     if(havuz.length) adaylar = havuz;
   }
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham, yonerge);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }

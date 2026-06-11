@@ -97,7 +97,7 @@ function kaynakCumlesi(kaynak){
 }
 
 // 1. AŞAMA — aday üretici (diyalog yok, sade ve hızlı)
-function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip, persona, ilham){
+function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip, persona, ilham, yonerge){
   const n = [3, 6, 9].indexOf(adaySayisi) >= 0 ? adaySayisi : 6;
   const sistem =
 `Sen yaratıcı ama AYAĞI YERE BASAN bir ürün mucitisin. Görev: dünyada ve Türkiye'de HENÜZ OLMAYAN, herkesin kullanabileceği ürünler icat etmek.
@@ -116,7 +116,8 @@ ${ORTAK_KURAL}
   const mod = kalip ? ` SEÇİLİ KALIP/MOD (tüm adaylar buna uysun): ${kalip}` : "";
   const bakis = persona ? ` BAKIŞ AÇIN (bu rolle üret): ${persona}` : "";
   const sinyal = ilham ? ` SAHADAN GERÇEK SİNYALLER (bunlardan ESİNLEN — ilişkili kavramları beklenmedik şekilde harmanla, gerçek dertlere çözüm üret; körü körüne kopyalama, klişeye düşme): ${ilham}` : "";
-  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni}${mod}${bakis}${sinyal} [çeşitlilik tohumu: ${tohum}]`;
+  const istek = yonerge ? ` KULLANICI YÖNERGESİ (EN YÜKSEK ÖNCELİK — buna MUTLAKA uy): ${yonerge}` : "";
+  const kullanici = `${alanCumlesi(alan)}${kaynakCumlesi(kaynak)} Bu turda özellikle şu açılara bak: ${acilar}. Birbirinden tamamen farklı, ÖZGÜN ${n} aday üret; her turda yepyeni fikirler çıkar, kendini tekrar etme. Cesur ama gerçekçi ol; hayal kurma.${yasak}${begeni}${mod}${bakis}${sinyal}${istek} [çeşitlilik tohumu: ${tohum}]`;
   return { sistem, kullanici };
 }
 

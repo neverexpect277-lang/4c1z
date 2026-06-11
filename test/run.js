@@ -822,6 +822,16 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   ok("üretici promptu sahadan sinyali içerir", /SAHADAN GERÇEK SİNYALLER/.test(pi.kullanici) && /mıknatıs/.test(pi.kullanici));
   ok("ilham yokken üretici promptu temiz (geriye uyumlu)", !/SAHADAN GERÇEK/.test(wp.ureticiPrompt("mutfak", [], "").kullanici));
 
+  // Akıllı niyet: "X ve Y'yi birleştir" → güçlü birleştirme yönergesi
+  const yb = wp.istekYorumla("buzdolabı ve drone'u birleştir");
+  ok("birleştir niyeti yakalanır", yb.tip === "birlestir");
+  ok("birleştirilecek parçalar çıkarılır", yb.parcalar.some(p => /buzdolabı/i.test(p)) && yb.parcalar.some(p => /drone/i.test(p)));
+  ok("'+' ile birleştirme de yakalanır", wp.istekYorumla("askı + mıknatıs").tip === "birlestir");
+  ok("düz alan birleştirme sayılmaz", wp.istekYorumla("mutfak").tip === "alan");
+  ok("iki alan ('ev ve bahçe') yanlışlıkla birleştirme sayılmaz", wp.istekYorumla("ev ve bahçe").tip === "alan");
+  const py = wp.ureticiPrompt("x", [], "", null, 6, "", null, "", "ŞU nesneleri BİRLEŞTİREN: buzdolabı + drone");
+  ok("yönerge üretici promptuna en yüksek öncelikle girer", /KULLANICI YÖNERGESİ/.test(py.kullanici) && /BİRLEŞTİREN/.test(py.kullanici));
+
   // ureticiIlham: /api/ara sonuçlarından ilişki + dert çıkarır
   const wi = yeniDom();
   wi.fetch = async (url) => {
