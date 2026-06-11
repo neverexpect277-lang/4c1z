@@ -28,8 +28,10 @@ function oturumKaydet(){
 const AYAR_KEY = "mucit_ayarlar";
 let ayarlar = { adaySayisi: 6, eleme: true, ton: "dengeli", web: true, kalip: "", otoKaydet: 0, anlamsal: false, yerel: false, heyet: false, sosyal: false, hiz: "dengeli", tesis: false };
 // Hız profilleri (süreleri KULLANICI seçer): Hızlı ↔ Derin (iyi araştırma). Hepsi ms.
+// NOT: Hızlı, aşama atlayarak hızlanır (web+eleştirmen yok); per-çağrı süreleri
+// CÖMERT tutulur ki model cevabı (özellikle uzun tesis prompt'u) yetişmeden abort olmasın.
 const HIZ = {
-  hizli:   { ilham: 5000,  ara: 12000, gemini: 14000, poll: 22000 },
+  hizli:   { ilham: 5000,  ara: 12000, gemini: 24000, poll: 42000 },
   dengeli: { ilham: 12000, ara: 25000, gemini: 22000, poll: 40000 },
   derin:   { ilham: 40000, ara: 45000, gemini: 35000, poll: 55000 }
 };

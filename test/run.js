@@ -511,6 +511,8 @@ console.log("\n#9 — Ayarlanabilir motor (dify ilhamı)");
   const selHiz2 = w.document.querySelector('[data-ayar="hiz"]');   // panel yeniden çizildi, taze al
   selHiz2.value = "hizli"; selHiz2.dispatchEvent(new w.Event("change", { bubbles: true }));
   ok("hızlı profili kısa süre verir", w.sureler().ara < 15000);
+  // Hızlı, aşama atlayarak hızlanır; per-çağrı süreleri cömert olmalı ki uzun tesis prompt'u abort olmasın
+  ok("hızlı per-çağrı süreleri cömert (model cevabı yetişir)", w.sureler().gemini >= 20000 && w.sureler().poll >= 35000);
 
   // Kontrol değişince ayar kalıcı kaydedilir (change tarayıcıda bubbles → delege)
   const sel = w.document.querySelector('[data-ayar="adaySayisi"]');
