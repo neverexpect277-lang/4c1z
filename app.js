@@ -190,7 +190,9 @@ function tesisGuncelle(){
   const k = $("#tesisKutu");
   if(k){ k.classList.toggle("on", on); k.setAttribute("aria-pressed", on ? "true" : "false"); }
   chipleriCiz();
-  const gen = $("#gen"); if(gen) gen.textContent = on ? "Tesis Üret" : "Fikir Üret";
+  // İki AYRI buton: aktif moddaki buton vurgulanır (Fikir Üret ↔ Tesis Üret)
+  const gen = $("#gen"); if(gen) gen.classList.toggle("aktifmod", !on);
+  const genT = $("#genTesis"); if(genT) genT.classList.toggle("aktifmod", on);
   if(alanInput) alanInput.placeholder = on
     ? "tesis alanı yaz (örn. 'mantar', 'akrep zehri'), boş bırak ya da serbest iste"
     : "alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste";
@@ -912,11 +914,12 @@ async function ureticiIlham(alan){
 }
 
 let calisiyor = false;
+function uretButonKilit(d){ ["#gen", "#genTesis"].forEach(s => { const b = $(s); if(b) b.disabled = d; }); }
 async function uret(){
   if(calisiyor) return;
   if(mod !== "yeni") setMod("yeni");
   calisiyor = true;
-  $("#gen").disabled = true;
+  uretButonKilit(true);
   const alan = alanInput.value.trim();
   const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
   const kaynak = ayarlar.anlamsal ? await kaynakSecAnlamsal(kaynakHam, alan) : kaynakSec(kaynakHam, alan);   // ragflow: alakalı kısmı seç (anlamsal/keyword)
@@ -1040,7 +1043,7 @@ async function uret(){
   }finally{
     clearInterval(dongu);   // spinner her hâlükârda durur
     calisiyor = false;      // kilit her hâlükârda açılır
-    $("#gen").disabled = false;
+    uretButonKilit(false);
   }
 }
 
@@ -1052,7 +1055,18 @@ async function uretCoklu(n){
   try{ for(let i = 0; i < n; i++){ await uret(); } }
   finally{ if(b) b.disabled = false; }
 }
-$("#gen").addEventListener("click", uret);
+// İki AYRI üret butonu: ilgili moda geçip üretir (Fikir Üret = ürün, 🏭 Tesis Üret = tesis)
+function uretModda(tesisMi){
+  if(calisiyor) return;
+  if(!!ayarlar.tesis !== !!tesisMi){
+    ayarlar.tesis = !!tesisMi; ayarKaydet(); tesisGuncelle();
+    if(mod === "kayit") cizKayitlilar(); else cizFikirler(sonUretilen);
+  }
+  uret();
+}
+$("#gen").addEventListener("click", () => uretModda(false));
+const _tesisBtn = $("#genTesis");
+if(_tesisBtn) _tesisBtn.addEventListener("click", () => uretModda(true));
 const _otoBtn = $("#genOto");
 if(_otoBtn) _otoBtn.addEventListener("click", () => uretCoklu(3));
 $("#temaKaydet").addEventListener("click", temaFormAc);

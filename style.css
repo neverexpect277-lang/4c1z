@@ -107,6 +107,10 @@ label.tt{display:block;font-size:11px;letter-spacing:.06em;text-transform:upperc
 .gen.oto{flex:1;font-size:14px;color:var(--accentDeep);background:var(--cream);
   border:1px solid var(--accentSoft);box-shadow:none;}
 .gen.oto:hover{background:#f0e6cd;box-shadow:none;}
+.gen.tesis{background:linear-gradient(135deg,#6db58a,#4f9e74);color:#0d2b1c;
+  box-shadow:0 6px 16px rgba(91,158,116,.22);}
+.gen.tesis:hover{filter:brightness(1.04);box-shadow:0 8px 20px rgba(91,158,116,.3);}
+.gen.aktifmod{box-shadow:0 0 0 3px rgba(46,43,36,.22), 0 6px 16px rgba(150,118,55,.18);}
 
 /* Tabs */
 .tabs{display:flex;gap:5px;margin-top:18px;background:var(--card2);border:1px solid var(--line);
