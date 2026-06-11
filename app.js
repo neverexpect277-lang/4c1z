@@ -909,13 +909,15 @@ async function uret(){
   ajanCiz(asama, mesajlar[0]);
   try{ if(statusEl.scrollIntoView) statusEl.scrollIntoView({ behavior: "smooth", block: "center" }); }catch(e){}
   const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; ajanCiz(asama, mesajlar[mi]); }, 2000);
+  const hizli = ayarlar.hiz === "hizli";   // Hızlı profili: web + eleştirmen atlanır, tek üretici (Dengeli/Derin'de hepsi çalışır)
 
+  try{
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   const yonerge = istekYorumla(alan).yonerge;          // "X+Y birleştir" gibi niyeti güçlü yönergeye çevir
-  const ilham = await ureticiIlham(alan);              // araştırma ordusu → üreticiye gerçek sinyaller
+  const ilham = hizli ? "" : await ureticiIlham(alan); // Hızlı: web araştırması atla; değilse araştırma ordusu → üreticiye sinyaller
   let adaylar = null;
-  if(ayarlar.heyet){
+  if(ayarlar.heyet && !hizli){
     // çok-ajan: PERSONALAR paralel üretir → adaylar havuzda birleşir
     const dilimler = await Promise.all(personaSec().map(persona => {
       const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
@@ -938,7 +940,7 @@ async function uret(){
 
   // 2. AŞAMA: KIRMIZI TAKIM eleştirmen — zayıf/klişe/yapılamaz adayları ele, kalanı keskinleştir
   let suzulmus = null;
-  if(adaylar && ayarlar.eleme){
+  if(adaylar && ayarlar.eleme && !hizli){
     for(let d = 1; d <= 2 && !suzulmus; d++){
       const p = elestirmenPrompt(alan, adaylar, kaynak, ayarlar.heyet, ayarlar.tesis);
       suzulmus = await zincir(p.sistem, p.kullanici);
@@ -967,13 +969,9 @@ async function uret(){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
     if(ayarlar.tesis) fikirler[0].tesis = true; // tesis kartı → etiketler tesise uyarlanır
     if(ilham) fikirler[0].ilham = ilham;       // sahadan beslenen sinyaller (kartta gösterilir)
-    await uzmanlastir(alan, fikirler[0], kaynak, ayarlar.web);
+    await uzmanlastir(alan, fikirler[0], kaynak, hizli ? false : ayarlar.web);
     asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
   }
-
-  clearInterval(dongu);
-  calisiyor = false;
-  $("#gen").disabled = false;
 
   if(fikirler && fikirler.length){
     const fikir = fikirler[0];                 // TEK fikir
@@ -997,6 +995,20 @@ async function uret(){
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
     statusEl.appendChild(b);
+  }
+  }catch(e){
+    // beklenmedik hata: motor ASLA takılı kalmasın, kullanıcıya tekrar dene sun
+    try{
+      statusEl.innerHTML = "Bir aksilik oldu — ";
+      const b = document.createElement("button");
+      b.className = "retry"; b.textContent = "Tekrar dene";
+      b.addEventListener("click", uret);
+      statusEl.appendChild(b);
+    }catch(_){}
+  }finally{
+    clearInterval(dongu);   // spinner her hâlükârda durur
+    calisiyor = false;      // kilit her hâlükârda açılır
+    $("#gen").disabled = false;
   }
 }
 

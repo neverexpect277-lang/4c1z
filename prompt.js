@@ -61,7 +61,7 @@ const KARSILAMA = [
 // Kullanıcının elle yazdığı metni yorumla: tema mı, kendi fikri/isteği mi
 function alanCumlesi(alan, tesis){
   if(alan) return tesis
-    ? `Kullanıcının yazdığı tesis alanı/isteği: "${alan}". Bunu MUTLAKA temel al — bu alanda ~3,5M TL ile kurulabilecek niş üretim/yetiştirme tesisleri öner; konuyu dağıtma.`
+    ? `Kullanıcının yazdığı tesis alanı/isteği: "${alan}". Bunu MUTLAKA temel al — bu alanda 5M TL'ye kadar bütçeyle kurulabilecek niş üretim/yetiştirme tesisleri öner; konuyu dağıtma.`
     : `Kullanıcının yazdığı istek/tema/fikir: "${alan}". Bunu MUTLAKA temel al — bir ürün fikri veya isteğiyse onu geliştir ve mevcut başka nesnelerle harmanla; bir alan/temaysa o alanda kal. Konuyu dağıtma.`;
   return tesis
     ? `Tesis alanı: SINIRSIZ — her sektörden, birbirinden bağımsız niş ve yüksek katma değerli üretim/yetiştirme tesisleri.`
@@ -72,9 +72,9 @@ function alanCumlesi(alan, tesis){
 const ORTAK_KURAL =
 `YARI TEKNOLOJİK serbest: basit sensör, mıknatıs, pil, yay, ısı, küçük elektronik, telefon-uygulaması bağlantısı kullanılabilir. AMA bilimkurgu, hayal ve VARSAYIM YASAK; bugünün ucuz, gerçek parçalarıyla üretilebilir olmalı, 10 saniyede anlaşılmalı. Her ürün MUTLAKA mevcut 2-3 sıradan nesnenin/ürünün BEKLENMEDİK HARMANI olmalı. Piyasada zaten satılan, klişe, bariz veya işe yaramaz şeyler YASAK.`;
 
-// ÜRETİM TESİSİ modu: ürün icadı yerine ~3,5M TL ile kurulabilen niş üretim/yetiştirme tesisi yatırımı
+// ÜRETİM TESİSİ modu: ürün icadı yerine 5M TL'ye kadar bütçeyle kurulabilen niş üretim/yetiştirme tesisi yatırımı
 const TESIS_KURAL =
-`GERÇEKÇİ YATIRIM zorunlu: Türkiye'de bugünün şartlarıyla yaklaşık 3,5 milyon TL sermayeyle KURULABİLEN üretim/yetiştirme tesisleri öner. Hedef: kilogramı/gramı PAHALI, ihracat ya da niş iç pazar talebi olan, herkesin yapmadığı işler (mantar, tıbbi sülük, safran, salyangoz, mikroalg, böcek proteini, esansiyel yağ, zehir/biyo-madde tarzı). Bilimkurgu, hayalcilik ve abartılı rakam YASAK; bugünün gerçek girdileri, ekipmanı ve fiyatlarıyla muhakeme et. Bariz, doymuş, herkesin kurduğu (sıradan besi, normal sera domatesi) işler YASAK.`;
+`GERÇEKÇİ YATIRIM zorunlu: Türkiye'de bugünün şartlarıyla 5 milyon TL'ye kadar sermayeyle KURULABİLEN üretim/yetiştirme tesisleri öner (küçük bütçeli de olabilir, tavan ~5M TL). Hedef: kilogramı/gramı PAHALI, ihracat ya da niş iç pazar talebi olan, herkesin yapmadığı işler (mantar, tıbbi sülük, safran, salyangoz, mikroalg, böcek proteini, esansiyel yağ, zehir/biyo-madde tarzı). Bilimkurgu, hayalcilik ve abartılı rakam YASAK; bugünün gerçek girdileri, ekipmanı ve fiyatlarıyla muhakeme et. Bariz, doymuş, herkesin kurduğu (sıradan besi, normal sera domatesi) işler YASAK.`;
 
 // Üretim tesisi modunda her turda farklı yatırım açıları
 const TESIS_ACILAR = [
@@ -121,7 +121,7 @@ function kaynakCumlesi(kaynak){
 function ureticiPrompt(alan, kacinilacak, kaynak, begenilen, adaySayisi, kalip, persona, ilham, yonerge, tesis){
   const n = [3, 6, 9].indexOf(adaySayisi) >= 0 ? adaySayisi : 6;
   const sistem = tesis ?
-`Sen niş ÜRETİM TESİSİ yatırım uzmanısın. Görev: Türkiye'de ~3,5M TL ile kurulabilen, kârı/katma değeri yüksek, ihracat ya da niş iç pazar potansiyeli olan üretim/yetiştirme tesisleri önermek.
+`Sen niş ÜRETİM TESİSİ yatırım uzmanısın. Görev: Türkiye'de 5M TL'ye kadar bütçeyle kurulabilen, kârı/katma değeri yüksek, ihracat ya da niş iç pazar potansiyeli olan üretim/yetiştirme tesisleri önermek.
 Bir yatırım danışmanı gibi düşün: her tesisi kafanda kabaca KUR — hangi girdi, hangi ekipman, hangi süreç, kim alır; zihninde kuramıyorsan o fikri YAZMA. Her aday bugünün gerçek girdileri ve fiyatlarıyla kurulabilir olmalı.
 ${TESIS_KURAL}
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür (${n} aday), markdown yok, açıklama yok:
@@ -158,10 +158,10 @@ function elestirmenPrompt(alan, adaylar, kaynak, derin, tesis){
 `Sen acımasız bir YATIRIM DENETÇİSİsin: üretim tesisi fizibilitesi ve kârlılık denetçisi. Sana aday tesis fikirleri verilir; görevin gerçekçi olmayanları SERTÇE ELEMEK, kalanları KESKİNLEŞTİRMEK.${heyet}
 ŞU adayları ELE (acımasız ol):
 - Doymuş, herkesin kurduğu, bariz işler.
-- ~3,5M TL sermayeye GERÇEKTEN sığmayan, abartılı yatırım isteyenler.
+- 5M TL sermaye tavanına GERÇEKTEN sığmayan, abartılı yatırım isteyenler.
 - Talebi/ihracatı şüpheli, alıcısı belirsiz olanlar.
 - Türkiye'nin iklimi, mevzuatı ya da lojistiği açısından yürümeyecek olanlar.
-SOKRATİK ELEME — her aday için kendine SOR, bir cevap bile 'hayır' ise AT: (1) ~3,5M'a gerçekten kurulur mu? (2) Kilogramı/gramı pahalı + talep gerçek mi? (3) Türkiye iklimi/mevzuatı uygun mu? (4) Giriş engeli onu koruyor mu, yoksa herkes mi yapar? (5) Geri ödeme makul süre içinde mi?
+SOKRATİK ELEME — her aday için kendine SOR, bir cevap bile 'hayır' ise AT: (1) 5M TL'ye kadar bütçeyle gerçekten kurulur mu? (2) Kilogramı/gramı pahalı + talep gerçek mi? (3) Türkiye iklimi/mevzuatı uygun mu? (4) Giriş engeli onu koruyor mu, yoksa herkes mi yapar? (5) Geri ödeme makul süre içinde mi?
 KALANLARI güçlendir: neyden/derde/nedenYok/vayBe alanlarını daha somut ve gerçekçi yap.
 ${TESIS_KURAL}
 ÇIKTI: SADECE geçerli bir JSON dizisi döndür — eleyip güçlendirdiğin EN İYİ 3 aday (diyalog YOK, markdown YOK, açıklama YOK):
@@ -194,7 +194,7 @@ function ustAkilPrompt(alan, adaylar, kaynak, ton, ilham, tesis){
   const konu = tesis ? "üretim tesisi fikirleri" : "ürün fikirleri";
   const kural = tesis ? TESIS_KURAL : ORTAK_KURAL;
   const yereBas = tesis
-    ? "- Hepsini GERÇEKÇİ yatırıma indir: hayal/abartı/temennî temizle; ~3,5M TL ile kurulabilir ve gerçek talebe dayalı olsun."
+    ? "- Hepsini GERÇEKÇİ yatırıma indir: hayal/abartı/temennî temizle; 5M TL'ye kadar bütçeyle kurulabilir ve gerçek talebe dayalı olsun."
     : "- Hepsini yarı-teknolojik ve YERE BASAN hale getir: varsayım/hayal/bilimkurgu temizle, gerçek ucuz parçalarla üretilebilir olsun.";
   const cavRol = tesis
     ? "(esmer erkek, çok detaycı, yatırım ve bilime aşık): tesisi ortaya atar ve SAVUNUR; Zeyneb'i yarı zarif sözle yarı rakam/mantıkla ikna eder."

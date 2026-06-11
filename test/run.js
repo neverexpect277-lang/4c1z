@@ -532,7 +532,7 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
 
   // 1) Prompt çerçevesi tesise döner (4 aşama)
   const u = w.ureticiPrompt("mantar", [], "", [], 6, "", null, "", "", true);
-  ok("üretici tesis çerçevesine geçer", /ÜRETİM TESİSİ yatırım/.test(u.sistem) && /3,5M/.test(u.sistem));
+  ok("üretici tesis çerçevesine geçer", /ÜRETİM TESİSİ yatırım/.test(u.sistem) && /5M TL/.test(u.sistem));
   const uUrun = w.ureticiPrompt("mutfak", [], "", [], 6, "", null, "", "", false);
   ok("tesis kapalıyken ürün çerçevesi korunur (regresyon)", /ürün mucitisin/.test(uUrun.sistem));
   const e = w.elestirmenPrompt("", [{ isim: "x" }], "", false, true);
@@ -565,6 +565,44 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   ok("tesis kartında 'Ruhsat / teşvik' etiketi", /Ruhsat \/ teşvik/.test(tKart) && /Kurulum \+ birim maliyet/.test(tKart));
   const pKart = w.kartHTML({ isim: "Ürün", ne: "x", neyden: "a+b", derde: "dert", patent: "yok" }, false);
   ok("ürün kartında klasik 'Neyden' etiketi korunur", /Neyden/.test(pKart) && /Patent durumu/.test(pKart) && !/Ne üretir/.test(pKart));
+})();
+
+// ---- Hızlı profili kısa yol + motor takılmaz (kod altyapısı sağlamlığı) ----
+console.log("\n#HIZ — Hızlı kısa yol + motor takılmaz");
+(async function(){
+  const w = yeniDom();
+  const cag = [];
+  const durum = { ara: false };
+  // içerik tabanlı stub: aşama atlansa da prompt içeriğine göre doğru yanıt verir
+  w.fetch = async (url, o) => {
+    if(String(url).startsWith("/api/ara")){ durum.ara = true; return { ok: true, status: 200, json: async () => ({ sonuclar: [] }) }; }
+    if(/frankfurter/.test(url)) return { ok: true, status: 200, json: async () => ({ rates: { TRY: 34 } }) };
+    const text = JSON.parse(o.body).text; cag.push(text);
+    let resp;
+    if(/ÜST AKLI/.test(text)) resp = [{ isim: "Hızlı Fikir", ne: "x", neyden: "a+b", diyalog: [{ kim: "Çavuş", soz: "h" }, { kim: "Zeyneb", soz: "ikna" }] }];
+    else if(/UZMAN HEYET/i.test(text)) resp = [{ isim: "Hızlı Fikir", skor: "80", hukum: "h", nasil: "n", maliyet: "m" }];
+    else if(/KIRMIZI TAKIM|YATIRIM DENETÇİSİ/.test(text)) resp = [{ isim: "Süz", ne: "s", neyden: "p+q" }];
+    else resp = [{ isim: "Aday", ne: "a", neyden: "x+y" }];
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(resp) }] } }] }) };
+  };
+  w.ayarSet("hiz", "hizli");
+  w.document.querySelector("#alan").value = "ev";
+  await w.uret();
+  ok("Hızlı: web araması (ilham + uzman heyeti) ATLANIR", durum.ara === false);
+  ok("Hızlı: eleştirmen aşaması ATLANIR", !cag.some(t => /KIRMIZI TAKIM|YATIRIM DENETÇİSİ/.test(t)));
+  ok("Hızlı: üst akıl çağrılır (Çavuş↔Zeyneb korunur)", cag.some(t => /ÜST AKLI/.test(t)));
+  ok("Hızlı: yine de final fikir üretilir", !!w.document.querySelector("#out .card"));
+  ok("Hızlı: bittiğinde buton kilidi açılır", w.document.querySelector("#gen").disabled === false);
+})();
+
+(async function(){
+  const w = yeniDom();
+  stubUret(w);
+  w.cizFikirler = () => { throw new Error("render patladı"); };   // try içinde beklenmedik hata
+  w.document.querySelector("#alan").value = "ev";
+  await w.uret();
+  ok("beklenmedik hatada buton kilidi açılır (motor takılmaz)", w.document.querySelector("#gen").disabled === false);
+  ok("beklenmedik hatada 'Tekrar dene' sunulur", !!w.document.querySelector("#status .retry"));
 })();
 
 (async function(){
