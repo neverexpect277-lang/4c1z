@@ -6,7 +6,7 @@ Dünyada ve Türkiye'de olmayan, yarı-teknolojik, herkesin kullanabileceği **y
 
 ## Nasıl çalışır — 4 aşamalı premium üst akıl
 ```
-üretici (6 aday, DIY-maker + SAHADAN gerçek sinyaller: ConceptNet ilişkileri üretici (6 aday, DIY-maker düşünme) gerçek dertler)
+üretici (6 aday, DIY-maker düşünme + SAHADAN gerçek sinyaller: ConceptNet ilişkileri & gerçek dertler)
    → kırmızı-takım eleştirmen (Sokratik eleme → en iyi 3)
    → üst akıl (en iyi 1 + Çavuş↔Zeyneb diyaloğu)
    → uzman heyeti (web destekli mühendislik)
