@@ -1002,13 +1002,18 @@ async function uret(){
   const premium = ayarlar.heyet || ayarlar.tesis;   // tesis = premium altyapı: ordu + geniş heyet otomatik
   let adaylar = null;
   if(premium && !hizli){
-    // çok-ajan: persona ORDUSU paralel üretir → adaylar havuzda birleşir (tesiste otomatik)
-    const dilimler = await Promise.all(personaSec().map(persona => {
-      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, ayarlar.tesis ? "" : kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
-      return zincir(p.sistem, p.kullanici);
-    }));
+    // çok-ajan ORDUSU: rate-limit'i önlemek için 3'erli DALGALAR halinde; yeterli aday toplanınca DUR (hız + güven)
+    const personalar = personaSec();
     const havuz = [];
-    for(const arr of dilimler){ if(Array.isArray(arr)) for(const a of arr) if(a && a.isim) havuz.push(a); }
+    const yeterli = Math.max(6, ayarlar.adaySayisi);
+    for(let i = 0; i < personalar.length && !iptalMi(); i += 3){
+      const dilimler = await Promise.all(personalar.slice(i, i + 3).map(persona => {
+        const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, ayarlar.tesis ? "" : kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
+        return zincir(p.sistem, p.kullanici);
+      }));
+      for(const arr of dilimler){ if(Array.isArray(arr)) for(const a of arr) if(a && a.isim) havuz.push(a); }
+      if(havuz.length >= yeterli) break;   // yeterli aday → sonraki dalgayı atla
+    }
     if(havuz.length) adaylar = havuz;
   }
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
