@@ -61,7 +61,11 @@ const TESIS_PERSONALAR = [
   "tarım teşvik danışmanı — IPARD/TKDK/KOSGEB hibe ve desteklerini önceler.",
   "yatırım maliyetçisi — kurulum (CAPEX), işletme gideri ve geri ödeme süresini hesaplar.",
   "pazar/talep analisti — kilogram/gram fiyatı yüksek, niş pazar boşluklarını arar.",
-  "sürdürülebilir tarım uzmanı — atığı gelire çeviren döngüsel üretim kurar."
+  "sürdürülebilir tarım uzmanı — atığı gelire çeviren döngüsel üretim kurar.",
+  "pazarlama & marka uzmanı — niş ürünü doğru alıcıya konumlandırır, premium fiyatlandırır.",
+  "lojistik & soğuk zincir uzmanı — taşıma, depolama ve bozulma kaybını minimize eder.",
+  "sertifikasyon uzmanı — organik, helal, HACCP ve ihracat sertifikalarını planlar.",
+  "finansman/kredi danışmanı — banka kredisi, leasing ve hibe-eş finansmanı kurgular."
 ];
 const HEYET_AJAN = 6;   // her turda sahaya inen persona sayısı (rotasyonla farklı kombinasyon)
 function personaSec(){
@@ -178,7 +182,7 @@ function favNotSet(isim, not){
 // ---- chips & input ----
 // Ürün modu chip'leri (varsayılan) vs. Üretim Tesisi modu chip'leri
 const URUN_CHIPLER = [["","Sınırsız"],["mutfak","Mutfak"],["banyo","Banyo"],["çanta / cep","Çanta"],["araba","Araba"],["çocuk","Çocuk"],["yaşlılar","Yaşlı"],["sokak / dışarı","Sokak"],["ev","Ev"],["ofis / okul","Ofis"],["bahçe / balkon","Bahçe"],["evcil hayvan","Evcil"]];
-const TESIS_CHIPLER = [["","Sınırsız"],["mantar üretim tesisi","Mantar"],["su ürünleri / balık çiftliği","Su ürünleri"],["tıbbi ve aromatik bitki","Tıbbi bitki"],["biyoteknoloji / zehir / enzim","Biyoteknoloji"],["niş hayvancılık (sülük, salyangoz, ipek böceği)","Niş hayvancılık"],["böcek proteini üretimi","Böcek proteini"],["mikroalg (spirulina, klorella)","Mikroalg"],["esansiyel yağ distilasyon tesisi","Esans yağ"],["arıcılık / arı ürünleri (zehir, propolis)","Arı ürünleri"],["seracılık / dikey tarım","Sera / Dikey"]];
+const TESIS_CHIPLER = [["","Sınırsız"],["mantar üretim tesisi","Mantar"],["su ürünleri / balık çiftliği","Su ürünleri"],["tıbbi ve aromatik bitki","Tıbbi bitki"],["biyoteknoloji / zehir / enzim","Biyoteknoloji"],["niş hayvancılık (sülük, salyangoz, ipek böceği)","Niş hayvancılık"],["böcek proteini üretimi","Böcek proteini"],["mikroalg (spirulina, klorella)","Mikroalg"],["esansiyel yağ distilasyon tesisi","Esans yağ"],["arıcılık / arı ürünleri (zehir, propolis)","Arı ürünleri"],["seracılık / dikey tarım","Sera / Dikey"],["safran / değerli baharat üretimi","Safran"],["trüf mantarı bahçesi","Trüf"],["solucan gübresi / vermikompost","Solucan gübresi"],["ipek böceği / koza üretimi","İpek böceği"],["fide / fidan üretimi","Fidan"],["dondurularak kurutma / kurutulmuş gıda","Kurutma"],["havyar / mersin balığı","Havyar"],["mantar bazlı / biyo malzeme","Biyo malzeme"]];
 function chipleriCiz(){
   const host = $("#chips"); if(!host) return;
   const set = ayarlar.tesis ? TESIS_CHIPLER : URUN_CHIPLER;
@@ -694,6 +698,7 @@ async function araGetir(q, en){
   let url = "/api/ara?q=" + encodeURIComponent(q);
   if(en) url += "&en=" + encodeURIComponent(en);
   if(ayarlar.sosyal) url += "&sosyal=1";
+  if(ayarlar.tesis) url += "&tesis=1";        // tesise özel kaynaklar (tarım/bilim/ticaret)
   const onb = ARA_ONBELLEK.get(url);
   if(onb && Date.now() - onb.t < ARA_ONBELLEK_TTL) return onb.v;   // tekrar eden çağrı → anında (ağ yok)
   try{

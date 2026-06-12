@@ -563,7 +563,7 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   // 2) Tesis ajan ordusu ayrı havuzdan seçilir (ürün personaları sahaya inmez)
   w.ayarSet("tesis", true);
   const tp = w.personaSec();
-  ok("tesis modunda ajanlar tesis havuzundan gelir", tp.every(p => /ziraat|su ürünleri|biyoteknoloji|gıda|hayvancılık|ihracat|teşvik|maliyetçi|pazar|sürdürülebilir/i.test(p)));
+  ok("tesis modunda ajanlar tesis havuzundan gelir", tp.every(p => /ziraat|su ürünleri|biyoteknoloji|gıda|hayvancılık|ihracat|teşvik|maliyetçi|pazar|sürdürülebilir|lojistik|sertifikasyon|finansman|marka/i.test(p)));
   ok("ürün personaları (DIY/maker) tesiste sahaya İNMEZ", !tp.some(p => /DIY\/maker|oyun tasarımcısı/.test(p)));
   w.ayarSet("tesis", false);
 
@@ -717,6 +717,17 @@ console.log("\n#BUTON — Ayrı 'Tesis Üret' butonu uçtan uca");
   ok("Fikir Üret butonu ürün moduna geçip ÜRÜN kartı üretir", !!kart && !kart.classList.contains("tesis"));
 })();
 
+// ---- TESİSE ÖZEL araştırma: client &tesis=1 (server tarafı #ALTYAPI bloğunda, global.fetch yarışını önlemek için) ----
+console.log("\n#TESİS-ARA — Tesise özel araştırma (client)");
+(async function(){
+  const w = yeniDom();
+  let curl = "";
+  w.fetch = async (u) => { curl = String(u); return { ok: true, json: async () => ({ sonuclar: [{ baslik: "X", ozet: "y" }] }) }; };
+  w.ayarSet("tesis", true);
+  await w.araGetir("mantar", "mushroom");
+  ok("tesis modunda araGetir &tesis=1 gönderir", /[?&]tesis=1/.test(curl));
+})();
+
 // ---- ALTYAPI: serverless zincir sağlamlığı (api/gen.js, api/poll.js) ----
 console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
 (async function(){
@@ -788,6 +799,15 @@ console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
     const ilkSayi = araFetch;
     res = mockRes(); await araHandler({ query: { q: sorgu } }, res);
     ok("ara: tekrar eden sorgu ÖNBELLEKTEN döner (ağa çıkmaz)", res.payload.onbellek === true && araFetch === ilkSayi);
+
+    // TESİSE ÖZEL araştırma (server): tesis=1 → yatırım terimleri; teknoloji kaynağı yok; tarım/bilim eklenir
+    const urller = [];
+    global.fetch = async (u) => { urller.push(decodeURIComponent(String(u))); return { ok: true, status: 200, json: async () => ({ results: [{ title: "T", content: "C" }] }), text: async () => "" }; };
+    res = mockRes();
+    await araHandler({ query: { q: "tesisSorgu_" + Date.now(), en: "mushroom", tesis: "1" } }, res);
+    ok("tesis ara: web sorgusu yatırım terimleriyle genişler (üretim tesisi + ihracat)", urller.some(u => /üretim tesisi/i.test(u)) && urller.some(u => /ihracat/i.test(u)));
+    ok("tesis ara: teknoloji kaynakları taranmaz (github yok)", !urller.some(u => /github\.com/i.test(u)));
+    ok("tesis ara: tarım/bilim kaynağı eklenir (openalex/openfoodfacts)", urller.some(u => /openalex\.org|openfoodfacts/i.test(u)));
   } finally {
     global.fetch = realFetch;
   }

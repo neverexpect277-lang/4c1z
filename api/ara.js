@@ -344,6 +344,18 @@ const EK_KAYNAKLAR = [
   { url: q => "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance&pagesize=3&site=electronics&q=" + encodeURIComponent(q), pick: j => (j.items || []).map(x => ({ baslik: "Elektronik: " + temizle(x.title || ""), ozet: "skor " + (x.score || 0) })) }
 ];
 
+// ÜRETİM TESİSİ için kaynak seti — teknoloji kaynakları (GitHub/npm/Stack-electronics) DEĞİL;
+// tarım/gıda, bilimsel yayın, kavram, ticaret/haber odaklı. EK_KAYNAKLAR'ın ilgili alt-kümesi + OpenAlex.
+const TESIS_KAYNAKLAR = [
+  EK_KAYNAKLAR[1],   // OpenFoodFacts — gıda/tarım ürünleri
+  EK_KAYNAKLAR[6],   // Crossref — bilimsel yayın (üretim tekniği/verim)
+  EK_KAYNAKLAR[7],   // DBpedia — kavram/tanım
+  EK_KAYNAKLAR[9],   // Internet Archive — belge/rapor
+  EK_KAYNAKLAR[10],  // GDELT — haber/pazar/ticaret
+  { url: q => "https://api.openalex.org/works?per-page=3&search=" + encodeURIComponent(q), pick: j => (j.results || []).map(x => ({ baslik: "Araştırma: " + temizle(x.title || ""), ozet: temizle((x.primary_location && x.primary_location.source && x.primary_location.source.display_name) || "") })) },
+  { url: q => "https://api.worldbank.org/v2/country/tur/indicator/AG.PRD.CROP.XD?format=json&per_page=1&mrnev=1&_q=" + encodeURIComponent(q), pick: j => (Array.isArray(j) && j[1] ? j[1] : []).map(x => ({ baslik: "TR tarım verim endeksi: " + temizle(String(x.value || "")), ozet: "yıl " + temizle(String(x.date || "")) })) }
+];
+
 // ALTYAPI önbellek: aynı sorgu sıcak instance'ta TTL boyunca AĞA ÇIKMADAN anında döner.
 const ONBELLEK = new Map();
 const ONBELLEK_TTL = 10 * 60 * 1000;   // 10 dakika
@@ -364,7 +376,8 @@ module.exports = async (req, res) => {
   const en = String((req.query && req.query.en) || "").slice(0, 200).trim();        // İngilizce (tech kaynakları)
   if (!q) { res.status(200).json({ sonuclar: [] }); return; }
   const sosyal = !!(req.query && (req.query.sosyal == "1" || req.query.sosyal === "true"));
-  const anahtar = q + "|" + en + "|" + (sosyal ? "s" : "");
+  const tesis = !!(req.query && (req.query.tesis == "1" || req.query.tesis === "true"));   // tesise özel kaynaklar
+  const anahtar = q + "|" + en + "|" + (sosyal ? "s" : "") + (tesis ? "|t" : "");
   const onb = onbellekAl(anahtar);
   if (onb) { res.status(200).json(Object.assign({ onbellek: true }, onb)); return; }   // tekrar eden çağrı → anında
   const patentSorgu = /patents\.google\.com/i.test(q);
@@ -373,7 +386,29 @@ module.exports = async (req, res) => {
     let kaynak = "searxng";
     if (!web.length) { web = await ddg(q); kaynak = "ddg"; }
     let sonuclar = web.slice(0, 4);   // web baskın olmasın, ek kaynaklara yer kalsın
-    if (!patentSorgu) {
+    if (!patentSorgu && tesis) {
+      // ÜRETİM TESİSİ araştırma altyapısı: TR yatırım/pazar/teşvik terimleriyle web + tarım/bilim/ticaret kaynakları
+      const temiz = q.replace(/^site:\S+\s*/, "");
+      const enTemiz = (en || q).replace(/^site:\S+\s*/, "");
+      const tesisSorgular = [
+        temiz + " üretim tesisi kurulum maliyeti",
+        temiz + " ihracat fiyatı pazar talebi",
+        temiz + " tesis teşvik IPARD TKDK hibe",
+        enTemiz + " production facility cost yield export"
+      ];
+      const webDilim = await Promise.all(tesisSorgular.map(t => searxng(t)));
+      const gor = new Set();
+      for (const it of web) gor.add(it.baslik);
+      for (const d of webDilim) for (const it of d) if (it.baslik && !gor.has(it.baslik)) { gor.add(it.baslik); sonuclar.push(it); }
+      // bilim + kavram + tarım + haber (teknoloji kaynakları YOK)
+      const [a, w, wd, ss, cn] = await Promise.all([
+        arxiv(enTemiz), wiki(temiz, enTemiz), wikidata(temiz), semanticScholar(enTemiz), conceptnet(enTemiz)
+      ]);
+      sonuclar = sonuclar.concat(a.slice(0, 2), w.slice(0, 2), wd.slice(0, 2), ss.slice(0, 2), cn.slice(0, 3));
+      const ekDilimler = await Promise.all(TESIS_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
+      for (const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 2));
+      kaynak = "tesis";
+    } else if (!patentSorgu) {
       const temiz = q.replace(/^site:\S+\s*/, "");
       const enTemiz = (en || q).replace(/^site:\S+\s*/, "");
       // Terim seti: İngilizce + Türkçe + Datamuse'un ilişkili kelimeleri (kapsamı genişletir → daha çok repo)
@@ -396,12 +431,16 @@ module.exports = async (req, res) => {
       // her alandan kendi-kendine kapanan ek ajan ordusu (alakasızsa susar)
       const ekDilimler = await Promise.all(EK_KAYNAKLAR.map(k => basitAjan(k, enTemiz)));
       for(const d of ekDilimler) sonuclar = sonuclar.concat(d.slice(0, 1));
+    }
+    if (!patentSorgu) {
+      const temiz = q.replace(/^site:\S+\s*/, "");
+      const enTemiz = (en || q).replace(/^site:\S+\s*/, "");
       // SOSYAL MEDYA EKİBİ (opt-in: ?sosyal=1) — YouTube(altyazı)+Bluesky+Lemmy+Instagram+TikTok
       if(sosyal){
         const sos = await sosyalEkip(temiz, enTemiz);
         sonuclar = sonuclar.concat(sos.slice(0, 8));
       }
-      if (!web.length && sonuclar.length) kaynak = "ek";
+      if (!tesis && !web.length && sonuclar.length) kaynak = "ek";
     }
     if (sonuclar.length) onbellekKoy(anahtar, { sonuclar, kaynak });   // sadece dolu sonucu önbelleğe al
     res.status(200).json({ sonuclar, kaynak });

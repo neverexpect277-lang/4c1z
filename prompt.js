@@ -87,7 +87,12 @@ const TESIS_ACILAR = [
   "geleceğin protein/gıda kaynağı (böcek, mikroalg, mantar)",
   "niş hayvancılık (sülük, salyangoz, ipek böceği, arı ürünleri)",
   "ithal edilen bir ürünü yerli üreten ithal-ikame tesisi",
-  "kozmetik/ilaç sanayiine hammadde üreten tesis"
+  "kozmetik/ilaç sanayiine sertifikalı hammadde üreten tesis",
+  "yan ürün/atıktan ikinci gelir kapısı açan döngüsel tesis",
+  "kısa sürede hasat veren, hızlı döngülü yüksek devirli üretim",
+  "lüks/gurme pazarına özel premium ürün üreten tesis",
+  "iklim değişikliğine dayanıklı yeni nesil kapalı tarım",
+  "yöresel/coğrafi işaretli ürünü ölçekleyen tesis"
 ];
 
 // Çeşitlilik için rastgele bakış açıları (her turda farklı fikir çıksın)
