@@ -733,30 +733,32 @@ async function araGetir(q, en){
   finally{ clearTimeout(to); cz(); }
   return [];
 }
-// 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
-async function uzmanlastir(alan, fikir, kaynak, webAcik){
+// Web + patent + kur aramasını topla (üst akılla PARALEL çalıştırılabilsin diye ayrıldı).
+// Tesiste patent araması yapılmaz (o alan ruhsat/teşvik için kullanılıyor) → boşa çağrı yok.
+async function aramaTopla(fikir, webAcik){
   const ad = ((fikir.isim || "") + " " + (fikir.ne || "")).trim();
-  const enQ = (fikir.aramaEN || "").trim();            // üst aklın ürettiği gizli İngilizce kelimeler
+  const enQ = (fikir.aramaEN || "").trim();
   const anahtar = fikir.isim || fikir.ne || "";
-  // web kapalı (dify ayarı): arama atlanır, sadece kur çekilir; uzman heyeti yine çalışır.
-  // Tesiste patent araması yapılmaz (o alan ruhsat/teşvik için kullanılıyor) → boşa çağrı yok.
   const [genel, patent, kur] = webAcik === false
     ? [[], [], await kurGetir()]
     : await Promise.all([
         araGetir(ad, enQ),
-        fikir.tesis ? Promise.resolve([]) : araGetir("site:patents.google.com " + (enQ || anahtar)),
+        ayarlar.tesis ? Promise.resolve([]) : araGetir("site:patents.google.com " + (enQ || anahtar)),
         kurGetir()
       ]);
   const fmt = arr => arr.slice(0, 12).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
-  const arama = genel.length ? fmt(genel) : "";
-  const patentArama = patent.length ? fmt(patent) : "";
+  return { arama: genel.length ? fmt(genel) : "", patentArama: patent.length ? fmt(patent) : "", kur };
+}
+// 4. AŞAMA yardımcısı: (önceden toplanmış arama varsa onu kullan) + uzman heyeti ile fikri zenginleştir
+async function uzmanlastir(alan, fikir, kaynak, webAcik, onceden){
+  const a = onceden || await aramaTopla(fikir, webAcik);   // onceden = üst akılla paralel toplanmış sonuç
   try{
-    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet || ayarlar.tesis, ayarlar.tesis);
+    const p = uzmanHeyetiPrompt(alan, fikir, kaynak, a.arama, a.patentArama, a.kur, ayarlar.heyet || ayarlar.tesis, ayarlar.tesis);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
       ["skor", "hukum", "yatirim", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "risk", "lokasyon", "yolharitasi", "tedarik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
-      if(arama) fikir.benzerWeb = true;
-      if(patentArama) fikir.patentWeb = true;
+      if(a.arama) fikir.benzerWeb = true;
+      if(a.patentArama) fikir.patentWeb = true;
     }
   }catch(e){}
 }
@@ -1052,6 +1054,13 @@ async function uret(){
   if(iptalMi()) throw new Error("__iptal__");
   if(suzulmus){ asama = 2; ajanCiz(asama, mesajlar[mi]); }
 
+  // HIZ (yalnız TESİS): uzman aramasını ÜST AKILLA PARALEL başlat (aynı arama, daha erken → ~10sn).
+  // Tesiste İngilizce teknoloji kaynakları kullanılmadığından aramaEN'siz toplamak kayıp YARATMAZ;
+  // konu kritikten üst akla korunur. Üründe hassas (aramaEN'li) sıralı arama aynen kalır.
+  const aramaP = (suzulmus && suzulmus[0] && !hizli && ayarlar.tesis)
+    ? aramaTopla(suzulmus[0], ayarlar.web)
+    : Promise.resolve(null);
+
   // 3. AŞAMA: ÜST AKIL — süzülmüş adaylardan en iyi 1'ini diyaloğuyla sun
   let fikirler = null;
   if(suzulmus){
@@ -1070,7 +1079,7 @@ async function uret(){
     fikirler[0].alan = alan || "Sınırsız";     // filtre için üretildiği alanı etiketle
     if(ayarlar.tesis) fikirler[0].tesis = true; // tesis kartı → etiketler tesise uyarlanır
     if(ilham) fikirler[0].ilham = ilham;       // sahadan beslenen sinyaller (kartta gösterilir)
-    await uzmanlastir(alan, fikirler[0], kaynak, hizli ? false : ayarlar.web);
+    await uzmanlastir(alan, fikirler[0], kaynak, hizli ? false : ayarlar.web, await aramaP);   // arama üst akılla paralel toplandı
     asama = 4; ajanCiz(asama, mesajlar[mi]);   // tüm aşamalar bitti
   }
 

@@ -767,6 +767,27 @@ console.log("\n#KARAKTER — Tesiste Çavuş & Zeyneb");
   ok("tesis kart diyaloğu Çavuş↔Zeyneb üretir", /ÇAVUŞ/.test(ua.sistem) && /ZEYNEB/.test(ua.sistem) && /"kim":"Çavuş"/.test(ua.sistem));
 })();
 
+// ---- HIZ: uzman araması üst akılla paralel (önceden toplanan arama yeniden aranmaz) ----
+console.log("\n#HIZ-PARALEL — Uzman araması paralel toplanır");
+(async function(){
+  const w = yeniDom();
+  let araSayisi = 0;
+  w.fetch = async (url) => {
+    if(String(url).startsWith("/api/ara")){ araSayisi++; return { ok: true, json: async () => ({ sonuclar: [{ baslik: "S", ozet: "o" }] }) }; }
+    if(/frankfurter/.test(url)) return { ok: true, json: async () => ({ rates: { TRY: 34 } }) };
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify([{ isim: "x", skor: "80" }]) }] } }] }) };
+  };
+  w.ayarSet("tesis", true);
+  // önceden toplanmış arama verilince uzmanlastir YENİDEN aramaz (paralel sonucu kullanır)
+  const f1 = { isim: "Tesis A", ne: "x", tesis: true };
+  await w.uzmanlastir("mantar", f1, "", true, { arama: "hazır", patentArama: "", kur: 34 });
+  ok("uzmanlastir önceden toplanan aramayı kullanır (yeniden aramaz)", araSayisi === 0 && f1.benzerWeb === true);
+  // önceden yoksa kendi aramasını yapar
+  const f2 = { isim: "Tesis B", ne: "y", tesis: true };
+  await w.uzmanlastir("mantar", f2, "", true);
+  ok("uzmanlastir önceden yoksa kendi aramasını yapar", araSayisi >= 1);
+})();
+
 // ---- TESİSE ÖZEL araştırma: client &tesis=1 (server tarafı #ALTYAPI bloğunda, global.fetch yarışını önlemek için) ----
 console.log("\n#TESİS-ARA — Tesise özel araştırma (client)");
 (async function(){
