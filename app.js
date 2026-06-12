@@ -266,7 +266,7 @@ function yatirimBlok(v){
     `<div class="yatirimstats">${stats.map(s => `<span class="ystat">${metin(s)}</span>`).join("")}</div></div>`;
 }
 function muhHTML(f){
-  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham || f.yatirim)) return "";
+  if(!(f.nasil || f.maliyet || f.benzer || f.talep || f.patent || f.teknik || f.prototip || f.farklilas || f.yapiTaslari || f.ilham || f.yatirim || f.risk || f.lokasyon || f.yolharitasi || f.tedarik)) return "";
   const sec = (b, v) => v ? `<div class="field"><b>${escapeHtml(b)}</b>${metin(v)}</div>` : "";
   const T = !!f.tesis;
   return `<div class="muhendislik"><div class="muhbaslik">${T ? "Mühendislik & Yatırım" : "Mühendislik"}</div>` +
@@ -278,6 +278,10 @@ function muhHTML(f){
     sec((T ? "İhracat / iç talep" : "Talep / ilgi") + (f.benzerWeb ? " · web" : ""), f.talep) +
     sec((T ? "Ruhsat / teşvik" : "Patent durumu") + (f.patentWeb ? " · web" : ""), f.patent) +
     sec(T ? "Teknik / biyolojik darboğaz" : "Teknik gerçeklik", f.teknik) +
+    (T ? sec("⚠️ Riskler + önlem", f.risk) : "") +
+    (T ? sec("📍 En uygun lokasyon (TR)", f.lokasyon) : "") +
+    (T ? sec("🗺️ Kuruluş yol haritası (0-12 ay)", f.yolharitasi) : "") +
+    (T ? sec("📦 Girdi tedariki", f.tedarik) : "") +
     sec(T ? "İlk pilot adımı" : "İlk prototip adımı", f.prototip) +
     sec(T ? "Teşvik / kaynaklar" : "Açık kaynak yapı taşları", f.yapiTaslari) +
     sec("Sahadan ilham (üreticiyi besleyen gerçek sinyaller)", f.ilham) +
@@ -736,7 +740,7 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
     const p = uzmanHeyetiPrompt(alan, fikir, kaynak, arama, patentArama, kur, ayarlar.heyet || ayarlar.tesis, ayarlar.tesis);
     const uz = await zincir(p.sistem, p.kullanici);
     if(uz && uz[0]){
-      ["skor", "hukum", "yatirim", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
+      ["skor", "hukum", "yatirim", "farklilas", "nasil", "maliyet", "benzer", "talep", "patent", "teknik", "risk", "lokasyon", "yolharitasi", "tedarik", "prototip", "yapiTaslari"].forEach(k => { if(uz[0][k]) fikir[k] = uz[0][k]; });
       if(arama) fikir.benzerWeb = true;
       if(patentArama) fikir.patentWeb = true;
     }

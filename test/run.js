@@ -546,6 +546,13 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   ok("uzman heyeti tesiste Ziraat+Teşvik heyetine döner", /Ziraat\/Su Ürünleri/.test(uz.sistem) && /Teşvik Danışmanı/.test(uz.sistem));
   ok("üst seviye: yatırım analizi + rakam zorunluluğu (geri ödeme, satış fiyatı)", /ÜST SEVİYE YATIRIM ANALİZİ/.test(uz.sistem) && /geri ödeme/i.test(uz.sistem) && /satış fiyatı/i.test(uz.sistem));
   ok("üst seviye: çıktı şemasında 'yatirim' alanı var", /"yatirim"/.test(uz.sistem));
+  ok("premium: heyete Risk Analisti + Lokasyon Uzmanı katıldı", /Risk Analisti/.test(uz.sistem) && /Lokasyon\/Bölge Uzmanı/.test(uz.sistem));
+  ok("premium: şemada risk/lokasyon/yolharitasi/tedarik alanları var", /"risk"/.test(uz.sistem) && /"lokasyon"/.test(uz.sistem) && /"yolharitasi"/.test(uz.sistem) && /"tedarik"/.test(uz.sistem));
+  // Premium alanlar tesis kartında render edilir
+  const dKart = w.kartHTML({ isim: "Mantar T", ne: "x", risk: "iklim riski · önlem klima", lokasyon: "Antalya · iklim", yolharitasi: "ay 0-3 ruhsat", tedarik: "miselyum tedarikçisi", tesis: true }, false);
+  ok("premium: tesis kartında risk/lokasyon/yol haritası/tedarik görünür", /Riskler/.test(dKart) && /lokasyon/i.test(dKart) && /yol haritası/i.test(dKart) && /Girdi tedariki/.test(dKart));
+  const dUrun = w.kartHTML({ isim: "Ürün", ne: "x", risk: "olmamalı", lokasyon: "olmamalı" }, false);
+  ok("premium: ürün kartında bu alanlar GÖSTERİLMEZ", !/Riskler/.test(dUrun) && !/yol haritası/i.test(dUrun));
 
   // Üst seviye + PREMIUM: tesis kartı yatırım özetini stat çipleriyle gösterir
   const yKart = w.kartHTML({ isim: "Mantar Tesisi", ne: "x", yatirim: "kurulum ≈3M₺ · geri ödeme ≈2 yıl · marj %45", tesis: true }, false);
@@ -833,6 +840,7 @@ console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
     ok("tesis ara: web sorgusu yatırım terimleriyle genişler (üretim tesisi + ihracat)", urller.some(u => /üretim tesisi/i.test(u)) && urller.some(u => /ihracat/i.test(u)));
     ok("tesis ara: teknoloji kaynakları taranmaz (github yok)", !urller.some(u => /github\.com/i.test(u)));
     ok("tesis ara: tarım/bilim kaynağı eklenir (openalex/openfoodfacts)", urller.some(u => /openalex\.org|openfoodfacts/i.test(u)));
+    ok("tesis ara: yeni bio/kimya repoları taranır (GBIF + PubChem)", urller.some(u => /gbif\.org/i.test(u)) && urller.some(u => /pubchem/i.test(u)));
   } finally {
     global.fetch = realFetch;
   }

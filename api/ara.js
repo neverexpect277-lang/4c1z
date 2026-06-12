@@ -353,7 +353,10 @@ const TESIS_KAYNAKLAR = [
   EK_KAYNAKLAR[9],   // Internet Archive — belge/rapor
   EK_KAYNAKLAR[10],  // GDELT — haber/pazar/ticaret
   { url: q => "https://api.openalex.org/works?per-page=3&search=" + encodeURIComponent(q), pick: j => (j.results || []).map(x => ({ baslik: "Araştırma: " + temizle(x.title || ""), ozet: temizle((x.primary_location && x.primary_location.source && x.primary_location.source.display_name) || "") })) },
-  { url: q => "https://api.worldbank.org/v2/country/tur/indicator/AG.PRD.CROP.XD?format=json&per_page=1&mrnev=1&_q=" + encodeURIComponent(q), pick: j => (Array.isArray(j) && j[1] ? j[1] : []).map(x => ({ baslik: "TR tarım verim endeksi: " + temizle(String(x.value || "")), ozet: "yıl " + temizle(String(x.date || "")) })) }
+  { url: q => "https://api.worldbank.org/v2/country/tur/indicator/AG.PRD.CROP.XD?format=json&per_page=1&mrnev=1&_q=" + encodeURIComponent(q), pick: j => (Array.isArray(j) && j[1] ? j[1] : []).map(x => ({ baslik: "TR tarım verim endeksi: " + temizle(String(x.value || "")), ozet: "yıl " + temizle(String(x.date || "")) })) },
+  { url: q => "https://api.gbif.org/v1/species/search?limit=2&q=" + encodeURIComponent(q), pick: j => (j.results || []).map(x => ({ baslik: "Tür(GBIF): " + temizle(x.scientificName || x.canonicalName || ""), ozet: temizle([x.rank, x.kingdom, x.family].filter(Boolean).join(" · ")) })) },
+  { url: q => "https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/" + encodeURIComponent(q) + "/json?limit=2", pick: j => ((j.dictionary_terms && j.dictionary_terms.compound) || []).map(t => ({ baslik: "Bileşik(PubChem): " + temizle(t), ozet: "kimyasal eşleşme" })) },
+  { url: q => "https://restcountries.com/v3.1/name/" + encodeURIComponent(q) + "?fields=name,region,population", pick: j => (Array.isArray(j) ? j : []).slice(0, 2).map(x => ({ baslik: "İhracat pazarı: " + temizle((x.name && (x.name.common || "")) || ""), ozet: temizle((x.region || "") + " · nüfus " + (x.population || "")) })) }
 ];
 
 // ALTYAPI önbellek: aynı sorgu sıcak instance'ta TTL boyunca AĞA ÇIKMADAN anında döner.
