@@ -28,7 +28,11 @@
     <div class="ogrenic">
       <p><b>4 aşamalı motor:</b> Önce araştırma ordusu o alanı tarar ve gerçek sinyaller toplar (aşağıda); sonra <b>Üretici</b> bu sinyallerden adaylar çıkarır → <b>Eleştirmen</b> 4 mercekten (teknik/pazar/maliyet/özgünlük) zayıfları eler → <b>Üst akıl</b> en iyi 1'i seçip Çavuş↔Zeyneb diyaloğuyla sunar → <b>Uzman heyeti</b> web destekli mühendislikle (maliyet, patent, teknik gerçeklik, prototip) zenginleştirir.</p>
 
-      <p><b>Anahtarsız ajanlar (30+):</b> Hiçbir API anahtarı gerektirmez, çıktı %100 Türkçe. Web arama (SearXNG/DuckDuckGo/Wikipedia), GitHub, Reddit, Hacker News, Stack Exchange, Google Patents, arXiv, Wikidata, Semantic Scholar, npm, Open Library, ConceptNet (kavram ilişkileri), Crossref, GitLab, iTunes, gıda/kitap/müzik/haber ajanları, güncel kur ve daha fazlası. Her ajan alakasız sorguda sessizce susar.</p>
+      <p><b>İki mod — üstten seç:</b> En üstteki <b>💡 Fikir Üret</b> ve <b>🏭 Üretim Tesisi</b> sekmeleri iki ayrı dünyadır. Hangisini seçersen alanlar (chip'ler), araştırma kaynakları, üretilenler ve kayıtlar o moda göre değişir; ikisi <b>karışmaz</b>. Altta tek <b>Üret</b> butonu seçili modda üretir. Üretim sürerken <b>⏹ İptal</b> belirir; basınca tüm çağrılar anında durur.</p>
+
+      <p><b>Hız (Motoru ayarla → Hızlandırma):</b> <b>Hızlı</b> = web araştırması + eleştirmen atlanır, çekirdek üretim + dosya kalır (en hızlı). <b>Dengeli</b> = tüm aşamalar (varsayılan). <b>Derin</b> = en uzun süre, en iyi araştırma. Ayrıca araştırma üretimle, uzman araması üst akılla <b>paralel</b> koşar (hız için).</p>
+
+      <p><b>Anahtarsız ajanlar (30+):</b> Hiçbir API anahtarı gerektirmez, çıktı %100 Türkçe. Web arama (SearXNG/DuckDuckGo/Wikipedia), GitHub, Reddit, Hacker News, Stack Exchange, Google Patents, arXiv, Wikidata, Semantic Scholar, npm, Open Library, ConceptNet (kavram ilişkileri), Crossref, GitLab, iTunes, gıda/kitap/müzik/haber ajanları, güncel kur ve daha fazlası. <b>Tesis modunda</b> ayrıca tarım/bilim/ticaret odaklı kaynaklar devreye girer: GBIF (tür/biyoloji), PubChem (bileşik/kimya), OpenAlex (araştırma), World Bank (tarım verisi), REST Countries (ihracat pazarı), GDELT (haber). Her ajan alakasız sorguda sessizce susar.</p>
 
       <p><b>Çalışma prensibi — araştırma üretime besleniyor:</b> Üretmeden önce ordu o alanı tarar; <b>ConceptNet ilişkileri</b> (harman için) + <b>gerçek dertler/sorular</b> (Reddit, DIY, forumlar) toplanıp üreticiye ve üst akla verilir. Bu sinyaller her kartta <b>"Sahadan ilham"</b> alanında görünür — yani fikir havadan değil, sahadan doğar.</p>
 
@@ -42,20 +46,22 @@
       <p><b>Motoru ayarla (akış + otomasyon):</b> 4 aşamayı düzenleyebilirsin —</p>
       <ul>
         <li>Aday sayısı (3/6/9), eleme aç/kapa, diyalog tonu (sert/dengeli/mizahi), web araması aç/kapa.</li>
-        <li><b>Otomasyon:</b> yüksek skoru oto-kaydet; ayrıca "Fikir Üret" yanındaki <b>"Otomatik üret"</b> butonu arka arkaya birden çok fikir üretir.</li>
+        <li><b>Otomasyon:</b> yüksek skoru oto-kaydet; ayrıca <b>"Otomatik üret"</b> butonu (Üret'in altında) arka arkaya birden çok fikir üretir.</li>
         <li><b>Anlamsal mod</b> (tarayıcıda yapay zekâ, anahtarsız): aynı/benzer ürünü tekrar vermez, üretilene anlamca benzer kaydı uyarır, kaynağı anlamca seçer, kayıtlarda anlamsal arama yapar. İlk açışta küçük bir model iner.</li>
         <li><b>Yerel LLM</b> (deneysel): güçlü cihazda fikirleri tamamen tarayıcıda üretir; yoksa buluta düşer.</li>
-        <li><b>Heyet modu (çok ajan):</b> üretici 10 personalık ekipten (mucit, tasarımcı, girişimci, mühendis, sürdürülebilirlik, erişilebilirlik…) her turda birkaçını paralel çalıştırır → daha çeşitli. Daha yavaştır.</li>
+        <li><b>Heyet modu (çok ajan):</b> üretici 10 personalık ekipten (mucit, tasarımcı, girişimci, mühendis, sürdürülebilirlik, erişilebilirlik…) her turda birkaçını paralel çalıştırır → daha çeşitli. (Tesis modunda bu ordu <b>otomatik</b> açıktır; rate-limit'i önlemek için 3'erli dalgalar halinde çalışır.) Daha yavaştır.</li>
         <li><b>Sosyal medya ekibi:</b> YouTube (videoyu bulur + <b>altyazıdan</b> bilgi süzer), Bluesky, Lemmy, Instagram/TikTok (en iyi çaba). Daha yavaştır.</li>
       </ul>
 
       <p><b>Kaynak (NotebookLM gibi):</b> Bir not/belge yapıştır ya da bir <b>https:// linki</b> koyup "Linki çek"e bas — sayfa temiz metne çevrilir. Uzun kaynaktan yalnızca alanla en alakalı kısımlar süzülüp fikre dayanak yapılır.</p>
 
-      <p><b>Mod (kalıp):</b> Ucuz prototip / yüksek teknoloji / sosyal fayda / çevre / eğlence — tek tıkla üretimi o tarza yönlendir.</p>
+      <p><b>Mod (kalıp):</b> Ucuz prototip / yüksek teknoloji / sosyal fayda / çevre / eğlence — tek tıkla üretimi o tarza yönlendir. (Yalnız Fikir modunda; tesise uymadığı için tesiste gizlenir.)</p>
 
-      <p><b>🏭 Üretim Tesisleri (ayrı motor):</b> "Tesis Üret" butonu, ürün fikri yerine <b>5M TL'ye kadar kurulabilen niş üretim/yetiştirme tesisi</b> önerir (mantar, tıbbi sülük, safran, mikroalg, zehir/biyo-madde…). Kendi ajan ordusu (ziraat, su ürünleri, biyoteknoloji, ihracat, teşvik, maliyet uzmanları), tesise özel araştırma kaynakları (tarım/bilim/ticaret) ve her kartta <b>★ Yatırım Özeti</b> (kurulum · geri ödeme · kâr marjı) ile çalışır. Tesis fikirleri ve kayıtları ürünlerden <b>ayrı</b> tutulur.</p>
+      <p><b>🏭 Üretim Tesisi modu — yatırım dosyası üretir:</b> Üstten bu modu seçince motor, ürün fikri yerine <b>5M TL'ye kadar kurulabilen niş üretim/yetiştirme tesisi</b> önerir (mantar, tıbbi sülük, safran, mikroalg, ipek böceği, zehir/biyo-madde…). Kendi <b>ajan ordusu</b> (ziraat, su ürünleri, biyoteknoloji, gıda, niş hayvancılık, ihracat, teşvik, maliyet, pazarlama, lojistik, sertifikasyon, finansman) ve <b>8 kişilik uzman heyeti</b> (Ziraat/Su Ürünleri + Maliyetçi + İhracat + Teşvik + Mevzuat + Pazar + <b>Risk</b> + <b>Lokasyon</b>) çalışır. Çavuş & Zeyneb burada da var: yatırımı tartışır, riski sıralar.</p>
 
-      <p><b>Her kartta:</b> skor (0-100) + hüküm, nasıl yapılır, maliyet (₺/$), benzer ürünler, talep, patent, teknik gerçeklik, ilk prototip, açık kaynak yapı taşları, sahadan ilham. <b>"Pazarı tara"</b> butonu o fikrin canlı rakip/ilgi durumunu web'den getirir. <b>★ Kaydet</b> ile saklayıp puan/durum/not eklersin; beğenilerin sonraki üretimleri besler. Temalar, filtre, metin + anlamsal arama, PWA (telefona kurulur) ve kalıcı oturum da var.</p>
+      <p><b>Tesis kartı — tam yatırım dosyası:</b> <b>★ Yatırım Özeti</b> (kurulum · yıllık ciro · geri ödeme · kâr marjı), kurulum maliyet dökümü, ne üretir/girdi, pazar/alıcı + kg satış fiyatı, ihracat talebi, <b>ruhsat/teşvik</b> (IPARD/TKDK/KOSGEB), teknik/biyolojik darboğaz, <b>⚠️ riskler + önlem</b>, <b>📍 en uygun lokasyon (TR)</b>, <b>🗺️ kuruluş yol haritası (0-12 ay)</b>, <b>📦 girdi tedariki</b>, ilk pilot adımı. Tesis fikirleri ve kayıtları ürünlerden <b>tamamen ayrı</b> tutulur.</p>
+
+      <p><b>Her kartta (Fikir modu):</b> skor (0-100) + hüküm, nasıl yapılır, maliyet (₺/$), benzer ürünler, talep, patent, teknik gerçeklik, ilk prototip, açık kaynak yapı taşları, sahadan ilham. <b>"Pazarı tara"</b> butonu o fikrin canlı rakip/ilgi durumunu web'den getirir (tesiste tarım/ticaret kaynaklarından). <b>★ Kaydet</b> ile saklayıp puan/durum/not eklersin; beğenilerin sonraki üretimleri besler. Temalar, filtre, metin + anlamsal arama, PWA (telefona kurulur) ve kalıcı oturum da var.</p>
     </div>
   </details>
 
