@@ -1021,6 +1021,11 @@ async function uret(){
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2 && !iptalMi()) await bekle(3000);
   }
+  if(!adaylar && !iptalMi()){
+    // SON ÇARE: en yalın tek çağrı (uzun yasak listesi/ilham YOK → prompt kısa, başarı şansı en yüksek)
+    const p = ureticiPrompt(alan, [], kaynak, [], ayarlar.adaySayisi, "", null, "", yonerge, ayarlar.tesis);
+    adaylar = await zincir(p.sistem, p.kullanici);
+  }
   if(iptalMi()) throw new Error("__iptal__");
   // anlamsal tekrar-eleme: geçmişe/birbirine ANLAMCA benzer adayları at (model varsa)
   if(adaylar && ayarlar.anlamsal) adaylar = await tekrarEle(adaylar);
@@ -1082,7 +1087,9 @@ async function uret(){
     // Fikir altta kalmasın: kutuya kaydır
     try{ const ust = $("#onerilenBaslik"); if(ust && ust.scrollIntoView) ust.scrollIntoView({ behavior: "smooth", block: "start" }); }catch(e){}
   }else{
-    statusEl.innerHTML = `Çavuş şu an bulamadı — `;
+    statusEl.innerHTML = ayarlar.tesis
+      ? `Çavuş ve Zeyneb şu an uygun tesis bulamadı (yoğunluk olabilir) — `
+      : `Çavuş şu an bulamadı — `;
     const b = document.createElement("button");
     b.className = "retry"; b.textContent = "Tekrar dene";
     b.addEventListener("click", uret);
