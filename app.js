@@ -200,6 +200,7 @@ function tesisGuncelle(){
   if(alanInput) alanInput.placeholder = on
     ? "tesis alanı yaz (örn. 'mantar', 'akrep zehri'), boş bırak ya da serbest iste"
     : "alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste";
+  const mk = $("#modKalip"); if(mk) mk.hidden = on;   // ürün kalıpları (Ucuz prototip vb.) tesise uymaz → gizle
   kayitSayiGuncelle();   // kayıt sayacı aktif moda göre
 }
 $("#chips").addEventListener("click", e => {
@@ -290,7 +291,7 @@ async function pazarTara(el, f){
   const q = ((f.isim || "") + " " + (f.ne || "")).trim();
   const en = (f.aramaEN || "").trim();
   try{
-    const url = "/api/ara?q=" + encodeURIComponent(q) + (en ? "&en=" + encodeURIComponent(en) : "");
+    const url = "/api/ara?q=" + encodeURIComponent(q) + (en ? "&en=" + encodeURIComponent(en) : "") + (f.tesis ? "&tesis=1" : "");
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 15000);
     const r = await fetch(url, { signal: ctrl.signal });
@@ -451,7 +452,9 @@ function cizKayitlilar(){
 function kopyala(f){
   const dia = Array.isArray(f.diyalog) && f.diyalog.length
     ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
-  const t = `${f.isim}\n${f.ne}${dia}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
+  const t = f.tesis
+    ? `${f.isim}\n${f.ne}${dia}\n\nNe üretir: ${f.neyden}\nPazar/alıcı: ${f.derde}\nGiriş engeli: ${f.nedenYok}\nKâr noktası: ${f.vayBe}${f.yatirim ? "\nYatırım: " + f.yatirim : ""}`
+    : `${f.isim}\n${f.ne}${dia}\n\nNeyden: ${f.neyden}\nHangi derde: ${f.derde}\nNeden yok: ${f.nedenYok}\nVay be: ${f.vayBe}`;
   navigator.clipboard?.writeText(t).then(
     () => flash("Kopyalandı"),
     () => flash("Kopyalanamadı")
@@ -460,7 +463,9 @@ function kopyala(f){
 function paylasMetni(f){
   const dia = Array.isArray(f.diyalog) && f.diyalog.length
     ? "\n\n" + f.diyalog.map(m => `${m.kim}: ${m.soz}`).join("\n") : "";
-  return `💡 ${f.isim}\n${f.ne}${dia}\n\n🔧 Neyden: ${f.neyden}\n🎯 Hangi derde: ${f.derde}\n✨ Vay be: ${f.vayBe}\n\n— 4c1z`;
+  return f.tesis
+    ? `🏭 ${f.isim}\n${f.ne}${dia}\n\n🌱 Ne üretir: ${f.neyden}\n🎯 Pazar: ${f.derde}${f.yatirim ? "\n💰 " + f.yatirim : ""}\n\n— 4c1z`
+    : `💡 ${f.isim}\n${f.ne}${dia}\n\n🔧 Neyden: ${f.neyden}\n🎯 Hangi derde: ${f.derde}\n✨ Vay be: ${f.vayBe}\n\n— 4c1z`;
 }
 // Metni canvas genişliğine göre satırlara böl
 function sar(ctx, metin, maxW){
@@ -716,11 +721,12 @@ async function uzmanlastir(alan, fikir, kaynak, webAcik){
   const enQ = (fikir.aramaEN || "").trim();            // üst aklın ürettiği gizli İngilizce kelimeler
   const anahtar = fikir.isim || fikir.ne || "";
   // web kapalı (dify ayarı): arama atlanır, sadece kur çekilir; uzman heyeti yine çalışır.
+  // Tesiste patent araması yapılmaz (o alan ruhsat/teşvik için kullanılıyor) → boşa çağrı yok.
   const [genel, patent, kur] = webAcik === false
     ? [[], [], await kurGetir()]
     : await Promise.all([
         araGetir(ad, enQ),
-        araGetir("site:patents.google.com " + (enQ || anahtar)),
+        fikir.tesis ? Promise.resolve([]) : araGetir("site:patents.google.com " + (enQ || anahtar)),
         kurGetir()
       ]);
   const fmt = arr => arr.slice(0, 12).map(s => "- " + s.baslik + ": " + (s.ozet || "")).join("\n");
@@ -960,7 +966,7 @@ async function uret(){
   if(premium && !hizli){
     // çok-ajan: persona ORDUSU paralel üretir → adaylar havuzda birleşir (tesiste otomatik)
     const dilimler = await Promise.all(personaSec().map(persona => {
-      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
+      const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, ayarlar.tesis ? "" : kalipVurgu(), persona, ilham, yonerge, ayarlar.tesis);
       return zincir(p.sistem, p.kullanici);
     }));
     const havuz = [];
@@ -968,7 +974,7 @@ async function uret(){
     if(havuz.length) adaylar = havuz;
   }
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
-    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, kalipVurgu(), null, ilham, yonerge, ayarlar.tesis);
+    const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, ayarlar.tesis ? "" : kalipVurgu(), null, ilham, yonerge, ayarlar.tesis);
     adaylar = await zincir(p.sistem, p.kullanici);
     if(!adaylar && d < 2) await bekle(3000);
   }

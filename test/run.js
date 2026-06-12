@@ -728,6 +728,31 @@ console.log("\n#TESİS-ARA — Tesise özel araştırma (client)");
   ok("tesis modunda araGetir &tesis=1 gönderir", /[?&]tesis=1/.test(curl));
 })();
 
+// ---- Uzman gözüyle tutarlılık düzeltmeleri (tesis) ----
+console.log("\n#TESİS-FIX — Tesis tutarlılık düzeltmeleri");
+(function(){
+  const w = yeniDom();
+  // Paylaş/Kopyala metni tesiste doğru etiketlenir
+  const pt = w.paylasMetni({ isim: "Mantar T", ne: "x", neyden: "miselyum", derde: "organik pazar", yatirim: "kurulum 2M · geri ödeme 2 yıl", tesis: true });
+  ok("paylaş: tesis metni 'Ne üretir' + 💰yatırım içerir, 'Neyden' içermez", /Ne üretir/.test(pt) && /💰/.test(pt) && !/Neyden/.test(pt));
+  ok("paylaş: ürün metni klasik 'Neyden' kalır", /Neyden/.test(w.paylasMetni({ isim: "Ü", ne: "x", neyden: "a+b", derde: "d", vayBe: "v" })));
+  // Mod (kalıp) bölümü tesiste gizlenir (ürün kalıpları tesise uymaz)
+  w.ayarSet("tesis", true); w.tesisGuncelle();
+  ok("Mod/kalıp bölümü tesiste gizli", w.document.querySelector("#modKalip").hidden === true);
+  w.ayarSet("tesis", false); w.tesisGuncelle();
+  ok("Mod/kalıp bölümü üründe görünür", w.document.querySelector("#modKalip").hidden === false);
+})();
+
+(async function(){
+  // pazarTara tesis kartında &tesis=1 gönderir
+  const w = yeniDom();
+  let purl = "";
+  w.fetch = async (u) => { purl = String(u); return { ok: true, json: async () => ({ sonuclar: [] }) }; };
+  const el = w.fikirKart({ isim: "Mantar T", ne: "x", tesis: true });
+  await w.pazarTara(el, { isim: "Mantar T", ne: "x", aramaEN: "mushroom", tesis: true });
+  ok("pazarTara: tesis kartında &tesis=1 gönderir", /[?&]tesis=1/.test(purl));
+})();
+
 // ---- ALTYAPI: serverless zincir sağlamlığı (api/gen.js, api/poll.js) ----
 console.log("\n#ALTYAPI — Serverless zincir (timeout + fallback)");
 (async function(){

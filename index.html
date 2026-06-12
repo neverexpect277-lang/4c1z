@@ -53,6 +53,8 @@
 
       <p><b>Mod (kalıp):</b> Ucuz prototip / yüksek teknoloji / sosyal fayda / çevre / eğlence — tek tıkla üretimi o tarza yönlendir.</p>
 
+      <p><b>🏭 Üretim Tesisleri (ayrı motor):</b> "Tesis Üret" butonu, ürün fikri yerine <b>5M TL'ye kadar kurulabilen niş üretim/yetiştirme tesisi</b> önerir (mantar, tıbbi sülük, safran, mikroalg, zehir/biyo-madde…). Kendi ajan ordusu (ziraat, su ürünleri, biyoteknoloji, ihracat, teşvik, maliyet uzmanları), tesise özel araştırma kaynakları (tarım/bilim/ticaret) ve her kartta <b>★ Yatırım Özeti</b> (kurulum · geri ödeme · kâr marjı) ile çalışır. Tesis fikirleri ve kayıtları ürünlerden <b>ayrı</b> tutulur.</p>
+
       <p><b>Her kartta:</b> skor (0-100) + hüküm, nasıl yapılır, maliyet (₺/$), benzer ürünler, talep, patent, teknik gerçeklik, ilk prototip, açık kaynak yapı taşları, sahadan ilham. <b>"Pazarı tara"</b> butonu o fikrin canlı rakip/ilgi durumunu web'den getirir. <b>★ Kaydet</b> ile saklayıp puan/durum/not eklersin; beğenilerin sonraki üretimleri besler. Temalar, filtre, metin + anlamsal arama, PWA (telefona kurulur) ve kalıcı oturum da var.</p>
     </div>
   </details>
@@ -67,8 +69,10 @@
       🏭 Üretim Tesisleri <span class="tesisalt">— 5M'a kadar kurulabilir niş tesis fikirleri arama motoru</span>
     </button>
     <div class="chips" id="chips"></div>
-    <label class="tt kt">Mod (kalıp) — fikirleri bir tarza yönlendir</label>
-    <div class="chips" id="kaliplar"></div>
+    <div id="modKalip">
+      <label class="tt kt">Mod (kalıp) — fikirleri bir tarza yönlendir</label>
+      <div class="chips" id="kaliplar"></div>
+    </div>
     <label class="tt kt" for="kaynak">Kaynak (isteğe bağlı) — not / belge / ürün açıklaması yapıştır, fikirler buna dayansın</label>
     <textarea id="kaynak" class="kaynak" rows="3" placeholder="örn. ürün notların, bir sorun açıklaması, pazar bilgisi… ya da bir https:// linki yapıştır, 'Linki çek'e bas"></textarea>
     <button class="cekurl" id="cekUrl" type="button">Linki çek (URL → metin)</button>
