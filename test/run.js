@@ -746,6 +746,27 @@ console.log("\n#İPTAL — Üretim durdurma");
   ok("İptal mesajı gösterilir", /İptal edildi/.test(w.document.querySelector("#status").textContent));
 })();
 
+// ---- Çavuş & Zeyneb karakteri tesiste de (ilerleme yazıları) ----
+console.log("\n#KARAKTER — Tesiste Çavuş & Zeyneb");
+(async function(){
+  const w = yeniDom();
+  w.fetch = async (url, o) => {
+    if(String(url).startsWith("/api/ara")) return { ok: true, json: async () => ({ sonuclar: [] }) };
+    if(/frankfurter/.test(url)) return { ok: true, json: async () => ({ rates: { TRY: 34 } }) };
+    if(o && o.signal && o.signal.aborted) throw new Error("iptal");
+    return new Promise((_, rej) => { if(o && o.signal) o.signal.addEventListener("abort", () => rej(new Error("iptal"))); });
+  };
+  w.ayarSet("tesis", true);
+  w.document.querySelector("#alan").value = "mantar";
+  const p = w.uret();
+  const dunya = w.document.querySelector("#status").textContent;
+  ok("tesis ilerleme yazılarında Çavuş & Zeyneb geçer", /Çavuş/.test(dunya) && /Zeyneb/.test(dunya));
+  w.iptalEt(); await p;
+  // tesis üst akıl promptunda Çavuş↔Zeyneb diyaloğu üretilir
+  const ua = w.ustAkilPrompt("mantar", [{ isim: "x" }], "", "dengeli", "", true);
+  ok("tesis kart diyaloğu Çavuş↔Zeyneb üretir", /ÇAVUŞ/.test(ua.sistem) && /ZEYNEB/.test(ua.sistem) && /"kim":"Çavuş"/.test(ua.sistem));
+})();
+
 // ---- TESİSE ÖZEL araştırma: client &tesis=1 (server tarafı #ALTYAPI bloğunda, global.fetch yarışını önlemek için) ----
 console.log("\n#TESİS-ARA — Tesise özel araştırma (client)");
 (async function(){

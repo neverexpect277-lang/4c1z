@@ -972,12 +972,12 @@ async function uret(){
   const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
   const kaynak = ayarlar.anlamsal ? await kaynakSecAnlamsal(kaynakHam, alan) : kaynakSec(kaynakHam, alan);   // ragflow: alakalı kısmı seç (anlamsal/keyword)
   const mesajlar = ayarlar.tesis ? [
-    "Yatırım heyeti toplanıyor…",
-    "Ziraat & su ürünleri uzmanları sahada…",
-    "Maliyet ve geri ödeme hesaplanıyor…",
-    "İhracat pazarları taranıyor…",
-    "Teşvik ve ruhsatlar çıkarılıyor…",
-    "En kârlı tesis dosyası hazırlanıyor…"
+    "Çavuş ve Zeyneb tesisi istişare ediyor…",
+    "Çavuş kârlı tesisleri tek tek tarıyor…",
+    "Zeyneb riskleri sıralıyor, Çavuş ikna ediyor…",
+    "Zeyneb: \"Bu yatırım tutar mı Çavuş'um?\"",
+    "Çavuş ihracat pazarını ve teşvikleri anlatıyor…",
+    "Çavuş ve Zeyneb en kârlı tesis dosyasını hazırlıyor…"
   ] : [
     "Çavuş ve Zeyneb istişare ediyor…",
     "Çavuş ürünleri tek tek tarıyor…",
