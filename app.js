@@ -998,7 +998,10 @@ async function uret(){
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
   const begenilen = favleriYukle().filter(f => f.puan >= 4 || f.durum === "Geliştirilecek").map(f => f.isim).filter(Boolean);
   const yonerge = istekYorumla(alan).yonerge;          // "X+Y birleştir" gibi niyeti güçlü yönergeye çevir
-  const ilham = hizli ? "" : await ureticiIlham(alan); // Hızlı: web araştırması atla; değilse araştırma ordusu → üreticiye sinyaller
+  // HIZ: web araştırması (ilham) ÜRETİMLE PARALEL koşar — üretici beklemez. ilham hazır olunca
+  // üst akla + karta beslenir (özellik korunur, sadece çakışır → ~10sn kazanç + üretici prompt'u kısalır).
+  const ilhamP = hizli ? Promise.resolve("") : ureticiIlham(alan);
+  let ilham = "";
   const premium = ayarlar.heyet || ayarlar.tesis;   // tesis = premium altyapı: ordu + geniş heyet otomatik
   let adaylar = null;
   if(premium && !hizli){
@@ -1027,6 +1030,7 @@ async function uret(){
     adaylar = await zincir(p.sistem, p.kullanici);
   }
   if(iptalMi()) throw new Error("__iptal__");
+  ilham = await ilhamP;   // araştırma üretimle PARALEL koştu; şimdi hazır → üst akıl + kart kullanır
   // anlamsal tekrar-eleme: geçmişe/birbirine ANLAMCA benzer adayları at (model varsa)
   if(adaylar && ayarlar.anlamsal) adaylar = await tekrarEle(adaylar);
   if(adaylar){ asama = 1; ajanCiz(asama, mesajlar[mi]); }
