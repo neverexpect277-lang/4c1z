@@ -65,9 +65,11 @@
       <input id="alan" placeholder="alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste" autocomplete="off" />
       <button class="clearx" id="clear" title="Temizle">✕</button>
     </div>
-    <button type="button" class="tesiskutu" id="tesisKutu" aria-pressed="false">
-      🏭 Üretim Tesisleri <span class="tesisalt">— 5M'a kadar kurulabilir niş tesis fikirleri arama motoru</span>
-    </button>
+    <div class="modsec" id="modSecim">
+      <button type="button" class="modbtn on" data-mod="urun">💡 Fikir Üret</button>
+      <button type="button" class="modbtn" data-mod="tesis">🏭 Üretim Tesisi</button>
+    </div>
+    <div class="modalt" id="modAlt">Dünyada ve Türkiye'de olmayan yeni ürün fikirleri</div>
     <div class="chips" id="chips"></div>
     <div id="modKalip">
       <label class="tt kt">Mod (kalıp) — fikirleri bir tarza yönlendir</label>
@@ -85,8 +87,8 @@
     </div>
     <div id="akis"></div>
     <div class="genrow">
-      <button class="gen" id="gen">Fikir Üret</button>
-      <button class="gen tesis" id="genTesis" type="button">🏭 Tesis Üret</button>
+      <button class="gen" id="gen">Üret</button>
+      <button class="gen iptal" id="iptal" type="button" hidden>⏹ İptal</button>
     </div>
     <div class="genrow">
       <button class="gen oto" id="genOto" type="button">Otomatik üret (3)</button>

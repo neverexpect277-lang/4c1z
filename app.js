@@ -191,26 +191,36 @@ function chipleriCiz(){
 }
 function tesisGuncelle(){
   const on = !!ayarlar.tesis;
-  const k = $("#tesisKutu");
-  if(k){ k.classList.toggle("on", on); k.setAttribute("aria-pressed", on ? "true" : "false"); }
+  // Üst MOD SEÇİMİ: Fikir Üret ↔ Üretim Tesisi (aktif segment vurgulu)
+  document.querySelectorAll("#modSecim .modbtn").forEach(b =>
+    b.classList.toggle("on", (b.dataset.mod === "tesis") === on));
+  const alt = $("#modAlt"); if(alt) alt.textContent = on
+    ? "5M'a kadar kurulabilir niş üretim tesisi yatırım fikirleri"
+    : "Dünyada ve Türkiye'de olmayan yeni ürün fikirleri";
   chipleriCiz();
-  // İki AYRI buton: aktif moddaki buton vurgulanır (Fikir Üret ↔ Tesis Üret)
-  const gen = $("#gen"); if(gen) gen.classList.toggle("aktifmod", !on);
-  const genT = $("#genTesis"); if(genT) genT.classList.toggle("aktifmod", on);
+  // Tek 'Üret' butonu — aktif modun rengini alır (tesis = yeşil)
+  const gen = $("#gen"); if(gen) gen.classList.toggle("tesis", on);
   if(alanInput) alanInput.placeholder = on
     ? "tesis alanı yaz (örn. 'mantar', 'akrep zehri'), boş bırak ya da serbest iste"
     : "alan yaz, boş bırak, ya da 'buzdolabı ve drone'u birleştir' gibi serbest iste";
   const mk = $("#modKalip"); if(mk) mk.hidden = on;   // ürün kalıpları (Ucuz prototip vb.) tesise uymaz → gizle
   kayitSayiGuncelle();   // kayıt sayacı aktif moda göre
 }
+// Üst mod seçimi: ürün ↔ tesis dünyası arasında geçiş (üretmez, sadece modu değiştirir)
+function modSec(tesisMi){
+  if(calisiyor) return;                         // üretim sürerken mod değişmesin
+  if(!!ayarlar.tesis === !!tesisMi) return;
+  ayarlar.tesis = !!tesisMi; ayarKaydet(); tesisGuncelle();
+  if(mod === "kayit") cizKayitlilar(); else cizFikirler(sonUretilen);
+}
 $("#chips").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if(!c) return;
   alanInput.value = c.dataset.v;
 });
-$("#tesisKutu") && $("#tesisKutu").addEventListener("click", () => {
-  ayarlar.tesis = !ayarlar.tesis; ayarKaydet(); tesisGuncelle();
-  // mod dünyası değişti: görünen listeyi (üretilenler/kayıtlar) tazele
-  if(mod === "kayit") cizKayitlilar(); else cizFikirler(sonUretilen);
+const _modSecim = $("#modSecim");
+if(_modSecim) _modSecim.addEventListener("click", e => {
+  const b = e.target.closest(".modbtn"); if(!b) return;
+  modSec(b.dataset.mod === "tesis");
 });
 $("#clear").addEventListener("click", () => { alanInput.value = ""; alanInput.focus(); });
 
@@ -647,6 +657,7 @@ function metin(s){ return escapeHtml(String(s || "").replace(/<[^>]*>/g, "")); }
 async function geminiCagir(sistem, kullanici){
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), sureler().gemini);
+  const cz = iptaleBagla(ctrl);
   try{
     const r = await fetch("/api/gen", {
       method: "POST",
@@ -657,12 +668,13 @@ async function geminiCagir(sistem, kullanici){
     if(!r.ok) throw new Error("Gemini " + r.status);
     const j = await r.json();
     return j?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  } finally { clearTimeout(to); }
+  } finally { clearTimeout(to); cz(); }
 }
 
 async function pollCagir(sistem, kullanici){
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), sureler().poll);
+  const cz = iptaleBagla(ctrl);
   try{
     const r = await fetch("/api/poll", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -672,7 +684,7 @@ async function pollCagir(sistem, kullanici){
     if(!r.ok) throw new Error("poll " + r.status);
     const j = await r.json();
     return j.text || "";
-  } finally { clearTimeout(to); }
+  } finally { clearTimeout(to); cz(); }
 }
 
 // Bir promptu model zincirinden geçirip fikir dizisi döndürür (Gemini -> pollinations)
@@ -689,13 +701,14 @@ function bekle(ms){ return new Promise(res => setTimeout(res, ms)); }
 
 // Güncel USD→TRY kuru (Frankfurter, anahtarsız + CORS). Hata olursa boş.
 async function kurGetir(){
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 8000);
+  const cz = iptaleBagla(ctrl);
   try{
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 8000);
     const r = await fetch("https://api.frankfurter.app/latest?from=USD&to=TRY", { signal: ctrl.signal });
-    clearTimeout(to);
     if(r.ok){ const j = await r.json(); if(j && j.rates && j.rates.TRY) return Math.round(j.rates.TRY); }
   }catch(e){}
+  finally{ clearTimeout(to); cz(); }
   return "";
 }
 
@@ -710,13 +723,14 @@ async function araGetir(q, en){
   if(ayarlar.tesis) url += "&tesis=1";        // tesise özel kaynaklar (tarım/bilim/ticaret)
   const onb = ARA_ONBELLEK.get(url);
   if(onb && Date.now() - onb.t < ARA_ONBELLEK_TTL) return onb.v;   // tekrar eden çağrı → anında (ağ yok)
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), sureler().ara);
+  const cz = iptaleBagla(ctrl);
   try{
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), sureler().ara);
     const r = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(to);
     if(r.ok){ const j = await r.json(); if(Array.isArray(j.sonuclar)){ if(j.sonuclar.length) ARA_ONBELLEK.set(url, { t: Date.now(), v: j.sonuclar }); return j.sonuclar; } }
   }catch(e){}
+  finally{ clearTimeout(to); cz(); }
   return [];
 }
 // 4. AŞAMA yardımcısı: web + patent araması (paralel) + uzman heyeti ile fikri mühendislik gözüyle zenginleştir
@@ -929,11 +943,30 @@ async function ureticiIlham(alan){
 }
 
 let calisiyor = false;
-function uretButonKilit(d){ ["#gen", "#genTesis"].forEach(s => { const b = $(s); if(b) b.disabled = d; }); }
+let iptalCtrl = null;          // çalışan üretimi iptal etmek için
+let iptalIstendi = false;      // toplu üretimi (uretCoklu) de durdurur
+// Üretim sırasında 'Üret' gizlenir, 'İptal' görünür; bitince tersi.
+function uretButonKilit(calisiyorMu){
+  const g = $("#gen"); if(g){ g.hidden = calisiyorMu; g.disabled = calisiyorMu; }
+  const o = $("#genOto"); if(o) o.disabled = calisiyorMu;
+  const ip = $("#iptal"); if(ip) ip.hidden = !calisiyorMu;
+}
+function iptalEt(){ iptalIstendi = true; if(iptalCtrl){ try{ iptalCtrl.abort(); }catch(e){} } }
+// Bir fetch çağrısını genel iptale bağlar: İptal'e basılınca bu çağrı da hemen abort olur.
+function iptaleBagla(ctrl){
+  const ic = iptalCtrl;
+  if(!ic) return () => {};
+  if(ic.signal.aborted){ try{ ctrl.abort(); }catch(e){} return () => {}; }
+  const f = () => { try{ ctrl.abort(); }catch(e){} };
+  ic.signal.addEventListener("abort", f);
+  return () => { try{ ic.signal.removeEventListener("abort", f); }catch(e){} };
+}
 async function uret(){
   if(calisiyor) return;
   if(mod !== "yeni") setMod("yeni");
   calisiyor = true;
+  iptalIstendi = false;
+  iptalCtrl = new AbortController();      // İptal'e basılınca tüm çağrılar abort olur
   uretButonKilit(true);
   const alan = alanInput.value.trim();
   const kaynakHam = (($("#kaynak") && $("#kaynak").value) || "").trim();
@@ -959,6 +992,7 @@ async function uret(){
   try{ if(statusEl.scrollIntoView) statusEl.scrollIntoView({ behavior: "smooth", block: "center" }); }catch(e){}
   const dongu = setInterval(() => { mi = (mi + 1) % mesajlar.length; ajanCiz(asama, mesajlar[mi]); }, 2000);
   const hizli = ayarlar.hiz === "hizli";   // Hızlı profili: web + eleştirmen atlanır, tek üretici (Dengeli/Derin'de hepsi çalışır)
+  const iptalMi = () => iptalIstendi || !!(iptalCtrl && iptalCtrl.signal.aborted);
 
   try{
   // 1. AŞAMA: aday fikir üretimi (ajan hafızası: beğenilen kayıtlar üreticiye pozitif sinyal)
@@ -980,8 +1014,9 @@ async function uret(){
   for(let d = 1; d <= 2 && !adaylar; d++){              // tekli üretici (heyet kapalı ya da havuz boş)
     const p = ureticiPrompt(alan, uretilmisIsimler, kaynak, begenilen, ayarlar.adaySayisi, ayarlar.tesis ? "" : kalipVurgu(), null, ilham, yonerge, ayarlar.tesis);
     adaylar = await zincir(p.sistem, p.kullanici);
-    if(!adaylar && d < 2) await bekle(3000);
+    if(!adaylar && d < 2 && !iptalMi()) await bekle(3000);
   }
+  if(iptalMi()) throw new Error("__iptal__");
   // anlamsal tekrar-eleme: geçmişe/birbirine ANLAMCA benzer adayları at (model varsa)
   if(adaylar && ayarlar.anlamsal) adaylar = await tekrarEle(adaylar);
   if(adaylar){ asama = 1; ajanCiz(asama, mesajlar[mi]); }
@@ -994,12 +1029,13 @@ async function uret(){
     for(let d = 1; d <= 2 && !suzulmus; d++){
       const p = elestirmenPrompt(alan, adaylar, kaynak, premium, ayarlar.tesis);
       suzulmus = await zincir(p.sistem, p.kullanici);
-      if(!suzulmus && d < 2) await bekle(3000);
+      if(!suzulmus && d < 2 && !iptalMi()) await bekle(3000);
     }
     if(!suzulmus) suzulmus = adaylar; // eleştirmen olmazsa ham adaylarla devam
   }else if(adaylar){
     suzulmus = adaylar;               // eleme kapalı (dify ayarı): ham adaylarla devam
   }
+  if(iptalMi()) throw new Error("__iptal__");
   if(suzulmus){ asama = 2; ajanCiz(asama, mesajlar[mi]); }
 
   // 3. AŞAMA: ÜST AKIL — süzülmüş adaylardan en iyi 1'ini diyaloğuyla sun
@@ -1008,10 +1044,11 @@ async function uret(){
     for(let d = 1; d <= 2 && !fikirler; d++){
       const p = ustAkilPrompt(alan, suzulmus, kaynak, ayarlar.ton, ilham, ayarlar.tesis);
       fikirler = await zincir(p.sistem, p.kullanici);
-      if(!fikirler && d < 2) await bekle(3000);
+      if(!fikirler && d < 2 && !iptalMi()) await bekle(3000);
     }
     if(!fikirler) fikirler = suzulmus.slice(0, 1); // üst akıl olmazsa en iyi adayı göster
   }
+  if(iptalMi()) throw new Error("__iptal__");
   if(fikirler){ asama = 3; ajanCiz(asama, mesajlar[mi]); }
 
   // 4. AŞAMA: UZMAN HEYETİ — fikri web destekli mühendislik gözüyle zenginleştir (diyalog korunur)
@@ -1047,14 +1084,18 @@ async function uret(){
     statusEl.appendChild(b);
   }
   }catch(e){
-    // beklenmedik hata: motor ASLA takılı kalmasın, kullanıcıya tekrar dene sun
-    try{
-      statusEl.innerHTML = "Bir aksilik oldu — ";
-      const b = document.createElement("button");
-      b.className = "retry"; b.textContent = "Tekrar dene";
-      b.addEventListener("click", uret);
-      statusEl.appendChild(b);
-    }catch(_){}
+    if(iptalIstendi || (iptalCtrl && iptalCtrl.signal.aborted) || String(e && e.message) === "__iptal__"){
+      statusEl.textContent = "İptal edildi.";   // kullanıcı durdurdu
+    }else{
+      // beklenmedik hata: motor ASLA takılı kalmasın, kullanıcıya tekrar dene sun
+      try{
+        statusEl.innerHTML = "Bir aksilik oldu — ";
+        const b = document.createElement("button");
+        b.className = "retry"; b.textContent = "Tekrar dene";
+        b.addEventListener("click", uret);
+        statusEl.appendChild(b);
+      }catch(_){}
+    }
   }finally{
     clearInterval(dongu);   // spinner her hâlükârda durur
     calisiyor = false;      // kilit her hâlükârda açılır
@@ -1067,23 +1108,15 @@ async function uretCoklu(n){
   if(calisiyor) return;
   n = Math.max(1, parseInt(n, 10) || 3);
   const b = $("#genOto"); if(b) b.disabled = true;
-  try{ for(let i = 0; i < n; i++){ await uret(); } }
+  try{ for(let i = 0; i < n; i++){ await uret(); if(iptalIstendi) break; } }   // İptal toplu üretimi de durdurur
   finally{ if(b) b.disabled = false; }
 }
-// İki AYRI üret butonu: ilgili moda geçip üretir (Fikir Üret = ürün, 🏭 Tesis Üret = tesis)
-function uretModda(tesisMi){
-  if(calisiyor) return;
-  if(!!ayarlar.tesis !== !!tesisMi){
-    ayarlar.tesis = !!tesisMi; ayarKaydet(); tesisGuncelle();
-    if(mod === "kayit") cizKayitlilar(); else cizFikirler(sonUretilen);
-  }
-  uret();
-}
-$("#gen").addEventListener("click", () => uretModda(false));
-const _tesisBtn = $("#genTesis");
-if(_tesisBtn) _tesisBtn.addEventListener("click", () => uretModda(true));
+// Tek 'Üret' butonu: aktif modda (üst seçim) üretir. İptal: çalışan üretimi durdurur.
+$("#gen").addEventListener("click", uret);
 const _otoBtn = $("#genOto");
 if(_otoBtn) _otoBtn.addEventListener("click", () => uretCoklu(3));
+const _iptalBtn = $("#iptal");
+if(_iptalBtn) _iptalBtn.addEventListener("click", iptalEt);
 $("#temaKaydet").addEventListener("click", temaFormAc);
 $("#temaOnay").addEventListener("click", temaOnayla);
 $("#temaIptal").addEventListener("click", temaFormKapat);

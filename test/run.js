@@ -574,16 +574,16 @@ console.log("\n#TESİS — Üretim Tesisleri modu");
   ok("ürün personaları (DIY/maker) tesiste sahaya İNMEZ", !tp.some(p => /DIY\/maker|oyun tasarımcısı/.test(p)));
   w.ayarSet("tesis", false);
 
-  // 3) AYRI butonlar: 'Fikir Üret' ve '🏭 Tesis Üret' (relabel YOK, üst üste binmez)
-  ok("ayrı bir 'Tesis Üret' butonu var", !!w.document.querySelector("#genTesis"));
-  ok("Fikir Üret butonu hep 'Fikir Üret' kalır (relabel yok)", w.document.querySelector("#gen").textContent === "Fikir Üret");
-  ok("Tesis Üret butonu metni sabit", /Tesis Üret/.test(w.document.querySelector("#genTesis").textContent));
+  // 3) AYRI MOD SEÇİMİ: üstte iki segment (Fikir / Üretim Tesisi), altta TEK 'Üret' butonu
+  ok("üst mod seçici iki segment içerir", w.document.querySelectorAll('#modSecim .modbtn').length === 2);
+  ok("tek 'Üret' butonu var (artık iki üret butonu yok)", w.document.querySelector("#gen").textContent === "Üret" && !w.document.querySelector("#genTesis"));
+  ok("İptal butonu var (başta gizli)", w.document.querySelector("#iptal").hidden === true);
   w.ayarSet("tesis", true); w.tesisGuncelle();
   const tChips = [...w.document.querySelectorAll("#chips .chip")].map(c => c.textContent);
   ok("tesis açıkken chip'ler tesis alanlarına döner", tChips.includes("Mantar") && tChips.includes("Biyoteknoloji"));
-  ok("tesis modunda Tesis Üret butonu aktif vurgulu", w.document.querySelector("#genTesis").classList.contains("aktifmod") && !w.document.querySelector("#gen").classList.contains("aktifmod"));
+  ok("tesis modunda tesis segmenti aktif + Üret yeşil", w.document.querySelector('#modSecim [data-mod="tesis"]').classList.contains("on") && w.document.querySelector("#gen").classList.contains("tesis"));
   w.ayarSet("tesis", false); w.tesisGuncelle();
-  ok("ürün modunda Fikir Üret butonu aktif vurgulu", w.document.querySelector("#gen").classList.contains("aktifmod") && !w.document.querySelector("#genTesis").classList.contains("aktifmod"));
+  ok("ürün modunda ürün segmenti aktif + Üret normal", w.document.querySelector('#modSecim [data-mod="urun"]').classList.contains("on") && !w.document.querySelector("#gen").classList.contains("tesis"));
   const pChips = [...w.document.querySelectorAll("#chips .chip")].map(c => c.textContent);
   ok("tesis kapalıyken ürün chip'leri geri gelir", pChips.includes("Mutfak") && !pChips.includes("Mantar"));
 
@@ -702,26 +702,48 @@ function icerikStub(w, cag){
   ok("ürün modunda ordu OTOMATİK açılmaz (tek üretici, persona yok)", uretici2.length === 1 && !cag2.some(t => /BAKIŞ AÇIN/.test(t)));
 })();
 
-// ---- AYRI BUTON: '🏭 Tesis Üret' butonu tesis moduna geçip tesis kartı üretir ----
-console.log("\n#BUTON — Ayrı 'Tesis Üret' butonu uçtan uca");
+// ---- MOD SEÇİMİ + TEK ÜRET: üst segment modu belirler, 'Üret' o modda üretir ----
+console.log("\n#BUTON — Mod seçimi + tek 'Üret' uçtan uca");
 (async function(){
   const w = yeniDom();
-  const cag = []; icerikStub(w, cag);              // başlangıç: ürün modu (tesis kapalı)
+  const cag = []; icerikStub(w, cag);
+  w.document.querySelector('#modSecim [data-mod="tesis"]').click();   // Üretim Tesisi moduna geç
   w.document.querySelector("#alan").value = "mantar";
-  w.document.querySelector("#genTesis").click();   // ayrı Tesis Üret butonuna bas
+  w.document.querySelector("#gen").click();                          // Üret
   for(let i = 0; i < 100 && !w.document.querySelector("#out .card.tesis"); i++) await new Promise(r => setTimeout(r, 5));
-  ok("Tesis Üret butonu tesis moduna geçip TESİS kartı üretir", !!w.document.querySelector("#out .card.tesis"));
-  ok("Tesis Üret üretimi tesis çerçevesini kullandı", cag.some(t => /ÜRETİM TESİSİ yatırım uzmanı/.test(t)));
+  ok("Tesis modunda 'Üret' TESİS kartı üretir", !!w.document.querySelector("#out .card.tesis"));
+  ok("Tesis üretimi tesis çerçevesini kullandı", cag.some(t => /ÜRETİM TESİSİ yatırım uzmanı/.test(t)));
 
-  // Fikir Üret butonu ürün moduna döndürüp ürün kartı üretir
+  // Tesisten ürüne geçip 'Üret' → ürün kartı
   const w2 = yeniDom();
   const cag2 = []; icerikStub(w2, cag2);
-  w2.ayarSet("tesis", true);                        // tesis modundayken
+  w2.document.querySelector('#modSecim [data-mod="tesis"]').click();  // önce tesise
+  w2.document.querySelector('#modSecim [data-mod="urun"]').click();   // sonra ürüne dön
   w2.document.querySelector("#alan").value = "mutfak";
-  w2.document.querySelector("#gen").click();        // Fikir Üret → ürün moduna geçer
+  w2.document.querySelector("#gen").click();
   for(let i = 0; i < 100 && !w2.document.querySelector("#out .card"); i++) await new Promise(r => setTimeout(r, 5));
   const kart = w2.document.querySelector("#out .card");
-  ok("Fikir Üret butonu ürün moduna geçip ÜRÜN kartı üretir", !!kart && !kart.classList.contains("tesis"));
+  ok("Ürün modunda 'Üret' ÜRÜN kartı üretir", !!kart && !kart.classList.contains("tesis"));
+})();
+
+// ---- İPTAL: çalışan üretim durdurulabilir ----
+console.log("\n#İPTAL — Üretim durdurma");
+(async function(){
+  const w = yeniDom();
+  // üretici çağrısı abort olana dek asılı kalır → İptal onu keser
+  w.fetch = async (url, o) => {
+    if(String(url).startsWith("/api/ara")) return { ok: true, json: async () => ({ sonuclar: [] }) };
+    if(/frankfurter/.test(url)) return { ok: true, json: async () => ({ rates: { TRY: 34 } }) };
+    if(o && o.signal && o.signal.aborted) throw new Error("iptal");   // gerçek fetch gibi: zaten abort'luysa hemen reddet
+    return new Promise((_, rej) => { if(o && o.signal) o.signal.addEventListener("abort", () => rej(new Error("iptal"))); });
+  };
+  w.document.querySelector("#alan").value = "ev";
+  const p = w.uret();                                        // üretim başlar (üretici aşamasında asılı)
+  ok("üretim sürerken 'İptal' görünür, 'Üret' gizli", w.document.querySelector("#iptal").hidden === false && w.document.querySelector("#gen").hidden === true);
+  w.iptalEt();                                               // İptal'e bas
+  await p;                                                   // iptal → catch/finally tamamlanır
+  ok("İptal sonrası 'Üret' geri gelir, buton kilidi açılır", w.document.querySelector("#iptal").hidden === true && w.document.querySelector("#gen").disabled === false);
+  ok("İptal mesajı gösterilir", /İptal edildi/.test(w.document.querySelector("#status").textContent));
 })();
 
 // ---- TESİSE ÖZEL araştırma: client &tesis=1 (server tarafı #ALTYAPI bloğunda, global.fetch yarışını önlemek için) ----
